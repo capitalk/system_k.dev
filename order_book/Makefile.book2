@@ -1,0 +1,42 @@
+CC=g++
+
+INCLUDE=-I/usr/local/boost/ -I/usr/local/include/ -I/usr/local/src/quickfix/include -I../gtest/include -I../gtest/include/gtest -I../ -I../utils
+
+LIBS=-L../utils -L/usr/local/src/quickfix/lib/ -L/usr/local/boost_1_45_0/stage/lib/ -L../gtest/lib/.libs -Wl,-rpath,../gtest/lib/.libs -lquickfix -lboost_date_time -lgtest 
+
+CFLAGS=-Wall  -std=c++0x -O3 # -g -D DEBUG
+
+
+%.o: %.cpp
+	$(CC) $(CFLAGS) $(INCLUDES) -c $(input) -o $(output)
+
+all: book_tests2 
+
+book_tests2 : KTimeUtils.o KBook.o KOrder.o KLimit.o book_tests2.o  FIXConvertors.o
+	$(CC) KTimeUtils.o KBook.o KOrder.o KLimit.o book_tests2.o FIXConvertors.o -L. $(LIBS) -o $@   
+
+book_tests2.o: book_tests2.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) book_tests2.cpp
+
+KOrder.o: KOrder.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) KOrder.cpp 
+
+KBook.o: KBook.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) KBook.cpp
+
+KLimit.o: KLimit.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) KLimit.cpp
+
+KTimeUtils.o: ../utils/KTimeUtils.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) ../utils/KTimeUtils.cpp
+
+FIXConvertors.o: ../utils/FIXConvertors.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) ../utils/FIXConvertors.cpp
+
+lib: KOrder.o KBook.o KLimit.o KTimeUtils.o FIXConvertors.o
+	ar rcs libOrderBook2.a $+
+
+
+clean :
+	rm -f  *.o book_tests2 libOrderBook2.a
+
