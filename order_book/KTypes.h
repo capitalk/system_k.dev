@@ -39,7 +39,7 @@ typedef enum {
 
 enum TickType {
 		QUOTE = 'Q',
-		DEAL  = 'D'
+		TRADE  = 'T'
 };
 
 enum Side {

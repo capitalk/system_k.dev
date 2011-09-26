@@ -44,7 +44,10 @@ public:
     virtual uint32_t getTotalVolumeAtLimit(buy_sell_t buySell, double price);
     void printLevels(buy_sell_t buySell);
 
-    pKOrder getOrder(uint32_t orderId) { return (_findOrderId(orderId)->second); }
+    virtual pKOrder getOrder(uint32_t orderId) { return (_findOrderId(orderId)->second); }
+    const char* getOutputVersionString() { return "V3"; } 
+    const timespec getEventTime() { return _evtTime; }
+    const timespec getExchangeSendTime() { return _exchSndTime; }
 
 private:
     virtual int addBid(KOrder* bid, timespec eventTime, timespec exchSendTime);

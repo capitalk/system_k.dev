@@ -736,10 +736,11 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 		    pLog = getStream(symbol.getValue());
 
 			if (NULL != (pBook = getBook(symbol.getValue())))  {
-    		        char side = mdEntryType.getValue();
-                    buy_sell_t nside = sideConvert(side);
-		            double price = mdEntryPx.getValue();
-        		    size = mdEntrySize.getValue();
+                *pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
+    		    char side = mdEntryType.getValue();
+                buy_sell_t nside = sideConvert(side);
+		        double price = mdEntryPx.getValue();
+        		size = mdEntrySize.getValue();
 
            	    const std::string& id = mdEntryID.getValue();
                 uint32_t nid = hashlittle(id.c_str(), id.size(), 0);
@@ -764,8 +765,8 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                         std::cerr << "Book add failed!!!!!!!!!!\n (" << nid << nside << "(" << side << ")" << size << price << evtTime << sndTime << "\n";
                     }
 
-                    std::cerr << "A," << nside << "," << size << "," << price << "\n"; 
-                    *pLog << "A," << nside << "," << size << "," << price << "\n"; 
+                    std::cerr << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
+                    *pLog << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
 
 				} else if (action == FIX::MDUpdateAction_CHANGE) { // change  
                     size = mdEntrySize.getValue(); 
@@ -788,8 +789,8 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             std::cerr << "***** SYNTHETIC MOD: ";
                             std::cerr << "Removing: " << nrefId << " and re-adding " << "(" << nid << ", " << nside << ", " << size << "@" << price << ")\n";
                         }
-                        std::cerr << "M," << nside << "," << size << "," << price << "\n"; 
-                        *pLog << "M," << nside << "," << size << "," << price << "\n"; 
+                        std::cerr << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
+                        *pLog << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
     
                         pBook->remove(nrefId, evtTime, sndTime);
                         pBook->add(nid, nside, size, price, evtTime, sndTime);
@@ -797,8 +798,8 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                         if (_config.printDebug) {
                             std::cerr << "***** MOD: " << nid << " to size " << size << "\n";
                         }
-                        std::cerr << "M," << pBook->getOrder(nid)->getSide() << "," << size << "," << pBook->getOrder(nid)->getPrice() << "\n"; 
-                        *pLog << "M," << pBook->getOrder(nid)->getSide() << "," << size << "," << pBook->getOrder(nid)->getPrice() << "\n"; 
+                        std::cerr << "M," << pBook->getOrder(nid)->getSide() << "," << size << "," << std::setprecision(7) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
+                        *pLog << "M," << pBook->getOrder(nid)->getSide() << "," << size << "," << std::setprecision(7) << pBook->getOrder(nid)->getPrice() << "," <<  evtTime << "\n"; 
     					pBook->modify(nid, size, evtTime, sndTime);
 					}
 				} else if (action == FIX::MDUpdateAction_DELETE) { // delete  
@@ -806,8 +807,8 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                     if (_config.printDebug) { 
                         std::cerr << "***** DEL: " << nid << "\n";
                     }
-                    std::cerr << "D," << pBook->getOrder(nid)->getSide() << "," << pBook->getOrder(nid)->getSize() << "," << pBook->getOrder(nid)->getPrice() << "\n"; 
-                    *pLog << "D," << pBook->getOrder(nid)->getSide() << "," << pBook->getOrder(nid)->getSize() << "," << pBook->getOrder(nid)->getPrice() << "\n"; 
+                    std::cerr << "D," << pBook->getOrder(nid)->getSide() << "," << std::setiosflags(std::ios_base::fixed) << pBook->getOrder(nid)->getSize() << "," << std::setprecision(7) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
+                    *pLog << "D," << pBook->getOrder(nid)->getSide() << "," << std::setiosflags(std::ios_base::fixed) << pBook->getOrder(nid)->getSize() << "," << std::setprecision(7) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
                     int removeOk = pBook->remove(nid, evtTime, sndTime);
                     //assert(removeOk == 1);
                     if (removeOk != 1) {
@@ -1011,7 +1012,7 @@ Application::run()
         bool isRestart = false;
 		symbol = *it; 
 		//pBook = new capitalk::PriceDepthOrderBook(symbol, 5);	
-		pBook = new KBook(symbol.c_str(), 5);	
+		pBook = new KBook(symbol.c_str(), _config.marketDepth);	
 		std::cerr << "Created new order book: " << symbol << "(" << pBook->getDepth() << ")" << "\n";
 		logFileName = MIC_prefix + remove_bad_filename_chars(symbol) + "_" + dateToday;
 		logFileName.append(".csv");
@@ -1021,11 +1022,16 @@ Application::run()
         }
 		pLog =  new std::ofstream(fullPathToLog.string(), std::ios::app | std::ios::out);
         if (isRestart) { 
-            *pLog << "\n";
+            timespec evtTime;
+            clock_gettime(CLOCK_MONOTONIC, &evtTime);
+            *pLog << "\nRESTART: " << evtTime << "\n";
 		    std::cout << "Appening to log for: " << symbol  << " as (" << fullPathToLog.string() << ") " << pLog->is_open()   << "\n";
         }
         else {
 		    std::cout << "Created new log for: " << symbol  << " as (" << fullPathToLog.string() << ") " << pLog->is_open()   << "\n";
+            timespec evtTime;
+            clock_gettime(CLOCK_MONOTONIC, &evtTime);
+            *pLog << pBook->getOutputVersionString() << "," << pBook->getName() << "," << pBook->getDepth() << evtTime << "\n"; 
         }
         
 		addStream(symbol, pLog);

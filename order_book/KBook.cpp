@@ -287,27 +287,30 @@ KBook::_findOrderId(uint32_t orderId)
 std::ostream& 
 operator<<(std::ostream& out, const KBook& b)
 {
-    out << "ORDERBOOK,";
+    //out << "OB,";
     //out << FIX::UtcTimeStampConvertor::convert(_evtTime, true) << "," << _name << "\n";
-    out << b._name << "," << b._evtTime << "," << b._exchSndTime << "\n";
+    //out << b._name << "," << b._evtTime << "," << b._exchSndTime << "\n";
     KTree::reverse_iterator bit = b._bidTree.rbegin();
     KTree::iterator ait = b._askTree.begin();
     int i = 1;
     while (bit != b._bidTree.rend()) {
+        out.unsetf(std::ios::fixed);
         int nOrders = (*bit)->getOrderCount();
         //if (nOrders == 0) { bit++; continue; }
-        out << (*bit)->getUpdateTime() << "," 
-            //<< b._name << ","
-            << (char)QUOTE << ","
+            out << (char)QUOTE << "," 
+            << (*bit)->getUpdateTime() << "," 
             << BID << ","
             << i << ","
-            //<< *(*bit) << ",";
+            << std::setprecision(8) 
             << (*bit)->getPrice() << ","
+            << std::setprecision(0) 
             << (*bit)->getTotalVolume() << ",";
-            //<< (*bit)->getOrderCount() << ",";
             Orders::iterator it = (*bit)->_orders.begin();
             while (it != (*bit)->_orders.end()) {
-                out << "[" << (*it)->getOrderId() << "]" << (*it)->getSize();
+                out.setf(std::ios::fixed);
+                out.precision(0);
+                //out << "[" << (*it)->getOrderId() << "]" << (*it)->getSize();
+                out << (*it)->getSize();
                 it++; 
                 
                 if (it != (*bit)->_orders.end()) {
@@ -321,20 +324,23 @@ operator<<(std::ostream& out, const KBook& b)
 
     i = 1;
     while (ait != b._askTree.end()) {
+        out.unsetf(std::ios::fixed);
         int nOrders = (*ait)->getOrderCount();
         //if (nOrders == 0) { ait++; continue;}
-        out << (*ait)->getUpdateTime() << "," 
-            //<< b._name << ","
-            << (char)QUOTE << ","
+        out << (char)QUOTE << "," 
+            << (*ait)->getUpdateTime() << "," 
             << ASK << ","
             << i << ","
-            //<< *(*ait) << ",";
+            << std::setprecision(8) 
             << (*ait)->getPrice() << ","
+            << std::setprecision(0)  
             << (*ait)->getTotalVolume() << ",";
-            //<< (*bit)->getOrderCount() << ",";
             Orders::iterator it = (*ait)->_orders.begin();
             while (it != (*ait)->_orders.end()) {
-                out << "[" << (*it)->getOrderId() << "]" << (*it)->getSize();
+                out.setf(std::ios::fixed);
+                out.precision(0);
+                //out << "[" << (*it)->getOrderId() << "]" << (*it)->getSize();
+                out << (*it)->getSize();
                 it++; 
                 if (it != (*ait)->_orders.end()) {
                     out << ";";
@@ -344,6 +350,7 @@ operator<<(std::ostream& out, const KBook& b)
             i++;
             ait++;
     }
+    out.unsetf(std::ios::fixed);
     return out;
 
 }
