@@ -37,7 +37,7 @@ FIXConvertors::UTCTimeStampToPTime(FIX::UtcTimeStamp& t, char* buf, const int bu
 
 }
 
-bool
+void
 FIXConvertors::TimespecToUTCTimeStamp(const timespec& ts, FIX::UtcTimeStamp& t)
 {
     std::string s;
@@ -61,7 +61,7 @@ FIXConvertors::TimespecToUTCTimeStamp(const timespec& ts, FIX::UtcTimeStamp& t)
 }
 
 
-bool
+void
 FIXConvertors::UTCTimeStampToTimespec(FIX::UtcTimeStamp& t, timespec* pt)
 {
     int hour, minute, second, millis;
@@ -75,6 +75,4 @@ FIXConvertors::UTCTimeStampToTimespec(FIX::UtcTimeStamp& t, timespec* pt)
     pt->tv_sec = tt; 
     pt->tv_nsec = millis*1000000;
     //std::cout << "OUT: " << pt->tv_sec << ":" << pt->tv_nsec << "\n";
-    return true;
-
 }

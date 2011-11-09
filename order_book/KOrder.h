@@ -12,14 +12,6 @@
 #include "KTypes.h"
 #include "utils/KTimeUtils.h"
 
-/*
-typedef uint32_t orderId_t;
-
-typedef enum {
-    BUY=0,
-    SELL=1
-} buy_sell_t;
-*/
 using namespace boost::posix_time;
 
 //namespace capitalk { 
@@ -28,20 +20,20 @@ using namespace boost::posix_time;
 class KOrder
 {
 public:
-    KOrder(uint32_t orderId, buy_sell_t buySell, double size, double price);
+    KOrder(uint32_t orderId, side_t buySell, double size, double price);
     virtual ~KOrder();
 
     inline void setSize(double size) { _size = size; }
     inline void setPrice(double price) { _price = price; }
     inline void setOrderId(uint32_t orderId) { _orderId = orderId; }
-    inline void setBuySell(buy_sell_t buySell) { _buySell = buySell ; }
+    inline void setBuySell(side_t buySell) { _buySell = buySell ; }
     //inline void setevtTime(const timespec eventTime) { _eventTime = eventTime; }
     
     inline double getSize() const { return _size; } 
     inline double getPrice() const { return _price; }
     inline orderId_t getOrderId() const { return _orderId; }
-    inline buy_sell_t getBuySell() const { return _buySell; }
-    inline buy_sell_t getSide() const { return _buySell; }
+    inline side_t getBuySell() const { return _buySell; }
+    inline side_t getSide() const { return _buySell; }
     //inline timespec getEventTime() const { return _eventTime; }
     //inline timespec getEntryTime() const { return _entryTime; }
     //OBE* nextOrder;
@@ -65,7 +57,7 @@ private:
     //timespec _entryTime;
     //timespec _evtTime;
     uint32_t _orderId;
-    buy_sell_t _buySell; 
+    side_t _buySell; 
     double _size;
     double _price;
     

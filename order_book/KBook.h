@@ -27,7 +27,7 @@ class KBook
 public:
     KBook(const char* name, size_t depth);
     virtual ~KBook();
-    virtual int add(uint32_t orderId, buy_sell_t buySell, double size, double price, timespec evtTime, timespec exchSendTime);
+    virtual int add(uint32_t orderId, side_t buySell, double size, double price, timespec evtTime, timespec exchSendTime);
     //virtual int removeBid(uint32_t orderId);//, timespec event);
     //virtual int removeAsk(uint32_t orderId);//, timespec event);
     virtual int remove(uint32_t orderId, timespec evtTime, timespec exchSendTime);
@@ -36,13 +36,13 @@ public:
     virtual int modify(uint32_t orderId, double size, timespec evtTime, timespec exchSendTime);
     inline const char* getName() const { return _name; };
     inline uint32_t getDepth() const { return _depth; };
-    virtual double bestPrice(buy_sell_t buySell);
-    virtual double bestPriceVolume(buy_sell_t buySell);
+    virtual double bestPrice(side_t buySell);
+    virtual double bestPriceVolume(side_t buySell);
 
     friend std::ostream& operator<<(std::ostream& out, const KBook& b);
-    virtual uint32_t getOrderCountAtLimit(buy_sell_t buySell, double price);
-    virtual uint32_t getTotalVolumeAtLimit(buy_sell_t buySell, double price);
-    void printLevels(buy_sell_t buySell);
+    virtual uint32_t getOrderCountAtLimit(side_t buySell, double price);
+    virtual uint32_t getTotalVolumeAtLimit(side_t buySell, double price);
+    void printLevels(side_t buySell);
 
     virtual pKOrder getOrder(uint32_t orderId) { return (_findOrderId(orderId)->second); }
     const char* getOutputVersionString() { return "V3"; } 

@@ -19,8 +19,8 @@ class FIXConvertors
 {
     public:
     static bool UTCTimeStampToPTime(FIX::UtcTimeStamp& t, char* buf, const int buflen, ptime& pt);
-    static bool UTCTimeStampToTimespec(FIX::UtcTimeStamp& t, timespec* pt);
-    static bool TimespecToUTCTimeStamp(const timespec& ts, FIX::UtcTimeStamp& t);
+    static void UTCTimeStampToTimespec(FIX::UtcTimeStamp& t, timespec* pt);
+    static void TimespecToUTCTimeStamp(const timespec& ts, FIX::UtcTimeStamp& t);
 
 };
 

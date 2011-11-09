@@ -38,18 +38,27 @@ typedef enum {
 
 
 enum TickType {
-		QUOTE = 'Q',
-		TRADE  = 'T'
+    QUOTE = 'Q',
+    TRADE  = 'T'
 };
 
 enum Side {
-		BID = 0,
-		ASK = 1
+    BID = 0,
+    ASK = 1
 };
 
 typedef Side side_t;
 
-inline buy_sell_t sideConvert(char s) { if (s == '0') { return BUY; } else if(s == '1') { return SELL; }  }
+inline buy_sell_t char2buy_sell_t(char s) { if (s == '0') { return BUY; } else if(s == '1') { return SELL; }  }
+inline side_t char2side_t(char c) { if (c == '0') { return BID; } else if(c == '1') { return ASK; }  }
+
+struct BBO{
+    double bestBid;
+    double bestBidVol;
+    double bestAsk;  
+    double bestAskVol;  
+    char* mic;
+};
 
 
 #endif // CAPK_OB_TYPES

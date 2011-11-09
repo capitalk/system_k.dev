@@ -1,7 +1,7 @@
 #include "KOrder.h" 
 
 
-KOrder::KOrder(uint32_t orderId, buy_sell_t buySell, double size, double price)
+KOrder::KOrder(uint32_t orderId, side_t buySell, double size, double price)
 {
     _orderId = orderId;
     _buySell = buySell;
