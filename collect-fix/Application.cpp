@@ -438,7 +438,7 @@ Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, cons
 			if (NULL != (pBook = getBook(symbol.getValue())))  {
 				FIX::UtcTimeStamp time = FIX::UtcTimeStamp(sendingTime); 
 				char side = mdEntryType.getValue(); 
-                buy_sell_t nside = sideConvert(side);
+                side_t nside = char2side_t(side);
 
                 std::string id = mdEntryID.getValue(); 
                 int nid = hashlittle(id.c_str(), id.size(), 0);
@@ -590,7 +590,7 @@ Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, cons
 			if (NULL != (pBook = getBook(symbol.getValue())))  {
 				FIX::UtcTimeStamp time = FIX::UtcTimeStamp(sendingTime); 
 				char side = mdEntryType.getValue(); 
-                buy_sell_t nside = sideConvert(side);
+                side_t nside = char2side_t(side);
 				std::string id = mdEntryID.getValue(); 
                 int nid = hashlittle(id.c_str(), id.size(), 0);
 
@@ -738,7 +738,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 			if (NULL != (pBook = getBook(symbol.getValue())))  {
                 *pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
     		    char side = mdEntryType.getValue();
-                buy_sell_t nside = sideConvert(side);
+                side_t nside = char2side_t(side);
 		        double price = mdEntryPx.getValue();
         		size = mdEntrySize.getValue();
 
@@ -825,8 +825,8 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 			}
 		}
         // PRINT BOOK HERE
-        if(pBook->bestPrice(BUY) > pBook->bestPrice(SELL)) {
-            std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK (" << pBook->bestPrice(BUY) <<  ", " << pBook->bestPrice(SELL) << ") XXXXXXXXXXXXXXXXX\n";
+        if(pBook->bestPrice(BID) > pBook->bestPrice(ASK)) {
+            std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK (" << pBook->bestPrice(BID) <<  ", " << pBook->bestPrice(ASK) << ") XXXXXXXXXXXXXXXXX\n";
             //assert(false);
         }
 			    
