@@ -789,7 +789,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             std::cerr << "***** SYNTHETIC MOD: ";
                             std::cerr << "Removing: " << nrefId << " and re-adding " << "(" << nid << ", " << nside << ", " << size << "@" << price << ")\n";
                         }
-                        std::cerr << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
+                        //std::cerr << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
                         *pLog << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
     
                         pBook->remove(nrefId, evtTime, sndTime);
@@ -798,19 +798,54 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                         if (_config.printDebug) {
                             std::cerr << "***** MOD: " << nid << " to size " << size << "\n";
                         }
-                        std::cerr << "M," << pBook->getOrder(nid)->getSide() << "," << size << "," << std::setprecision(7) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
-                        *pLog << "M," << pBook->getOrder(nid)->getSide() << "," << size << "," << std::setprecision(7) << pBook->getOrder(nid)->getPrice() << "," <<  evtTime << "\n"; 
-    					pBook->modify(nid, size, evtTime, sndTime);
+                        //std::cerr << "M," << pBook->getOrder(nid)->getSide() << "," << size << "," << std::setprecision(7) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
+                        pKOrder pOrder = pBook->getOrder(nid);
+                        if (pOrder) {
+                            *pLog << 
+                            "M," << 
+                            pBook->getOrder(nid)->getSide() << 
+                            "," << 
+                            std::setiosflags(std::ios_base::fixed) << size << 
+                            "," << 
+                            std::setprecision(7) << pBook->getOrder(nid)->getPrice() << 
+                            "," <<  
+                            evtTime << 
+                            "\n"; 
+                        }
+                        else {
+                            std::cerr << "***** (M) CAN'T FIND ORDERID: " << nid << " for orig_id: " << id;
+                            std::cerr << *pBook;
+                        }
+    					int modifyOk = pBook->modify(nid, size, evtTime, sndTime);
+                        if (modifyOk != 1) {
+                            std::cerr << "***** DELETE FAILED: MdEntryID: " << nid << " does not exist in book\n"; 
+                        }
 					}
 				} else if (action == FIX::MDUpdateAction_DELETE) { // delete  
                     //modifiedBook = pBook->remove(id, time, true); 
                     if (_config.printDebug) { 
                         std::cerr << "***** DEL: " << nid << "\n";
                     }
-                    std::cerr << "D," << pBook->getOrder(nid)->getSide() << "," << std::setiosflags(std::ios_base::fixed) << pBook->getOrder(nid)->getSize() << "," << std::setprecision(7) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
-                    *pLog << "D," << pBook->getOrder(nid)->getSide() << "," << std::setiosflags(std::ios_base::fixed) << pBook->getOrder(nid)->getSize() << "," << std::setprecision(7) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
+                    //std::cerr << "D," << pBook->getOrder(nid)->getSide() << "," << std::setiosflags(std::ios_base::fixed) << pBook->getOrder(nid)->getSize() << "," << std::setprecision(7) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
+                    pKOrder pOrder = pBook->getOrder(nid);
+                    if (pOrder) {
+                        *pLog << 
+                            "D," << 
+                            pBook->getOrder(nid)->getSide() << 
+                            "," << 
+                            std::setiosflags(std::ios_base::fixed) << pBook->getOrder(nid)->getSize() << 
+                            "," << 
+                            std::setprecision(7) << pBook->getOrder(nid)->getPrice() << 
+                            "," << 
+                            evtTime << 
+                            "\n"; 
+                    }
+                    else { 
+                        std::cerr << "***** (D) CAN'T FIND ORDERID: " << nid << "for orig_id: " << id;
+                        std::cerr << *pBook;
+                    }
+
                     int removeOk = pBook->remove(nid, evtTime, sndTime);
-                    //assert(removeOk == 1);
                     if (removeOk != 1) {
                         std::cerr << "***** DELETE FAILED: MdEntryID: " << nid << " does not exist in book\n"; 
                     }
