@@ -39,7 +39,7 @@ libOrderBook2.a:
 
 clean :
 	rm -f *.o collect
-	cd $(ORDERBOOK_DIR) && make clean 
+	#cd $(ORDERBOOK_DIR) && make clean 
 
 install :
 	cp -r ./cfg /usr/local/capk

@@ -12,6 +12,20 @@ KBook::~KBook()
 {
 }
 
+pKOrder 
+KBook::getOrder(uint32_t orderId) 
+{ 
+    KOrderMap::iterator it = _findOrderId(orderId);
+    if (it == _orderMap.end()) {
+        //return NULL; 
+        //return it->second;
+        return pKOrder();
+    }
+    else { 
+        return it->second; 
+    }
+}
+
 int
 KBook::add(uint32_t orderId, side_t buySell, double size, double price, timespec evtTime, timespec exchSndTime)//, timespec evtTime*/)
 {
@@ -47,7 +61,10 @@ KBook::addBid(KOrder* bid, timespec evtTime, timespec exchSndTime)
             this->_evtTime = evtTime;//newLimit->getUpdateTime();
             _bidTree.insert(pKLimit(newLimit));
         }
-        _orderMap[bid->getOrderId()] = pBid;
+        uint32_t oid = bid->getOrderId();
+        //std::cerr << "Adding bid: " << oid << "\n";
+        _orderMap[oid] = pBid;
+        //dbg();
 #ifdef DEBUG
         KOrderMap::iterator xxx = _findOrderId(bid->getOrderId());
         std::cerr << "MAP ENTRY: " << xxx->second->getOrderId() << std::endl;
@@ -75,7 +92,10 @@ KBook::addAsk(KOrder* ask, timespec evtTime, timespec exchSndTime)
             _evtTime = evtTime;//newLimit->getUpdateTime();
             _askTree.insert(pKLimit(newLimit));
         }
-        _orderMap[ask->getOrderId()] = pAsk;
+        uint32_t oid = ask->getOrderId();
+        //std::cerr << "Adding ask: " << oid << "\n";
+        _orderMap[oid] = pAsk;
+        //dbg();
         return 1; 
     }
     return 0;
@@ -278,10 +298,24 @@ KBook::_findLimit(KTree& tree, double price)
     return it;
 }
 
+
 KOrderMap::iterator
 KBook::_findOrderId(uint32_t orderId)
 {
-    return _orderMap.find(orderId);        
+    KOrderMap::iterator it = _orderMap.find(orderId);        
+    //assert(it != _orderMap.end());
+    return it;
+}
+
+void
+KBook::dbg() 
+{
+    KOrderMap::iterator it = _orderMap.begin();
+    std::cerr << "ORDER MAP\n";
+    while (it != _orderMap.end()) {
+        std::cerr << it->first << " : " << *(it->second) << "\n";
+        it++;
+    }
 }
 
 std::ostream& 
