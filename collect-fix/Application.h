@@ -67,7 +67,7 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/make_shared.hpp>
 
-
+#include <zmq.hpp>
 //#include "orderBook/KPriceDepthOrderBook.h"
 #include "order_book/KBook.h"
 
@@ -99,7 +99,7 @@ class Application :
 public:
 	Application(bool bReset, const ApplicationConfig& config) 
          :  _loggedIn(false), _loggedOut(false), _loginCount(0), 
-            _resetSequence(bReset), _appMsgCount(0), _config(config)
+            _appMsgCount(0), _resetSequence(bReset), _config(config)
             /*, _bookLog(0), _msgLog(0)*/  {
 
   	   std::cout << "Application::Application()" << std::endl;
@@ -124,9 +124,14 @@ public:
 	void setDataPath(const std::string&);
     void deleteBooks();
     void flushLogs();
-	/* 
- 		void setPassword(const std::string password);
-	*/ 
+
+    void setZMQContext(zmq::context_t* c) { this->_pzmq_context = c;}
+    void setZMQSocket(zmq::socket_t* s) { this->_pzmq_socket = s;}
+    void setPublishing(bool isPublishing) { this->_isPublishing = isPublishing;}
+    inline bool isPublishing() { return _isPublishing;}
+    zmq::socket_t* getZMQSocket() { return this->_pzmq_socket;}
+    zmq::context_t* getZMQContext() { return this->_pzmq_context;}
+    
 	//void addStream(const std::string& symbol, boost::shared_ptr<std::ostream> log);
 	//boost::shared_ptr<std::ostream> getStream(const std::string& symbol);
 
@@ -198,11 +203,11 @@ private:
 
 	bool _resetSequence;
 	const ApplicationConfig& _config; 
-/*
-	std::string _username; 
-	std::string _password;
-*/ 
 
+    zmq::socket_t* _pzmq_socket;
+    zmq::context_t* _pzmq_context;
+    bool _isPublishing;
+    
 	//std::ostream _bookLog;
 	//std::ostream _msgLog;
 

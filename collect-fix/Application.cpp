@@ -38,6 +38,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include "../proto/spot_fx_md_1.pb.h"
+
 namespace fs = boost::filesystem; 
 namespace dt = boost::gregorian; 
 
@@ -656,6 +658,8 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 	KBook* pBook = NULL;
     std::ostream* pLog = NULL;
 
+    static double dbar, dcount, dsum;
+
 	if (message.isSetField(mdReqID)) {
 		message.getField(mdReqID);	
 	}
@@ -765,7 +769,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                         std::cerr << "Book add failed!!!!!!!!!!\n (" << nid << nside << "(" << side << ")" << size << price << evtTime << sndTime << "\n";
                     }
 
-                    std::cerr << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
+                    //std::cerr << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
                     *pLog << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
 
 				} else if (action == FIX::MDUpdateAction_CHANGE) { // change  
@@ -859,18 +863,55 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 				std::cerr << __FILE__ << ":" << __LINE__ << "Can't find orderbook - book is null!" << "\n";
 			}
 		}
-        // PRINT BOOK HERE
-        if(pBook->bestPrice(BID) > pBook->bestPrice(ASK)) {
-            std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK (" << pBook->bestPrice(BID) <<  ", " << pBook->bestPrice(ASK) << ") XXXXXXXXXXXXXXXXX\n";
-            //assert(false);
-        }
+
+        // BOOK IS FINAL - PRINT OR BROADCAST HERE
 			    
+        ptime time_start(microsec_clock::local_time());
+        
+        double bbprice = pBook->bestPrice(BID);
+        double bbsize = pBook->bestPriceVolume(BID);
+        double baprice = pBook->bestPrice(ASK);
+        double basize = pBook->bestPriceVolume(ASK);
+        
+        if (isPublishing()) {
+            capitalk::venue_bbo bbo;
+            bbo.set_name(symbol.getValue());
+            bbo.set_bid_price(bbprice);
+            bbo.set_ask_price(baprice);
+            bbo.set_bid_size(bbsize);
+            bbo.set_ask_size(basize);
+            bbo.set_venue(_config.mic_code);
+            
+            int msgsize = bbo.ByteSize();
+            char* msgbuf = new char[msgsize];
+            zmq::message_t message(msgsize);
+            bbo.SerializeToArray(msgbuf, msgsize);
+            memcpy(message.data(), msgbuf, msgsize);
+            std::cerr << "Sending "  << message.size() << " bytes\n";
+            this->_pzmq_socket->send(message);
+            if (msgbuf) {
+                delete[] msgbuf;
+            }
+        }
+
+        if(bbprice > baprice) {
+            std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK (" << bbprice <<  ", " << baprice << ") XXXXXXXXXXXXXXXXX\n";
+        }
+
 		if (pLog == NULL) {
 		    std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
         } else {
 		    *pLog << *pBook;
-            std::cerr << *pBook << "\n";
+            //std::cerr << *pBook << "\n";
 		}
+        
+        ptime time_end(microsec_clock::local_time());
+        time_duration duration(time_end - time_start);
+        dsum += duration.total_microseconds();
+        dcount ++ ;
+        dbar = dsum / dcount;
+        std::cout << "Mean time(us) to broadcast and write log: " << dbar << "\n";
+        std::cout << "SANITY CHECK: " << to_simple_string(duration) << "\n";
 	}
 }
 

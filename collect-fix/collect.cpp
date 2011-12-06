@@ -41,6 +41,10 @@
 #include <boost/lexical_cast.hpp>
 #include "boost/date_time/gregorian/gregorian.hpp" 
 
+#include <zmq.hpp>
+
+#include "../proto/spot_fx_md_1.pb.h"
+
 namespace po = boost::program_options;
 namespace fs = boost::filesystem; 
 namespace dt = boost::gregorian; 
@@ -50,6 +54,10 @@ void sighandler(int sig);
 // Global pointers for signal handlers to cleanup properly
 FIX::SocketInitiator* pinitiator;
 Application* papplication;
+
+// ZMQ Globals - can't have these go out of scope
+zmq::context_t context(1);
+zmq::socket_t publisher(context, ZMQ_PUB);
 
 std::vector<std::string> 
 readSymbols(std::string symbolFileName)
@@ -82,6 +90,8 @@ int main( int argc, char** argv )
     (void) signal(SIGINT, sighandler);
     (void) signal(SIGTERM, sighandler);
     (void) signal(SIGHUP, sighandler);
+
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
 
 	try {
 		po::options_description desc("Allowed options");
@@ -238,6 +248,26 @@ int main( int argc, char** argv )
             exit(-1);
         }
 
+        // Get the bind address for zmq sockets
+        bool isPublishing = false;
+        std::string bindAddress = dict.has("ZMQBindAddress") ? dict.getString("ZMQBindAddress") : "";
+        if (bindAddress != "") {
+            std::cout << "ZMQ: Binding to zmq address: " << bindAddress << std::endl;
+            isPublishing = true;
+        }
+        else {
+            std::cout << "ZMQ: NOT publishing prices: " << std::endl; 
+        }
+
+        // ZMQ initialization
+        if (isPublishing) {
+            std::cout << "ZMQ: Seting publishing params" << std::endl;
+            publisher.bind(bindAddress.c_str());
+            application.setZMQContext(&context);
+            application.setZMQSocket(&publisher);
+        }
+        application.setPublishing(isPublishing);
+        
 
 		application.setDataPath(orderBooksOutputDir);
 		FIX::FileStoreFactory storeFactory(storeOutputDir);         

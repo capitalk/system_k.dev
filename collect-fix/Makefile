@@ -4,11 +4,14 @@ INCLUDE=-I/usr/local/boost/ -I/usr/local/include/ \
         -I/usr/local/src/quickfix/include -I.. -I../orderBook2
 LIBS= -L/usr/local/src/quickfix/lib/ -L/usr/local/lib \
 	  -L../order_book/ \
-      -lquickfix -lboost_date_time -lboost_program_options -lboost_filesystem -lOrderBook2
+      -lquickfix -lboost_date_time -lboost_program_options -lboost_filesystem -lOrderBook2 -lzmq -lprotobuf
 	#-lquickfix -lboost_date_time -lboost_program_options -lboost_filesystem -lOrderBook
 
 CFLAGS=-Wall -std=c++0x -pthread -O3
 LDFLAGS=-static
+
+PROTOC=protoc
+PROTO=../proto
 
 ifeq ($(dbg),1)
         CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb -g # -DDEBUG_BOOK
@@ -22,8 +25,11 @@ ORDERBOOK_DIR=../order_book
 #debug: LDFLAGS += -DDEBUG -g
 #debug: collect
 
-collect : collect.o Application.o  libOrderBook2.a
-	$(CC) $(CFLAGS) collect.o Application.o $(ORDERBOOK_DIR)/libOrderBook2.a $(LIBS) -o $@ 
+collect : collect.o Application.o  libOrderBook2.a spot_fx_md_1.pb.o
+	$(CC) $(CFLAGS) collect.o spot_fx_md_1.pb.o Application.o $(ORDERBOOK_DIR)/libOrderBook2.a $(LIBS) -o $@ 
+
+spot_fx_md_1.pb.o: $(PROTO)/spot_fx_md_1.pb.cc $(PROTO)/spot_fx_md_1.pb.h
+	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/spot_fx_md_1.pb.cc
 
 collect.o: collect.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
@@ -36,9 +42,11 @@ libOrderBook2.a:
 
 #libOrderBook.a:
 #	cd $(ORDERBOOK_DIR) && make
+protos: $(PROTO)/spot_fx_md_1.proto
+	$(PROTOC) -I$(PROTO) --cpp_out=$(PROTO) $(PROTO)/*.proto
 
 clean :
-	rm -f *.o collect
+	rm -f *.o collect $(PROTO)/*.cc $(PROTO)/*.h
 	cd $(ORDERBOOK_DIR) && make clean 
 
 install :
