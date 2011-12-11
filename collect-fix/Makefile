@@ -18,9 +18,7 @@ LDFLAGS=-static
 
 ORDERBOOK_DIR=../order_book
 
-#debug: CFLAGS += -DDEBUG -g
-#debug: LDFLAGS += -DDEBUG -g
-#debug: collect
+all: collect
 
 collect : collect.o Application.o  libOrderBook2.a
 	$(CC) $(CFLAGS) collect.o Application.o $(ORDERBOOK_DIR)/libOrderBook2.a $(LIBS) -o $@ 

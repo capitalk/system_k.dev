@@ -732,7 +732,8 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 		    pLog = getStream(symbol.getValue());
 
 			if (NULL != (pBook = getBook(symbol.getValue())))  {
-                *pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
+                // KTK MOVED TO MATCH CONFLUENCE 12/9/2011
+                //*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
     		    char side = mdEntryType.getValue();
                 side_t nside = char2side_t(side);
 
@@ -895,6 +896,8 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 		if (pLog == NULL) {
 		    std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
         } else {
+            // KTK MOVED TO MATCH CONFLUENCE 12/9/2011
+            *pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
 		    *pLog << *pBook;
             //std::cerr << *pBook << "\n";
 		}
