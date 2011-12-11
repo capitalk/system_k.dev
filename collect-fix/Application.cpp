@@ -1100,7 +1100,7 @@ Application::run()
 		    std::cout << "Created new log for: " << symbol  << " as (" << fullPathToLog.string() << ") " << pLog->is_open()   << "\n";
             timespec evtTime;
             clock_gettime(CLOCK_MONOTONIC, &evtTime);
-            *pLog << pBook->getOutputVersionString() << "," << pBook->getName() << "," << pBook->getDepth() << evtTime << "\n"; 
+            *pLog << pBook->getOutputVersionString() << "," << pBook->getName() << "," << pBook->getDepth() << "," << evtTime << "\n"; 
         }
         
 		addStream(symbol, pLog);
