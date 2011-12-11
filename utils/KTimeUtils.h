@@ -5,7 +5,7 @@
 #include <time.h>
 #include <ostream>
 
-timespec diff(timespec start, timespec end);
+timespec timespec_delta(timespec start, timespec end);
 
 std::ostream& operator<<(std::ostream& out, const timespec ts);
 

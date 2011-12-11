@@ -33,35 +33,35 @@ TEST(BookTests, LaceBook) {
     clock_gettime(CLOCK_MONOTONIC, &evtTime);
     exchSndTime.setCurrent();
     FIXConvertors::UTCTimeStampToTimespec(exchSndTime, &exchTime);
-    EXPECT_EQ(book.add(1, BUY, 1, 1.0000, evtTime, exchTime ), 1);
+    EXPECT_EQ(book.add(1, BID, 1, 1.0000, evtTime, exchTime ), 1);
 
     clock_gettime(CLOCK_MONOTONIC, &evtTime);
     exchSndTime.setCurrent();
     FIXConvertors::UTCTimeStampToTimespec(exchSndTime, &exchTime);
-    EXPECT_EQ(book.add(2, BUY, 23, 1.0000, evtTime, exchTime ), 1);
+    EXPECT_EQ(book.add(2, BID, 23, 1.0000, evtTime, exchTime ), 1);
         
     clock_gettime(CLOCK_MONOTONIC, &evtTime);
     exchSndTime.setCurrent();
     FIXConvertors::UTCTimeStampToTimespec(exchSndTime, &exchTime);
-    EXPECT_EQ(book.add(3, SELL, 17, 1.0001, evtTime, exchTime ), 1);
+    EXPECT_EQ(book.add(3, ASK, 17, 1.0001, evtTime, exchTime ), 1);
 
     clock_gettime(CLOCK_MONOTONIC, &evtTime);
     exchSndTime.setCurrent();
     FIXConvertors::UTCTimeStampToTimespec(exchSndTime, &exchTime);
-    EXPECT_EQ(book.add(4, SELL, 31, 1.045, evtTime, exchTime ), 1);
+    EXPECT_EQ(book.add(4, ASK, 31, 1.045, evtTime, exchTime ), 1);
 
     clock_gettime(CLOCK_MONOTONIC, &evtTime);
     exchSndTime.setCurrent();
     FIXConvertors::UTCTimeStampToTimespec(exchSndTime, &exchTime);
-    EXPECT_EQ(book.add(7, BUY, 33, 0.99, evtTime, exchTime ), 1);
+    EXPECT_EQ(book.add(7, BID, 33, 0.99, evtTime, exchTime ), 1);
 
     clock_gettime(CLOCK_MONOTONIC, &evtTime);
     exchSndTime.setCurrent();
     FIXConvertors::UTCTimeStampToTimespec(exchSndTime, &exchTime);
-    EXPECT_EQ(book.add(9, BUY, 123, 0.98, evtTime, exchTime ), 1);
+    EXPECT_EQ(book.add(9, BID, 123, 0.98, evtTime, exchTime ), 1);
 
-    double best_bid = book.bestPrice(BUY);
-    double best_ask = book.bestPrice(SELL);
+    double best_bid = book.bestPrice(BID);
+    double best_ask = book.bestPrice(ASK);
     std::cerr << "BBO1(" << best_bid << ", " << best_ask << ")\n";
 } 
 
@@ -78,8 +78,8 @@ TEST(BookTests, m1) {
     clock_gettime(CLOCK_MONOTONIC, &evtTime);
     exchSndTime.setCurrent();
     FIXConvertors::UTCTimeStampToTimespec(exchSndTime, &exchTime);
-    double best_bid = book.bestPrice(BUY);
-    double best_ask = book.bestPrice(SELL);
+    double best_bid = book.bestPrice(BID);
+    double best_ask = book.bestPrice(ASK);
     std::cerr << "BBO2(" << best_bid << ", " << best_ask << ")\n" ;
     EXPECT_EQ(book.remove(1, evtTime, exchTime), 1);
     std::cout << book;
@@ -89,12 +89,12 @@ TEST(BookTests, m1) {
     std::cout << book;
     EXPECT_EQ(book.remove(99, evtTime, exchTime), 0);
     std::cout << book;
-    EXPECT_EQ(book.add(10, BUY, 1, 1.0002, evtTime, exchTime ), 1);
-    EXPECT_EQ(book.add(11, BUY, 1, 1.0033, evtTime, exchTime ), 1);
-    EXPECT_EQ(book.add(12, BUY, 1, 1.0003, evtTime, exchTime ), 1);
-    EXPECT_EQ(book.add(13, BUY, 1, 1.0089, evtTime, exchTime ), 1);
-    best_bid = book.bestPrice(BUY);
-    best_ask = book.bestPrice(SELL);
+    EXPECT_EQ(book.add(10, BID, 1, 1.0002, evtTime, exchTime ), 1);
+    EXPECT_EQ(book.add(11, BID, 1, 1.0033, evtTime, exchTime ), 1);
+    EXPECT_EQ(book.add(12, BID, 1, 1.0003, evtTime, exchTime ), 1);
+    EXPECT_EQ(book.add(13, BID, 1, 1.0089, evtTime, exchTime ), 1);
+    best_bid = book.bestPrice(BID);
+    best_ask = book.bestPrice(ASK);
     EXPECT_EQ(best_bid, 1.0089);
     ASSERT_EQ(best_ask, 1.045);
     std::cerr << "BBO3(" << best_bid << ", " << best_ask << ")\n" ;
@@ -106,14 +106,14 @@ TEST(BookTests, m1) {
     std::cout << book;
     EXPECT_EQ(book.remove(13, evtTime, exchTime), 1);
     std::cout << book;
-    EXPECT_EQ(book.add(1, BUY, 1, 1.0000, evtTime, exchTime ), 1);
+    EXPECT_EQ(book.add(1, BID, 1, 1.0000, evtTime, exchTime ), 1);
     std::cout << book;
-    EXPECT_EQ(book.add(2, BUY, 23, 1.0000, evtTime, exchTime ), 1);
+    EXPECT_EQ(book.add(2, BID, 23, 1.0000, evtTime, exchTime ), 1);
     std::cout << book;
-    EXPECT_EQ(book.add(3, SELL, 17, 1.0001, evtTime, exchTime ), 1);
+    EXPECT_EQ(book.add(3, ASK, 17, 1.0001, evtTime, exchTime ), 1);
     std::cout << book;
-    best_bid = book.bestPrice(BUY);
-    best_ask = book.bestPrice(SELL);
+    best_bid = book.bestPrice(BID);
+    best_ask = book.bestPrice(ASK);
     std::cerr << "BBO4(" << best_bid << ", " << best_ask << ")\n";
     EXPECT_EQ(best_bid, 1.0000);
     ASSERT_EQ(best_ask, 1.0001);
@@ -121,25 +121,25 @@ TEST(BookTests, m1) {
 }
 /*
 TEST(BookTests, BBO) {
-    double best_bid = book.bestPrice(BUY);
-    double best_ask = book.bestPrice(SELL);
+    double best_bid = book.bestPrice(BID);
+    double best_ask = book.bestPrice(ASK);
     ASSERT_LT(best_bid, best_ask);
 }
 
 TEST(BookTests, CountFirstLevelBids) { 
-    uint32_t bestBids = book.getOrderCountAtLimit(BUY, 1.0000); 
+    uint32_t bestBids = book.getOrderCountAtLimit(BID, 1.0000); 
     std::cerr << "Found: " << bestBids << " best bids" << std::endl;
     EXPECT_EQ(bestBids, (uint32_t)2); 
 } 
 
 TEST(BookTests, FindNonExistentLevelBids) { 
-    uint32_t badLevelCount = book.getOrderCountAtLimit(BUY, 100); 
+    uint32_t badLevelCount = book.getOrderCountAtLimit(BID, 100); 
     EXPECT_EQ(badLevelCount, (uint32_t)0); 
 } 
 
 TEST(BookTests, GetTotalVolume2) { 
     double volumeAtLevel;
-    volumeAtLevel = book.getTotalVolumeAtLimit(BUY, 1.000); 
+    volumeAtLevel = book.getTotalVolumeAtLimit(BID, 1.000); 
     EXPECT_EQ(volumeAtLevel, 24); 
 } 
 
@@ -152,7 +152,7 @@ TEST(BookTests, Modify1) {
     FIXConvertors::UTCTimeStampToTimespec(exchSndTime, &exchTime);
     EXPECT_EQ(book.modify(1, 5000, evtTime, exchTime), 1);
 
-    volumeAtLevel = book.getTotalVolumeAtLimit(BUY, 1.000); 
+    volumeAtLevel = book.getTotalVolumeAtLimit(BID, 1.000); 
     EXPECT_EQ(volumeAtLevel, 5023);
 }
 
@@ -165,7 +165,7 @@ TEST(BookTests, Remove1) {
     FIXConvertors::UTCTimeStampToTimespec(exchSndTime, &exchTime);
     EXPECT_EQ(book.remove(1, evtTime, exchTime), 1);
 
-    volumeAtLevel = book.getTotalVolumeAtLimit(BUY, 1.000); 
+    volumeAtLevel = book.getTotalVolumeAtLimit(BID, 1.000); 
     EXPECT_EQ(volumeAtLevel, 23);
 }
 
@@ -187,7 +187,7 @@ TEST(BookTests, PrintBookAfterRemove1) {
 
 TEST(BookTests, GetTotalVolume3) { 
     double volumeAtLevel;
-    volumeAtLevel = book.getTotalVolumeAtLimit(BUY, 0.98); 
+    volumeAtLevel = book.getTotalVolumeAtLimit(BID, 0.98); 
     EXPECT_EQ(volumeAtLevel, 123); 
 } 
 */
@@ -198,14 +198,14 @@ TEST(BookTests, Remove2) {
     clock_gettime(CLOCK_MONOTONIC, &sndTime);
     clock_gettime(CLOCK_MONOTONIC, &evtTime);
     EXPECT_EQ(book.removeBid(3432, evtTime, sndTime), 1);
-    volumeAtLevel = book.getTotalVolumeAtLimit(BUY, 1.000); 
+    volumeAtLevel = book.getTotalVolumeAtLimit(BID, 1.000); 
     EXPECT_EQ(volumeAtLevel, 0);
 }
 */
 /*
 TEST(BookTests, GetTotalVolume4) { 
     double volumeAtLevel;
-    volumeAtLevel = book.getTotalVolumeAtLimit(SELL, 1.0001); 
+    volumeAtLevel = book.getTotalVolumeAtLimit(ASK, 1.0001); 
     EXPECT_EQ(volumeAtLevel, 17); 
 } 
 
@@ -299,10 +299,10 @@ main(int argc, char* argv[])
             double bidPrice = 1.0000 + inc;
             double askPrice = bidPrice + 0.0001;
             if (randSides[i] == BID) {
-                addSuccess += book.add(entId[pos], BUY, 100.00, bidPrice, evtTime, exchTime);
+                addSuccess += book.add(entId[pos], BID, 100.00, bidPrice, evtTime, exchTime);
             }
             if (randSides[i] == ASK) {
-                addSuccess += book.add(entId[pos], SELL, 100.00, askPrice, evtTime, exchTime);
+                addSuccess += book.add(entId[pos], ASK, 100.00, askPrice, evtTime, exchTime);
             }
             countAdd++;
         }
@@ -320,7 +320,7 @@ main(int argc, char* argv[])
     }
     //ptime time_end(microsec_clock::local_time());
     clock_gettime(CLOCK_REALTIME, &time_end);
-    timespec d = diff(time_end, time_start);
+    timespec d = timespec_delta(time_end, time_start);
 
     printf("Summary\n--------------------------------------------------\n"); 
     std::cout << "Elapsed time: " << d<< std::endl;

@@ -1,7 +1,7 @@
 #include <KTimeUtils.h>
 
 // Calculate miliseconds between two timespecs.
-unsigned long time_delta(const timespec& start, const timespec& end)
+unsigned long timespec_delta(const timespec& start, const timespec& end)
 {
     uint64_t usec = ((end.tv_sec * 1000000) + end.tv_nsec / 1000) - ((start.tv_sec * 1000000) + start.tv_nsec / 1000) ;
     return (unsigned long)(usec / 1000) ;
