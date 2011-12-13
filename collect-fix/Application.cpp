@@ -1096,7 +1096,7 @@ Application::run()
         if (isRestart) { 
             timespec evtTime;
             clock_gettime(CLOCK_MONOTONIC, &evtTime);
-            *pLog << "\nRESTART: " << evtTime << "\n";
+            *pLog << "RESTART: " << evtTime << "\n";
 		    std::cout << "Appening to log for: " << symbol  << " as (" << fullPathToLog.string() << ") " << pLog->is_open()   << "\n";
         }
         else {
