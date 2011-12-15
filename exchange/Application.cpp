@@ -68,13 +68,26 @@
 #define IF_REPLAY(x, y) if (_isReplay) { x } else { y }
 #define IF_DEBUG(x) if (_config.printDebug) { x }
 
+
+void 
+Application::setReplayVolatility(const double vol)
+{
+    _replayVolatility = vol;
+}
+
+void 
+Application::setReplaySpeed(const double sp)
+{
+    _replayTimeDiv = sp;
+}
+
 void
 Application::setReplayLog(const std::string& log) 
 {
     IF_DEBUG(std::cerr << "Set replay log: " << log << std::endl;)
     try {
         if (_config.printDebug) {
-            std::cout << "Reading from: " << log << std::endl;
+            std::cerr << "Reading from: " << log << std::endl;
         }
         _replayLog = log;
         _isReplay = true;
@@ -120,6 +133,7 @@ void Application::onLogout(const FIX::SessionID& sessionID)
         std::cout << "Application::onLogout" << std::endl;
     }
     std::map<const FIX::SessionID, SessionInfo*>::iterator it;
+    std::cerr << "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\n";
     it = _sessionMap.find(sessionID);
     if (it == _sessionMap.end()) {
         if (_config.printDebug) {
@@ -130,6 +144,15 @@ void Application::onLogout(const FIX::SessionID& sessionID)
         if (_config.printDebug) {
             std::cerr << "SessionInfo deleting info for:" << sessionID.toString();
         }
+        MsgPump* mp = it->second->getPump();
+        assert(mp);
+        mp->stop();
+        
+        MsgDispatcher *md = it->second->getDispatcher();
+        assert(md);
+        md->stop();
+
+
         delete (it->second);
         _sessionMap.erase(it);
     }
@@ -139,7 +162,7 @@ void Application::toAdmin(FIX::Message& message,
                          const FIX::SessionID& sessionID) 
 {
     if (_config.printDebug) {
-        std::cout << "Application::toAdmin" << std::endl;
+        std::cerr << "Application::toAdmin" << std::endl;
     }
 }
 
@@ -148,7 +171,7 @@ void Application::toApp(FIX::Message& message,
 throw(FIX::DoNotSend)
 {
     if (_config.printDebug) {
-        std::cout << "Application::toApp" << message << sessionID << std::endl;
+        std::cerr << "Application::toApp" << message << sessionID << std::endl;
     }
 }
 
@@ -157,7 +180,7 @@ void Application::fromAdmin(const FIX::Message& message,
 throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::RejectLogon) 
 {
     if (_config.printDebug) {
-        std::cout << "Application::fromAdmin" << std::endl;
+        std::cerr << "Application::fromAdmin" << std::endl;
     }
 }
 
@@ -166,11 +189,11 @@ void Application::fromApp(const FIX::Message& message,
 throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::UnsupportedMessageType)
 { 
     if (_config.printDebug) {
-        std::cout << "Application::fromApp" << std::endl;
+        std::cerr << "Application::fromApp" << std::endl;
     }
     FIX::MsgType msgType;
     message.getHeader().getField(msgType);
-    //std::cout << "ABOUT TO CRACK------------------------>" << std::endl;
+    //std::cerr << "ABOUT TO CRACK------------------------>" << std::endl;
     /*
      * Use this special message type to initiate book replay when ready to process
      */
@@ -479,7 +502,7 @@ void
 Application::onMessage(const FIX42::SecurityStatusRequest& message, const FIX::SessionID& sessionID)
 {
     if (_config.printDebug) {
-        std::cout << "Application::SecurityStatus  FIX42" << std::endl;
+        std::cerr << "Application::SecurityStatus  FIX42" << std::endl;
     }
     // Returns SecurityStatus
 }
@@ -488,7 +511,7 @@ void
 Application::onMessage(const FIX42::TradingSessionStatusRequest& message, const FIX::SessionID& sessionID)
 {
     if (_config.printDebug) {
-        std::cout << "Application::TradingSessionStatusRequest FIX42" << std::endl;
+        std::cerr << "Application::TradingSessionStatusRequest FIX42" << std::endl;
     }
 }
 /*
@@ -496,7 +519,7 @@ void
 Application::onMessage(const FIX42::SecurityDefinition& message, const FIX::SessionID& sessionID) 
 {
     if (_config.printDebug) {
-        std::cout << "Application::SecurityDefinition FIX42" << std::endl;
+        std::cerr << "Application::SecurityDefinition FIX42" << std::endl;
     }
 }
 */
@@ -505,7 +528,7 @@ void
 Application::onMessage(const FIX42::TestRequest& message, const FIX::SessionID& sessionID)
 {
     if (_config.printDebug) {
-        std::cout << "Application::TestRequest FIX42" << std::endl;
+        std::cerr << "Application::TestRequest FIX42" << std::endl;
     }
 }
 
@@ -513,7 +536,7 @@ void
 Application::onMessage(const FIX42::Heartbeat& message, const FIX::SessionID& sessionID)
 {
     if (_config.printDebug) {
-        std::cout << "Application::Heartbeat FIX42" << std::endl;
+        std::cerr << "Application::Heartbeat FIX42" << std::endl;
     }
 }
 
@@ -521,15 +544,16 @@ void
 Application::onMessage(const FIX42::Logout& message, const FIX::SessionID& sessionID)
 {
     if (_config.printDebug) {
-        std::cout << "Application::Logout FIX42" << std::endl;
+        std::cerr << "Application::Logout FIX42" << std::endl;
     }
+    std::cerr << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n";
 }
 
 void 
 Application::onMessage(const FIX42::Logon& message, const FIX::SessionID& sessionID)
 {
     if (_config.printDebug) {
-        std::cout << "Application::Logon FIX42" << std::endl;
+        std::cerr << "Application::Logon FIX42" << std::endl;
     }
 }
 
@@ -538,7 +562,7 @@ void
 Application::onMessage(const FIX42::MarketDataRequest& message, const FIX::SessionID& sessionID) 
 {
     if (_config.printDebug) {
-        std::cout << "Application::MarketDataRequest FIX42" << std::endl;
+        std::cerr << "Application::MarketDataRequest FIX42" << std::endl;
     }
 
     // MarketDepth
@@ -577,10 +601,10 @@ Application::onMessage(const FIX42::MarketDataRequest& message, const FIX::Sessi
     FIX42::MarketDataRequest::NoMDEntryTypes mdEntry;
     FIX::MDEntryType mdEntryType;
     message.getField(noMDEntryTypes);
-    std::cout << "MDEntryTypes: " << noMDEntryTypes;
+    std::cerr << "NoMDEntryTypes: " << noMDEntryTypes << "\n";
     for (int i = 0; i< noMDEntryTypes; i++) {
         message.getGroup(i+1, mdEntry);
-        std::cout << mdEntry.getField(mdEntryType);
+        std::cerr << "Entry type: " << mdEntry.getField(mdEntryType) << "\n";
     }
     std::cout << std::endl;
 
@@ -703,15 +727,27 @@ Application::onMessage(const FIX42::MarketDataRequest& message, const FIX::Sessi
         message.getField(k_replayFile);
         std::cerr << ">>>>>>>> K_REPLAYFILE: " << k_replayFile << std::endl;
     }
+    else {
+        FIX::K_ReplayFile commandLineFile(_replayLog.c_str());
+        k_replayFile = commandLineFile;
+    }
     FIX::K_ReplayTimeDiv k_replayTimeDiv;
     if (message.isSetField(k_replayTimeDiv)) {
         message.getField(k_replayTimeDiv);
         std::cerr << ">>>>>>>> K_REPLAYTIMEDIV: " << k_replayTimeDiv << std::endl;
     }
+    else {
+        FIX::K_ReplayTimeDiv commandLineReplayTimeDiv(_replayTimeDiv);
+        k_replayTimeDiv = commandLineReplayTimeDiv;
+    }
     FIX::K_Volatility k_volatility;
     if (message.isSetField(k_volatility)) {
         message.getField(k_volatility);
         std::cerr << ">>>>>>>> K_VOLATILITY: " << k_volatility << std::endl;
+    }
+    else {
+        FIX::K_Volatility commandLineVolatility(_replayVolatility);
+        k_volatility = commandLineVolatility;
     }
     
     if (_isReplay) {

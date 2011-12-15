@@ -60,7 +60,7 @@ class MsgDispatcher
         boost::mutex _consumedMutex;
         boost::mutex _initMutex;
         boost::mutex _timeBufMutex;
-        boost::condition _msgConsumed;
+        //boost::condition _msgConsumed;
 
         MsgPump* _pMsgPump;
         //std::map<const FIX::SessionID, SessionInfo*>& _sessionIDToInfo;

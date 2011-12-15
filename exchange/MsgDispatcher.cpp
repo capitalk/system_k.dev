@@ -97,9 +97,11 @@ MsgDispatcher::run()
     long delta = 0;
     while(!_stopRequested) {
         if (_pMsgPump->getMessage(m1, raw1) == false) {
+            std::cerr << "getMessage m1 returned false\n";
             break;
         }        
         if (_pMsgPump->getMessage(m2, raw2) == false) {
+            std::cerr << "getMessage m2 returned false\n";
             break;
         }
 #if DEBUG 
@@ -115,10 +117,16 @@ MsgDispatcher::run()
         }
 */
         delta /= _speedFactor;
-        std::cerr << "Sleep micros: " << delta << " micros" << "(speedFactor = " << _speedFactor << ")" << std::endl;
+        //std::cerr << "Sleep micros: " << delta << " micros" << "(speedFactor = " << _speedFactor << ")" << std::endl;
         dispatch(m1);
         boost::this_thread::sleep(boost::posix_time::microseconds(delta));
         dispatch(m2);
+    }
+    if (!m1.isEmpty()) {
+        dispatch(m1); 
+    }
+    if (!m2.isEmpty()) {
+        dispatch(m2); 
     }
 }
 

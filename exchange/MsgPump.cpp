@@ -3,7 +3,9 @@
 
 using namespace std;
 
-MsgPump::MsgPump(std::string inFile):_inFile(inFile), _isStarted(false), _stopRequested(false), _bEOF(false), _dbgLine(0)
+int32_t MsgPump::_dbgLine = 0;
+
+MsgPump::MsgPump(std::string inFile):_inFile(inFile), _isStarted(false), _stopRequested(false), _bEOF(false)
 {
 }
 
@@ -13,7 +15,6 @@ MsgPump::MsgPump()
     _isStarted = false;
     _stopRequested = false;
     _bEOF = false;
-    _dbgLine = 0;
 }
 
 MsgPump::~MsgPump()
@@ -41,7 +42,7 @@ MsgPump::run()
         if (read() == false) {
             _bEOF = true;
             break;
-        };
+        }
     }
 }
 
@@ -71,6 +72,7 @@ MsgPump::read()
     bool parseOK = false;
 
     if (getline(_in, rawLine) && _in.eof() == false) {
+            std::cerr << "Line: " << _dbgLine++ << "\n";
             // FIX message parse    
             _msg.clear();
             _parser.addToStream(rawLine);
@@ -81,20 +83,26 @@ MsgPump::read()
             // NOTE NB - Using the dictionary is the only way to get correct ordering when reading 
             // the message from a string using setString(...)!!!!!!!!!!!!!!!!!!          
 
+            // Ignore messages that will log us out - 35=5
+            FIX::MsgType msgType;
+            if (_msg.getHeader().isSetField(FIX::FIELD::MsgType)) {
+                _msg.getHeader().getField(msgType);
+                //std::cerr << "msgType: " << msgType << std::endl;
+            }
+            else {
+                //std::cerr << "msgType is not set" << std::endl;
+            }
+            if (msgType == FIX::MsgType_Logout) {
+                std::cerr << "SKIPPING LOGOUT MESSAGE (35=5)\n";
+            }
+            
+
 #ifdef DEBUG
             if (!parseOK) {
                 std::cerr << "Parse failed" << std::endl;
             }
             else {
                 std::cerr << "Parse OK" << std::endl;
-            }
-            if (_msg.getHeader().isSetField(FIX::FIELD::MsgType)) {
-                FIX::MsgType msgType;
-                _msg.getHeader().getField(msgType);
-                std::cerr << "msgType: " << msgType << std::endl;
-            }
-            else {
-                std::cerr << "msgType is not set" << std::endl;
             }
             if (_msg.getHeader().isSetField(FIX::FIELD::SendingTime)) {
                 std::cerr << "Sending time IS set" << std::endl;
@@ -123,7 +131,6 @@ MsgPump::read()
 */
     }
     else {
-    //{
         _msgRead.notify_all();
         return false;
     }

@@ -84,9 +84,10 @@ main(int argc, char ** argv)
         if (pMsgPump->getMessage(m1, s1) == false) {
             break;
         }
-        //if (pMsgPump->getMessage(m2, s2) == false) {
-            //break;
-        //}
+        if (pMsgPump->getMessage(m2, s2) == false) {
+            break;
+        }
+
         if (m1.getHeader().isSetField(FIX::FIELD::SendingTime)) {
             FIX::SendingTime sendingTime;
             std::cout << m1.getHeader().getField(sendingTime);
@@ -102,6 +103,31 @@ main(int argc, char ** argv)
         else {
             std::cout << "*** MsgType not set\n" ;
         }
+
+        if (m2.getHeader().isSetField(FIX::FIELD::SendingTime)) {
+            FIX::SendingTime sendingTime;
+            std::cout << m1.getHeader().getField(sendingTime);
+        }
+        else {
+            std::cout << "*** SendingTime not set\n" ;
+        }
+
+        if (m2.getHeader().isSetField(FIX::FIELD::MsgType)) {
+            FIX::MsgType mt;
+            std::cout << m1.getHeader().getField(mt);
+        }
+        else {
+            std::cout << "*** MsgType not set\n" ;
+        }
+
+
+
+
+
+
+
+
+
         //FIX::MsgType msgType;
         //std::cout << i++ << ":";
         //if (m.getHeader().isSetField(FIX::FIELD::MsgType)) {

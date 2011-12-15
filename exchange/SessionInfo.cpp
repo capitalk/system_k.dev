@@ -61,6 +61,12 @@ SessionInfo::setDispatcher(MsgDispatcher* md) {
     }
     return false;
 }
+
+MsgDispatcher* 
+SessionInfo::getDispatcher()
+{
+    return _msgDispatcher;
+}
         
 bool 
 SessionInfo::setPump(MsgPump* mp) {
@@ -70,6 +76,12 @@ SessionInfo::setPump(MsgPump* mp) {
     } 
     return false;
 }
+
+MsgPump* 
+SessionInfo::getPump() {
+    return _msgPump;
+}
+
 
 void 
 SessionInfo::getSessionID(FIX::SessionID& sessionID) { sessionID = _sessionID;}

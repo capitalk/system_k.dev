@@ -71,6 +71,7 @@ class SessionInfo
             return false;
         }
         */
+        MsgDispatcher* getDispatcher();
         
         bool setPump(MsgPump* mp); /*{
             if (_msgPump == NULL && mp != NULL) {
@@ -80,6 +81,7 @@ class SessionInfo
             return false;
         }
         */
+        MsgPump* getPump();
 
         void getSessionID(FIX::SessionID& sessionID);/*{ sessionID = _sessionID;} */
     

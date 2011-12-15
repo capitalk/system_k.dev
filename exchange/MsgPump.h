@@ -43,6 +43,7 @@ class MsgPump
         void setDataDictionary(const FIX::DataDictionary& dd);
 
     private:
+        uint64_t _msgCount;
         FIX::Message _msg;
         std::string _strMsg;
         FIX::Parser _parser;
@@ -57,7 +58,7 @@ class MsgPump
         boost::condition _msgConsumed;
         boost::condition _msgRead;
         bool _bEOF;
-        int _dbgLine;
+        static int32_t _dbgLine;
         FIX::DataDictionary _dict;
 };
 
