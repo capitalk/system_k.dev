@@ -1,13 +1,10 @@
 
 #include "SessionInfo.h"
 
-SessionInfo::SessionInfo(const FIX::SessionID& sid) : _sessionID(sid), _msgDispatcher(0), _msgPump(0) { }
+SessionInfo::SessionInfo(const FIX::SessionID& sid) : _sessionID(sid), _msgDispatcher(NULL){ }
 
 
 SessionInfo::~SessionInfo() {
-    if (_msgPump) {
-        delete _msgPump;
-    }
     if (_msgDispatcher) {
         delete _msgDispatcher;
     }
@@ -50,7 +47,7 @@ SessionInfo::size() {
 
 bool 
 SessionInfo::hasDispatcher() { 
-    return _msgDispatcher != NULL;
+    return (_msgDispatcher != NULL);
 }
 
 bool 
@@ -68,19 +65,7 @@ SessionInfo::getDispatcher()
     return _msgDispatcher;
 }
         
-bool 
-SessionInfo::setPump(MsgPump* mp) {
-    if (_msgPump == NULL && mp != NULL) {
-        _msgPump = mp;
-        return true;
-    } 
-    return false;
-}
 
-MsgPump* 
-SessionInfo::getPump() {
-    return _msgPump;
-}
 
 
 void 

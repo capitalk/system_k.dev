@@ -1,7 +1,11 @@
 #include "MsgDispatcher.h"
 
-MsgDispatcher::MsgDispatcher(MsgPump* pMsgPump, SessionInfo* pSessionInfo/*std::map<const FIX::SessionID, SessionInfo*>& sessionInfo,*/  /*std::set<FIX::SessionID>& sessions*/): _pMsgPump(pMsgPump), _pSessionInfo(pSessionInfo), /*_sessions(sessions),*/ _bInit(false), _speedFactor(1)
+MsgDispatcher::MsgDispatcher(MP* pMsgPump, SessionInfo* pSessionInfo/*std::map<const FIX::SessionID, SessionInfo*>& sessionInfo,*/  /*std::set<FIX::SessionID>& sessions*/): _pMsgPump(pMsgPump), _pSessionInfo(pSessionInfo), /*_sessions(sessions),*/ _bInit(false), _speedFactor(1)
 {
+#ifdef DEBUG
+    fp = fopen("./MDLOG", "wb");
+    assert(fp);
+#endif
 }
 
 MsgDispatcher::~MsgDispatcher()
@@ -86,6 +90,14 @@ MsgDispatcher::getTimeDelta(FIX::Message& m1, FIX::Message& m2, long* tDelta)
 }
 
 void 
+MsgDispatcher::setDataDictionary(const FIX::DataDictionary& dict) 
+{
+    _dict = dict;
+}
+
+
+
+void 
 MsgDispatcher::run()
 {
     FIX::Message m1;
@@ -94,20 +106,55 @@ MsgDispatcher::run()
     FIX::SendingTime sendingTime;
     std::string raw1;
     std::string raw2;
+    std::string mtext1;
+    std::string mtext2;
     long delta = 0;
+    bool parseOK = false;
+
+    std::cerr << "MsgDispatcher::run()\n";
+/*
+ * Now, _strMsg contains the cleaned up string of the message read from the log as is
+ * and _msg contains the properly parsed message using the dictionary passed to the msg pump
+ * NOTE NB - Using the dictionary is the only way to get correct ordering when reading
+ * the message from a string using setString(...)!!!!!!!!!!!!!!!!!!
+ */
+
+    MSG_RET ret;
     while(!_stopRequested) {
-        if (_pMsgPump->getMessage(m1, raw1) == false) {
-            std::cerr << "getMessage m1 returned false\n";
-            break;
+        //if (_pMsgPump->getMessage(m1, raw1) == MSG_OK) {
+        _pMsgPump->getMsg(raw1, &ret);
+#ifdef DEBUG
+        if (ret == MSG_OK) fprintf(fp, "%s\n", raw1.c_str());
+        fflush(fp);
+#endif 
+        if (ret == MSG_OK) {
+            m1.clear();
+            _parser.addToStream(raw1);
+            parseOK = _parser.readFixMessage(mtext1); 
+            m1.setString(mtext1, false, &_dict);
         }        
-        if (_pMsgPump->getMessage(m2, raw2) == false) {
-            std::cerr << "getMessage m2 returned false\n";
+        else {
+            std::cerr << "getMessage m1 returned NOT MSG_OK\n";
             break;
         }
-#if DEBUG 
-        std::cout << "****M1: " << m1.toString() << std::endl; 
-        std::cout << "****M2: " << m2.toString() << std::endl; 
-#endif // DEBUG
+        //if (_pMsgPump->getMessage(m2, raw2) == MSG_OK) {
+        _pMsgPump->getMsg(raw2, &ret);
+#ifdef DEBUG
+        if (ret == MSG_OK) fprintf(fp, "%s\n", raw2.c_str());
+        fflush(fp);
+#endif 
+        if (ret == MSG_OK) {
+            m2.clear();
+            _parser.addToStream(raw2);
+            parseOK = _parser.readFixMessage(mtext2);
+            m2.setString(mtext2, false, &_dict);
+        }
+        else {
+            std::cerr << "getMessage m2 returned NOT MSG_OK\n";
+            break;
+        }
+        //std::cout << "****M1: " << m1.toString() << std::endl; 
+        //std::cout << "****M2: " << m2.toString() << std::endl; 
         if (!getTimeDelta(m1, m2, &delta)) {
             std::cerr << "Error fetching timestamp from msg" << std::endl;
         }
@@ -116,18 +163,23 @@ MsgDispatcher::run()
             std::cerr << "DELTA: " << delta << std::endl;
         }
 */
+        
         delta /= _speedFactor;
         //std::cerr << "Sleep micros: " << delta << " micros" << "(speedFactor = " << _speedFactor << ")" << std::endl;
         dispatch(m1);
         boost::this_thread::sleep(boost::posix_time::microseconds(delta));
         dispatch(m2);
+        m1.clear();
+        m2.clear();
     }
+/*
     if (!m1.isEmpty()) {
         dispatch(m1); 
     }
     if (!m2.isEmpty()) {
         dispatch(m2); 
     }
+*/
 }
 
 void 
@@ -182,6 +234,7 @@ MsgDispatcher::start()
     }
     _thread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&MsgDispatcher::run, this)));
     _isStarted = true;
+    
 }
 
 void 

@@ -22,7 +22,7 @@
 #ifndef EXECUTOR_APPLICATION_H
 #define EXECUTOR_APPLICATION_H
 
-#include "MsgPump.h"
+//#include "MP.h"
 #include "SessionInfo.h"
 
 #include <unordered_set>
@@ -154,7 +154,7 @@ private:
     double _replayVolatility;
     double _replayTimeDiv;
     std::ifstream _inLog;
-    MsgPump _msgPump;
+    MP _msgPump;
     //std::unordered_map<FIX::SessionID, SessionInfo*> _sessionInfo;
     typedef std::map<const FIX::SessionID, SessionInfo*> SessionMap;
     SessionMap _sessionMap;

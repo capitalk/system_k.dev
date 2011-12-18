@@ -8,7 +8,7 @@
 #include "quickfix/Session.h"
 
 #include "MsgDispatcher.h"
-#include "MsgPump.h"
+#include "MP.h"
 
 class MsgDispatcher;
 
@@ -73,15 +73,6 @@ class SessionInfo
         */
         MsgDispatcher* getDispatcher();
         
-        bool setPump(MsgPump* mp); /*{
-            if (_msgPump == NULL && mp != NULL) {
-                _msgPump = mp;
-                return true;
-            } 
-            return false;
-        }
-        */
-        MsgPump* getPump();
 
         void getSessionID(FIX::SessionID& sessionID);/*{ sessionID = _sessionID;} */
     
@@ -92,7 +83,6 @@ class SessionInfo
         FIX::MarketDepth _marketDepth;
         FIX::MDUpdateType _mdUpdateType;
         MsgDispatcher* _msgDispatcher;
-        MsgPump*  _msgPump;
 
 };
 

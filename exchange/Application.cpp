@@ -144,12 +144,12 @@ void Application::onLogout(const FIX::SessionID& sessionID)
         if (_config.printDebug) {
             std::cerr << "SessionInfo deleting info for:" << sessionID.toString();
         }
-        MsgPump* mp = it->second->getPump();
-        assert(mp);
-        mp->stop();
         
         MsgDispatcher *md = it->second->getDispatcher();
         assert(md);
+        MP* mp = md->getPump();
+        assert(mp);
+        mp->stop();
         md->stop();
 
 
@@ -713,15 +713,6 @@ Application::onMessage(const FIX42::MarketDataRequest& message, const FIX::Sessi
 /************************************************************/
 /* TEST REPLY END                                           */
 /************************************************************/
-    // KTK TODO - check if session info exists for this session already
-    for (int j = 0; j < noRelatedSym; j++) {
-        message.getGroup(j+1, relatedSym);
-        relatedSym.getField(symbol);
-        _sessionMap[sessionID] = new SessionInfo(sessionID);
-        _sessionMap[sessionID]->addSymbol(symbol.getString());
-        // KTK TODO - add MDReqID here in sessionInfo as well!!!!!!!!!!!
-    }
-
     FIX::K_ReplayFile k_replayFile;
     if (message.isSetField(k_replayFile)) {
         message.getField(k_replayFile);
@@ -750,42 +741,66 @@ Application::onMessage(const FIX42::MarketDataRequest& message, const FIX::Sessi
         k_volatility = commandLineVolatility;
     }
     
+    // KTK TODO - check if session info exists for this session already
+    // OK - DONE
+    SessionMap::iterator sessionIter = _sessionMap.find(sessionID);
+    if (sessionIter == _sessionMap.end()) {
+       std::cerr << "Session not found" << sessionID << "\n"; 
+       std::cerr << "CHECK THAT SESSSION WAS CREATED ON LOGON" << sessionID << "\n"; 
+    }
+    else {
+       std::cerr << "Found session: " << sessionID.toString() << "\n";
+        if (_sessionMap[sessionID]->hasDispatcher()) {
+            std::cerr << "Session: " << sessionID.toString() << " already has dispatcher" << std::endl;
+            // Add symbols
+            for (int j = 0; j < noRelatedSym; j++) {
+                message.getGroup(j+1, relatedSym);
+                relatedSym.getField(symbol);
+                _sessionMap[sessionID]->addSymbol(symbol.getString());
+            }
+        } 
+        else {
+           std::cerr << "Creating dispatcher for session: " << sessionID.toString() << "\n";
+           MP* pPump = new MP();
+           pPump->setInputFile(k_replayFile);
+           if(!pPump->open()) {
+                    std::cerr << "Error opening replay log" << std::endl;
+           }
+           MsgDispatcher* d = new MsgDispatcher(pPump, _sessionMap[sessionID]);//, s);
+           FIX::Session* psession = FIX::Session::lookupSession(sessionID);
+           if (!psession) {
+                throw FIX::Exception("INVALID SESSION!", "psession is NULL");
+           }
+           FIX::DataDictionaryProvider dp = psession->getDataDictionaryProvider();
+           FIX::DataDictionary dict = dp.getSessionDataDictionary(sessionID.getBeginString());
+           d->setDataDictionary(dict);
+           d->setSpeedFactor(k_replayTimeDiv);
+           _sessionMap[sessionID]->setDispatcher(d);
+           std::cerr << "Starting pump and dispatcher for session: " << sessionID.toString() << std::endl;
+           pPump->start();
+           d->start();
+        }
+    }
+/*
     if (_isReplay) {
     // Start the dispatcher
         // KTK TODO - start the msg dispatcher but this will start for all requests which is not really what we 
         // want but for testing it is fine for now 20110602
         // KTK TODO - create the MsgPump here as well and put in the dispatcher. 
+       IF_DEBUG(std::cout << "isReplay: " << _isReplay << std::endl;)
+        
         if (_sessionMap[sessionID]->hasDispatcher()) {
             std::cerr << "Session: " << sessionID.toString() << " already has dispatcher" << std::endl;
         } 
         else {
-            FIX::Session* psession = FIX::Session::lookupSession(sessionID);
-            if (!psession) {
-                throw FIX::Exception("INVALID SESSION!", "psession is NULL");
+            for (int j = 0; j < noRelatedSym; j++) {
+                message.getGroup(j+1, relatedSym);
+                relatedSym.getField(symbol);
+                sessionIter->second->addSymbol(symbol.getString());
             }
-            //std::set<FIX::SessionID> s = FIX::Session::getSessions();
-            FIX::DataDictionaryProvider dp = psession->getDataDictionaryProvider();
-            FIX::DataDictionary dict = dp.getSessionDataDictionary(sessionID.getBeginString());
-            MsgPump* pPump = new MsgPump();
-            pPump->setInputFile(k_replayFile);
-            if(!pPump->open()) {
-                std::cerr << "Error opening replay log" << std::endl;
-            }
-            IF_DEBUG(std::cout << "isReplay: " << _isReplay << std::endl;)
-            pPump->start();
-            pPump->setDataDictionary(dict);
-            _sessionMap[sessionID]->setPump(pPump); 
-            MsgDispatcher* d = new MsgDispatcher(pPump, _sessionMap[sessionID]);//, s);
-            d->setSpeedFactor(k_replayTimeDiv);
-            _sessionMap[sessionID]->setDispatcher(d);
-            std::cerr << "Starting dispatcher for session: " << sessionID.toString() << std::endl;
-            d->start();
         }
     }
-    else {
-    // Get the orderbook and send what is requested 
-    }
-
+*/
 
     /* KTK - before sending snapshot full refresh we need to get some data from msgPump if 
     * IF we're in replay mode

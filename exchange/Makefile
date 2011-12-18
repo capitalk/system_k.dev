@@ -13,7 +13,7 @@ LDFLAGS=-static
 
 ORDERBOOK_OBJS=$(ORDERBOOK)/KOrderBook.o $(ORDERBOOK)/KPriceDepthOrderBook.o $(ORDERBOOK)/PriceDepthEntry.o $(ORDERBOOK)/OrderBookEntry.o
 ifeq ($(dbg),1)
-		status = '*** BUILDING IN DEBUG ***\n'
+		status = '*** BUILDING IN DEBUG ***'
 		CFLAGS += -DDEBUG -ggdb -g # -DDEBUG_BOOK
 endif
 
@@ -24,8 +24,8 @@ LDFLAGS=-static
 
 all: status exchange MsgPumpTest SessionInfoTest FIXConvertorsTest
 
-exchange : executor.o Application.o MsgPump.o MsgDispatcher.o $(UTILSDIR)/FIXConvertors.o SessionInfo.o libOrderBook.a 
-	$(CC) $(CFLAGS) executor.o Application.o MsgPump.o MsgDispatcher.o SessionInfo.o $(UTILSDIR)/FIXConvertors.o $(ORDERBOOK_DIR)/libOrderBook.a $(LIBS) -o $@ 
+exchange : executor.o Application.o MP.o MsgDispatcher.o $(UTILSDIR)/FIXConvertors.o SessionInfo.o libOrderBook.a 
+	$(CC) $(CFLAGS) executor.o Application.o MP.o MsgDispatcher.o SessionInfo.o $(UTILSDIR)/FIXConvertors.o $(ORDERBOOK_DIR)/libOrderBook.a $(LIBS) -o $@ 
 
 
 SessionInfo.o: SessionInfo.cpp
@@ -49,14 +49,17 @@ Application.o: Application.cpp
 libOrderBook.a:
 	cd $(ORDERBOOK_DIR) && make
 
-MsgPumpTest: MsgPumpTest.o MsgPump.o
-	$(CC) MsgPumpTest.o MsgPump.o $(LIBS) -o $@
+MP.o: MP.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) MP.cpp
+
+MsgPumpTest: MsgPumpTest.o MP.o
+	$(CC) MsgPumpTest.o MP.o $(LIBS) -o $@
 
 MsgPumpTest.o: MsgPumpTest.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) MsgPumpTest.cpp 
 
-SessionInfoTest: SessionInfoTest.o SessionInfo.o MsgPump.o MsgDispatcher.o $(UTILSDIR)/FIXConvertors.o
-	$(CC)  SessionInfoTest.o SessionInfo.o MsgPump.o MsgDispatcher.o $(LIBS) $(UTILSDIR)/FIXConvertors.o -o $@ 
+SessionInfoTest: SessionInfoTest.o SessionInfo.o MP.o MsgDispatcher.o $(UTILSDIR)/FIXConvertors.o
+	$(CC)  SessionInfoTest.o SessionInfo.o MP.o MsgDispatcher.o $(LIBS) $(UTILSDIR)/FIXConvertors.o -o $@ 
 
 SessionInfoTest.o: SessionInfoTest.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) SessionInfoTest.cpp 
