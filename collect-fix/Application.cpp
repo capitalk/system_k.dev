@@ -1209,7 +1209,7 @@ Application::querySingleMarketDataRequest43(const std::string& requestSymbol)
 	FIX::SubscriptionRequestType 
 	  subType(FIX::SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES);
 // KTK TODO - pull the depth into symbols file
-	FIX::MarketDepth marketDepth(1);
+	FIX::MarketDepth marketDepth(_config.marketDepth);
 	FIX43::MarketDataRequest message(mdReqID, subType, marketDepth);
 	
 	if (_config.aggregatedBook) { 
