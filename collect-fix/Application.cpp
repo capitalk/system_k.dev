@@ -874,20 +874,20 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
         double basize = pBook->bestPriceVolume(ASK);
         
         if (isPublishing()) {
-            capitalk::venue_bbo bbo;
-            bbo.set_name(symbol.getValue());
+            capitalk::mic_bbo bbo;
+            bbo.set_symbol(symbol.getValue());
             bbo.set_bid_price(bbprice);
             bbo.set_ask_price(baprice);
             bbo.set_bid_size(bbsize);
             bbo.set_ask_size(basize);
-            bbo.set_venue(_config.mic_code);
+            bbo.set_mic(_config.mic_code);
             
             int msgsize = bbo.ByteSize();
             char* msgbuf = new char[msgsize];
             zmq::message_t message(msgsize);
             bbo.SerializeToArray(msgbuf, msgsize);
             memcpy(message.data(), msgbuf, msgsize);
-            std::cerr << "Sending "  << message.size() << " bytes\n";
+            std::cerr << "Sending "  << msgsize << " bytes\n";
             this->_pzmq_socket->send(message);
             if (msgbuf) {
                 delete[] msgbuf;
