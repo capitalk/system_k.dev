@@ -1,0 +1,40 @@
+package capitalk;
+
+message order_t {
+    enum side_t {
+        BID = 0;
+        ASK = 1;
+    }
+    enum quote_type_t {
+        INDICATIVE = 0;
+        TRADEABLE = 1;
+    }
+    required string name = 1;
+    required string mic = 2;
+    required int32 qid = 3;
+    required side_t side = 4;
+    required double size = 5;
+    required double price = 6;
+
+}
+
+message mic_bbo {
+    required string mic = 1;
+    required string symbol = 2;
+    required double bid_size = 3;
+    required double bid_price = 4;
+    required double ask_size = 5;
+    required double ask_price = 6;
+}
+
+message instrument_bbo {
+    required string symbol = 1;
+    required string bb_mic = 2;
+    required double bb_price = 3;
+    required double bb_size = 4;
+
+    required string ba_mic = 5;
+    required double ba_price = 6;
+    required double ba_size = 7;
+}
+
