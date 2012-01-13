@@ -5,7 +5,8 @@
 #include <time.h>
 #include <ostream>
 
-timespec timespec_delta(timespec start, timespec end);
+unsigned long int timespec_delta_micros(const timespec& start, const timespec& end);
+timespec timespec_delta(const timespec& start, const timespec& end);
 
 std::ostream& operator<<(std::ostream& out, const timespec ts);
 
