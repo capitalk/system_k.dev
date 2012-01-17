@@ -1,5 +1,5 @@
-#ifndef _CAPK_MSGPUMP_
-#define _CAPK_MSGPUMP_
+#ifndef _CAPK_MP
+#define _CAPK_MP
 
 #include <string>
 #include <iostream>
@@ -22,43 +22,48 @@
 
 using namespace std;
 
-class MsgPump
+typedef enum MSG_RET {
+    MSG_OK = 0,
+    MSG_NOT_READY = 1,
+    MSG_EOF = 2,
+    MSG_ERROR = 3
+} MSG_RET;
+
+class MP
 {
     public:
-        MsgPump();
-        MsgPump(std::string inFile);
-        ~MsgPump(); 
+        MP();
+        MP(std::string inFile);
+        ~MP(); 
         bool open();
         void run();
         void start();
         void stop();
-        bool read();
 
         void join();
-        //void wait();
-        //void notify();
 
         bool setInputFile(std::string inFile);
-        bool getMessage(FIX::Message& m, std::string& raw);
-        void setDataDictionary(const FIX::DataDictionary& dd);
+        void getMsg(std::string& raw, MSG_RET* ret);
 
     private:
-        FIX::Message _msg;
-        std::string _strMsg;
-        FIX::Parser _parser;
-    
-        std::ifstream _in;
+        void read();
+
         std::string _inFile;
         volatile bool _isStarted;
         volatile bool _stopRequested;
+        MSG_RET _msgCode;
+        volatile bool _read;
+        volatile bool _consumed;
+        std::string _strMsg;
+    
+        std::ifstream _in;
         boost::shared_ptr<boost::thread> _thread;
-        boost::mutex _consumedMutex;
-        boost::mutex _readMutex;
+        boost::mutex _mutex;
         boost::condition _msgConsumed;
         boost::condition _msgRead;
-        bool _bEOF;
-        int _dbgLine;
-        FIX::DataDictionary _dict;
+        boost::condition _c;
+        boost::condition _stop;
+        FILE* fp;
 };
 
-#endif // _CAPK_MSGPUMP_
+#endif // _CAPK_MP

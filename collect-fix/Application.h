@@ -199,9 +199,8 @@ private:
 	bool _loggedIn;
 	bool _loggedOut;
 	unsigned int _loginCount;
-    unsigned int _appMsgCount;
-
 	bool _resetSequence;
+    unsigned int _appMsgCount;
 	const ApplicationConfig& _config; 
 
     zmq::socket_t* _pzmq_socket;

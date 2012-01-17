@@ -21,9 +21,7 @@ LDFLAGS=-static
 
 ORDERBOOK_DIR=../order_book
 
-#debug: CFLAGS += -DDEBUG -g
-#debug: LDFLAGS += -DDEBUG -g
-#debug: collect
+all: collect
 
 collect : collect.o Application.o  libOrderBook2.a spot_fx_md_1.pb.o
 	$(CC) $(CFLAGS) collect.o spot_fx_md_1.pb.o Application.o $(ORDERBOOK_DIR)/libOrderBook2.a $(LIBS) -o $@ 
@@ -47,7 +45,7 @@ protos: $(PROTO)/spot_fx_md_1.proto
 
 clean :
 	rm -f *.o collect $(PROTO)/*.cc $(PROTO)/*.h
-	cd $(ORDERBOOK_DIR) && make clean 
+	#cd $(ORDERBOOK_DIR) && make clean 
 
 install :
 	cp -r ./cfg /usr/local/capk

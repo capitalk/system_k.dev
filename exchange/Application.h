@@ -22,7 +22,7 @@
 #ifndef EXECUTOR_APPLICATION_H
 #define EXECUTOR_APPLICATION_H
 
-#include "MsgPump.h"
+//#include "MP.h"
 #include "SessionInfo.h"
 
 #include <unordered_set>
@@ -39,6 +39,7 @@
 #include "quickfix/fix43/NewOrderSingle.h"
 #include "quickfix/fix44/NewOrderSingle.h"
 #include "quickfix/fix50/NewOrderSingle.h"
+
 
 /*
 #include <google/dense_hash_map>
@@ -77,7 +78,6 @@ class Application :
 {
 public:
     Application(const ApplicationConfig& config) : m_orderID(0), m_execID(0), _config(config), _isReplay(false) { }
-    void setReplayLog(const std::string& log);
 
     // Application overloads
     void onCreate(const FIX::SessionID&);
@@ -142,12 +142,19 @@ public:
         return stream.str();
     }
 
+
+    void setReplayLog(const std::string& log);
+    void setReplayVolatility(const double vol);
+    void setReplaySpeed(const double sp);
+
 private:
     int m_orderID, m_execID;
     const ApplicationConfig& _config;
     std::string _replayLog;
+    double _replayVolatility;
+    double _replayTimeDiv;
     std::ifstream _inLog;
-    MsgPump _msgPump;
+    MP _msgPump;
     //std::unordered_map<FIX::SessionID, SessionInfo*> _sessionInfo;
     typedef std::map<const FIX::SessionID, SessionInfo*> SessionMap;
     SessionMap _sessionMap;

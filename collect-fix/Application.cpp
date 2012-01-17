@@ -672,13 +672,9 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
     }
 
 	if (message.isSetField(noMDEntries)) {
-		//try {
-			message.getField(noMDEntries); 
-			nEntries = noMDEntries.getValue();
-		//}
-		//catch (std::exception& e) {
-			//std::cerr << e.what() << std::endl;
-		//}
+        message.getField(noMDEntries); 
+        nEntries = noMDEntries.getValue();
+
 		typename T::NoMDEntries mdEntries;
 		for (int i = 0; i< nEntries; i++) {
 			message.getGroup(i+1, mdEntries);
@@ -690,16 +686,16 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
             }
 			if (mdEntries.isSetField(mdEntryID)) {
 			    mdEntries.getField(mdEntryID);
+                //std::cerr << "=======================> mdEntryID: " << mdEntryID << "\n";
             }
             else {
-                //std::cerr << "*************************************** MDENTRYID field not set in 35=X" << std::endl;
+                std::cerr << "*************************************** MDENTRYID field not set in 35=X" << std::endl;
             }
 			if (mdEntries.isSetField(symbol)) {
 				mdEntries.getField(symbol);
 			}
             else {
-                //std::cerr << "*************************************** SYMBOL field not set in FIELD of 35=X" << std::endl;
-
+                std::cerr << "*************************************** SYMBOL field not set in FIELD of 35=X" << std::endl;
             }
 			if (mdEntries.isSetField(securityType)) {
 				mdEntries.getField(securityType);
@@ -709,10 +705,10 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 			}
 			if (mdEntries.isSetField(mdEntryPx)) {
 				mdEntries.getField(mdEntryPx);
+                //std::cerr << "=======================> mdEntryPx: " << mdEntryPx << "\n";
 			}
 			else {
-			// KTK - what to do if the price is empty? We need to have an orderbook that is indexed by 
-			// MDEntryID and NOT by price.
+                //std::cerr << "*************************************** MDENTRYPX field not set in FIELD of 35=X (Action=" << mdUpdateAction << ")" << std::endl;
 			}
 			if (mdEntries.isSetField(mdEntrySize)) {
 				mdEntries.getField(mdEntrySize);
@@ -740,10 +736,15 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 		    pLog = getStream(symbol.getValue());
 
 			if (NULL != (pBook = getBook(symbol.getValue())))  {
-                *pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
+                // KTK MOVED TO MATCH CONFLUENCE 12/9/2011
+                //*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
     		    char side = mdEntryType.getValue();
                 side_t nside = char2side_t(side);
-		        double price = mdEntryPx.getValue();
+
+//		        double price = mdEntryPx.getValue();
+
+                double price = 0.0;
+
         		size = mdEntrySize.getValue();
 
            	    const std::string& id = mdEntryID.getValue();
@@ -753,6 +754,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                 }
 				int action = mdUpdateAction.getValue(); 
 				if (action == FIX::MDUpdateAction_NEW) { // new 
+                    price = mdEntryPx.getValue();
                     if (_config.printDebug) {
                         std::cerr << "***** DEL BEFORE ADD: " << nid << "\n";
                     }
@@ -760,23 +762,27 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 
                     if (_config.printDebug) {
                         if (removeOk == 0) {
-                            std::cerr << "Order: " << nid << " not found - so just add \n"; 
+                           std::cerr << "Order: " << nid << " not found - so just add \n"; 
                         }
                         std::cerr << "***** ADD: " << nid << ", " << size  << "@" << price << "\n";
                     }
 
-                    if (!pBook->add(nid, nside, size, price, evtTime, sndTime)) {
+                    if (pBook->add(nid, nside, size, price, evtTime, sndTime) !=1) {
                         std::cerr << "Book add failed!!!!!!!!!!\n (" << nid << nside << "(" << side << ")" << size << price << evtTime << sndTime << "\n";
                     }
 
-                    //std::cerr << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
                     *pLog << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
-
+                    if (_config.printDebug) {
+                        std::cerr << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
+                        pBook->dbg();
+                    }
 				} else if (action == FIX::MDUpdateAction_CHANGE) { // change  
+                    price = mdEntryPx.getValue();
                     size = mdEntrySize.getValue(); 
-                    /* if the message contains a MDEntryRefID then 
-                       we're renaming an existing entity so we delete the old one (with MDEntryRefID and re-add with mdEntryID) 
-                    */ 
+                    /* if the message contains a MDEntryRefID 
+                     * then we're renaming an existing entity so we delete 
+                     * the old one (with MDEntryRefID and re-add with mdEntryID) 
+                     */ 
 			        if (mdEntries.isSetField(mdEntryRefID)) {
 			    	    mdEntries.getField(mdEntryRefID);
                         const std::string& refId = mdEntryRefID.getValue(); 
@@ -790,10 +796,10 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                         uint32_t nrefId = hashlittle(refId.c_str(), refId.size(), 0);
                     
                         if (_config.printDebug) {
-                            std::cerr << "***** SYNTHETIC MOD: ";
-                            std::cerr << "Removing: " << nrefId << " and re-adding " << "(" << nid << ", " << nside << ", " << size << "@" << price << ")\n";
+                            //std::cerr << "Synthetic modify: " << nrefId << " and re-adding " << "(" << nid << ", " << nside << ", " << size << "@" << price << ")\n";
+                            //std::cerr << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
                         }
-                        //std::cerr << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
+
                         *pLog << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
     
                         pBook->remove(nrefId, evtTime, sndTime);
@@ -815,14 +821,26 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             "," <<  
                             evtTime << 
                             "\n"; 
+                            if (_config.printDebug) {
+                            std::cerr << 
+                            "M," << 
+                            pBook->getOrder(nid)->getSide() << 
+                            "," << 
+                            std::setiosflags(std::ios_base::fixed) << size << 
+                            "," << 
+                            std::setprecision(7) << pBook->getOrder(nid)->getPrice() << 
+                            "," <<  
+                            evtTime << 
+                            "\n"; 
+                            }
+    					    int modifyOk = pBook->modify(nid, size, evtTime, sndTime);
+                            if (modifyOk != 1) {
+                                std::cerr << "***** MODIFY FAILED: MdEntryID: " << nid << " does not exist in book\n"; 
+                            }
                         }
                         else {
-                            std::cerr << "***** (M) CAN'T FIND ORDERID: " << nid << " for orig_id: " << id;
+                            std::cerr << "***** (M) CAN'T FIND ORDERID: " << nid << " for orig_id: " << id << "\n";
                             std::cerr << *pBook;
-                        }
-    					int modifyOk = pBook->modify(nid, size, evtTime, sndTime);
-                        if (modifyOk != 1) {
-                            std::cerr << "***** DELETE FAILED: MdEntryID: " << nid << " does not exist in book\n"; 
                         }
 					}
 				} else if (action == FIX::MDUpdateAction_DELETE) { // delete  
@@ -830,7 +848,6 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                     if (_config.printDebug) { 
                         std::cerr << "***** DEL: " << nid << "\n";
                     }
-                    //std::cerr << "D," << pBook->getOrder(nid)->getSide() << "," << std::setiosflags(std::ios_base::fixed) << pBook->getOrder(nid)->getSize() << "," << std::setprecision(7) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
                     pKOrder pOrder = pBook->getOrder(nid);
                     if (pOrder) {
                         *pLog << 
@@ -843,16 +860,29 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             "," << 
                             evtTime << 
                             "\n"; 
+                        if (_config.printDebug) {
+                            std::cerr << 
+                            "D," << 
+                            pBook->getOrder(nid)->getSide() << 
+                            "," << 
+                            std::setiosflags(std::ios_base::fixed) << pBook->getOrder(nid)->getSize() << 
+                            "," << 
+                            std::setprecision(7) << pBook->getOrder(nid)->getPrice() << 
+                            "," << 
+                            evtTime << 
+                            "\n"; 
+                        } 
+                        int removeOk = pBook->remove(nid, evtTime, sndTime);
+                        if (removeOk != 1) {
+                            std::cerr << "***** DELETE FAILED: MdEntryID: " << nid << " does not exist in book\n"; 
+                        }
                     }
                     else { 
-                        std::cerr << "***** (D) CAN'T FIND ORDERID: " << nid << "for orig_id: " << id;
-                        std::cerr << *pBook;
+                        std::cerr << "***** (D) CAN'T FIND ORDERID: " << nid << " for orig_id: " << id << "\n";
+                        pBook->dbg();
+                        assert(0);
                     }
 
-                    int removeOk = pBook->remove(nid, evtTime, sndTime);
-                    if (removeOk != 1) {
-                        std::cerr << "***** DELETE FAILED: MdEntryID: " << nid << " does not exist in book\n"; 
-                    }
 				}
                 else { 
                     std::cerr << __FILE__ << ":" <<  __LINE__ << "Unknown action type: " << action << "\n"; 
@@ -863,8 +893,13 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 				std::cerr << __FILE__ << ":" << __LINE__ << "Can't find orderbook - book is null!" << "\n";
 			}
 		}
-
-        // BOOK IS FINAL - PRINT OR BROADCAST HERE
+        // PRINT BOOK HERE
+        double bbid = pBook->bestPrice(BID);
+        double bask = pBook->bestPrice(ASK);
+        if(bbid > bask) {
+            std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK " << pBook->getName() << " (" << (double) bbid <<  ", " << (double) bask << ") XXXXXXXXXXXXXXXXX\n";
+            //assert(false);
+        }
 			    
         ptime time_start(microsec_clock::local_time());
         
@@ -901,6 +936,8 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 		if (pLog == NULL) {
 		    std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
         } else {
+            // KTK MOVED TO MATCH CONFLUENCE 12/9/2011
+            *pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
 		    *pLog << *pBook;
             //std::cerr << *pBook << "\n";
 		}
@@ -962,9 +999,6 @@ Application::onMessage(const FIX42::MarketDataRequestReject& message, const FIX:
 void
 Application::toAdmin(FIX::Message& message, const FIX::SessionID& sessionID) 
 {
-	if (_config.printDebug) { 
-		std::cout << "Application::toAdmin(FIX::Message& message, const FIX::SessionID& sessionID)" << "\n";
-	}
 	FIX::MsgType msgType;
 	message.getHeader().getField(msgType);
 	if (msgType.getValue() == "1") { 
@@ -977,6 +1011,16 @@ Application::toAdmin(FIX::Message& message, const FIX::SessionID& sessionID)
 			std::cerr << "Sending ResendRequest" << "\n";
 		}
 	}
+	if (msgType.getValue() == "3") {
+		if (_config.printDebug) {
+            std::cerr << "*******************************************************\n";
+            std::cerr << "*******************************************************\n";
+            std::cerr << "*******************************************************\n";
+            std::cerr << "*******************************************************\n";
+            std::cerr << "*******************************************************\n";
+			std::cerr << "Sending Reject" << "\n";
+		}
+    }
 	if (msgType.getValue() == "0") { 
 		if (_config.printDebug) { 
 			std::cerr << "Sending Heartbeat" << "\n";
@@ -1107,7 +1151,7 @@ Application::run()
 		    std::cout << "Created new log for: " << symbol  << " as (" << fullPathToLog.string() << ") " << pLog->is_open()   << "\n";
             timespec evtTime;
             clock_gettime(CLOCK_MONOTONIC, &evtTime);
-            *pLog << pBook->getOutputVersionString() << "," << pBook->getName() << "," << pBook->getDepth() << evtTime << "\n"; 
+            *pLog << pBook->getOutputVersionString() << "," << pBook->getName() << "," << pBook->getDepth() << "," << evtTime << "\n"; 
         }
         
 		addStream(symbol, pLog);
@@ -1209,7 +1253,7 @@ Application::querySingleMarketDataRequest43(const std::string& requestSymbol)
 	FIX::SubscriptionRequestType 
 	  subType(FIX::SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES);
 // KTK TODO - pull the depth into symbols file
-	FIX::MarketDepth marketDepth(1);
+	FIX::MarketDepth marketDepth(_config.marketDepth);
 	FIX43::MarketDataRequest message(mdReqID, subType, marketDepth);
 	
 	if (_config.aggregatedBook) { 
