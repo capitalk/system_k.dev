@@ -32,14 +32,14 @@
 
 #include "SessionInfo.h"
 #include "FIXConvertors.h"
-#include "MsgPump.h"
+#include "MP.h"
 
 class SessionInfo;
 
 class MsgDispatcher
 {
     public:
-        MsgDispatcher(MsgPump* pMsgPump, SessionInfo* pSessionInfo/*std::map<const FIX::SessionID, SessionInfo*>& sessionInfo,*/  /*std::set<FIX::SessionID>& sessions*/);
+        MsgDispatcher(MP* pMsgPump, SessionInfo* pSessionInfo/*std::map<const FIX::SessionID, SessionInfo*>& sessionInfo,*/  /*std::set<FIX::SessionID>& sessions*/);
         ~MsgDispatcher(); 
     
         inline void setSpeedFactor(float speedFactor) { this->_speedFactor = speedFactor; }
@@ -50,6 +50,10 @@ class MsgDispatcher
 
         void join();
         void dispatch(FIX::Message& msg);//, const FIX::SessionID& sessionID);
+        void setDataDictionary(const FIX::DataDictionary& dict);
+
+        void setPump(MP* mp) { this->_pMsgPump = mp;}
+        MP*  getPump() { return this->_pMsgPump;}
 
 
     private:
@@ -60,15 +64,18 @@ class MsgDispatcher
         boost::mutex _consumedMutex;
         boost::mutex _initMutex;
         boost::mutex _timeBufMutex;
-        boost::condition _msgConsumed;
+        //boost::condition _msgConsumed;
 
-        MsgPump* _pMsgPump;
+        MP* _pMsgPump;
         //std::map<const FIX::SessionID, SessionInfo*>& _sessionIDToInfo;
         SessionInfo* _pSessionInfo;
+        FIX::DataDictionary _dict;
+        FIX::Parser _parser;
         //std::set<FIX::SessionID>& _sessions;
         char* _timeBuf;
         bool _bInit;
         float _speedFactor;
+        FILE* fp;
 };
 
 #endif //_CAPK_MSGDISPATCHER_

@@ -14,6 +14,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#define OB_VERSION_STRING "V3"
+
 //namespace capitalk { 
 
 //typedef boost::shared_ptr<KLimit> pKLimit;
@@ -46,7 +48,7 @@ public:
 
     virtual pKOrder getOrder(uint32_t orderId);
                                                 
-    const char* getOutputVersionString() { return "V3"; } 
+    const char* getOutputVersionString() { return OB_VERSION_STRING; } 
     const timespec getEventTime() { return _evtTime; }
     const timespec getExchangeSendTime() { return _exchSndTime; }
     void dbg();

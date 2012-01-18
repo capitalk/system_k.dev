@@ -68,13 +68,26 @@
 #define IF_REPLAY(x, y) if (_isReplay) { x } else { y }
 #define IF_DEBUG(x) if (_config.printDebug) { x }
 
+
+void 
+Application::setReplayVolatility(const double vol)
+{
+    _replayVolatility = vol;
+}
+
+void 
+Application::setReplaySpeed(const double sp)
+{
+    _replayTimeDiv = sp;
+}
+
 void
 Application::setReplayLog(const std::string& log) 
 {
     IF_DEBUG(std::cerr << "Set replay log: " << log << std::endl;)
     try {
         if (_config.printDebug) {
-            std::cout << "Reading from: " << log << std::endl;
+            std::cerr << "Reading from: " << log << std::endl;
         }
         _replayLog = log;
         _isReplay = true;
@@ -120,6 +133,7 @@ void Application::onLogout(const FIX::SessionID& sessionID)
         std::cout << "Application::onLogout" << std::endl;
     }
     std::map<const FIX::SessionID, SessionInfo*>::iterator it;
+    std::cerr << "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\n";
     it = _sessionMap.find(sessionID);
     if (it == _sessionMap.end()) {
         if (_config.printDebug) {
@@ -130,6 +144,15 @@ void Application::onLogout(const FIX::SessionID& sessionID)
         if (_config.printDebug) {
             std::cerr << "SessionInfo deleting info for:" << sessionID.toString();
         }
+        
+        MsgDispatcher *md = it->second->getDispatcher();
+        assert(md);
+        MP* mp = md->getPump();
+        assert(mp);
+        mp->stop();
+        md->stop();
+
+
         delete (it->second);
         _sessionMap.erase(it);
     }
@@ -139,7 +162,7 @@ void Application::toAdmin(FIX::Message& message,
                          const FIX::SessionID& sessionID) 
 {
     if (_config.printDebug) {
-        std::cout << "Application::toAdmin" << std::endl;
+        std::cerr << "Application::toAdmin" << std::endl;
     }
 }
 
@@ -148,7 +171,7 @@ void Application::toApp(FIX::Message& message,
 throw(FIX::DoNotSend)
 {
     if (_config.printDebug) {
-        std::cout << "Application::toApp" << message << sessionID << std::endl;
+        std::cerr << "Application::toApp" << message << sessionID << std::endl;
     }
 }
 
@@ -157,7 +180,7 @@ void Application::fromAdmin(const FIX::Message& message,
 throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::RejectLogon) 
 {
     if (_config.printDebug) {
-        std::cout << "Application::fromAdmin" << std::endl;
+        std::cerr << "Application::fromAdmin" << std::endl;
     }
 }
 
@@ -166,11 +189,11 @@ void Application::fromApp(const FIX::Message& message,
 throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::UnsupportedMessageType)
 { 
     if (_config.printDebug) {
-        std::cout << "Application::fromApp" << std::endl;
+        std::cerr << "Application::fromApp" << std::endl;
     }
     FIX::MsgType msgType;
     message.getHeader().getField(msgType);
-    //std::cout << "ABOUT TO CRACK------------------------>" << std::endl;
+    //std::cerr << "ABOUT TO CRACK------------------------>" << std::endl;
     /*
      * Use this special message type to initiate book replay when ready to process
      */
@@ -479,7 +502,7 @@ void
 Application::onMessage(const FIX42::SecurityStatusRequest& message, const FIX::SessionID& sessionID)
 {
     if (_config.printDebug) {
-        std::cout << "Application::SecurityStatus  FIX42" << std::endl;
+        std::cerr << "Application::SecurityStatus  FIX42" << std::endl;
     }
     // Returns SecurityStatus
 }
@@ -488,7 +511,7 @@ void
 Application::onMessage(const FIX42::TradingSessionStatusRequest& message, const FIX::SessionID& sessionID)
 {
     if (_config.printDebug) {
-        std::cout << "Application::TradingSessionStatusRequest FIX42" << std::endl;
+        std::cerr << "Application::TradingSessionStatusRequest FIX42" << std::endl;
     }
 }
 /*
@@ -496,7 +519,7 @@ void
 Application::onMessage(const FIX42::SecurityDefinition& message, const FIX::SessionID& sessionID) 
 {
     if (_config.printDebug) {
-        std::cout << "Application::SecurityDefinition FIX42" << std::endl;
+        std::cerr << "Application::SecurityDefinition FIX42" << std::endl;
     }
 }
 */
@@ -505,7 +528,7 @@ void
 Application::onMessage(const FIX42::TestRequest& message, const FIX::SessionID& sessionID)
 {
     if (_config.printDebug) {
-        std::cout << "Application::TestRequest FIX42" << std::endl;
+        std::cerr << "Application::TestRequest FIX42" << std::endl;
     }
 }
 
@@ -513,7 +536,7 @@ void
 Application::onMessage(const FIX42::Heartbeat& message, const FIX::SessionID& sessionID)
 {
     if (_config.printDebug) {
-        std::cout << "Application::Heartbeat FIX42" << std::endl;
+        std::cerr << "Application::Heartbeat FIX42" << std::endl;
     }
 }
 
@@ -521,15 +544,16 @@ void
 Application::onMessage(const FIX42::Logout& message, const FIX::SessionID& sessionID)
 {
     if (_config.printDebug) {
-        std::cout << "Application::Logout FIX42" << std::endl;
+        std::cerr << "Application::Logout FIX42" << std::endl;
     }
+    std::cerr << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n";
 }
 
 void 
 Application::onMessage(const FIX42::Logon& message, const FIX::SessionID& sessionID)
 {
     if (_config.printDebug) {
-        std::cout << "Application::Logon FIX42" << std::endl;
+        std::cerr << "Application::Logon FIX42" << std::endl;
     }
 }
 
@@ -538,7 +562,7 @@ void
 Application::onMessage(const FIX42::MarketDataRequest& message, const FIX::SessionID& sessionID) 
 {
     if (_config.printDebug) {
-        std::cout << "Application::MarketDataRequest FIX42" << std::endl;
+        std::cerr << "Application::MarketDataRequest FIX42" << std::endl;
     }
 
     // MarketDepth
@@ -577,10 +601,10 @@ Application::onMessage(const FIX42::MarketDataRequest& message, const FIX::Sessi
     FIX42::MarketDataRequest::NoMDEntryTypes mdEntry;
     FIX::MDEntryType mdEntryType;
     message.getField(noMDEntryTypes);
-    std::cout << "MDEntryTypes: " << noMDEntryTypes;
+    std::cerr << "NoMDEntryTypes: " << noMDEntryTypes << "\n";
     for (int i = 0; i< noMDEntryTypes; i++) {
         message.getGroup(i+1, mdEntry);
-        std::cout << mdEntry.getField(mdEntryType);
+        std::cerr << "Entry type: " << mdEntry.getField(mdEntryType) << "\n";
     }
     std::cout << std::endl;
 
@@ -689,67 +713,94 @@ Application::onMessage(const FIX42::MarketDataRequest& message, const FIX::Sessi
 /************************************************************/
 /* TEST REPLY END                                           */
 /************************************************************/
-    // KTK TODO - check if session info exists for this session already
-    for (int j = 0; j < noRelatedSym; j++) {
-        message.getGroup(j+1, relatedSym);
-        relatedSym.getField(symbol);
-        _sessionMap[sessionID] = new SessionInfo(sessionID);
-        _sessionMap[sessionID]->addSymbol(symbol.getString());
-        // KTK TODO - add MDReqID here in sessionInfo as well!!!!!!!!!!!
-    }
-
     FIX::K_ReplayFile k_replayFile;
     if (message.isSetField(k_replayFile)) {
         message.getField(k_replayFile);
         std::cerr << ">>>>>>>> K_REPLAYFILE: " << k_replayFile << std::endl;
+    }
+    else {
+        FIX::K_ReplayFile commandLineFile(_replayLog.c_str());
+        k_replayFile = commandLineFile;
     }
     FIX::K_ReplayTimeDiv k_replayTimeDiv;
     if (message.isSetField(k_replayTimeDiv)) {
         message.getField(k_replayTimeDiv);
         std::cerr << ">>>>>>>> K_REPLAYTIMEDIV: " << k_replayTimeDiv << std::endl;
     }
+    else {
+        FIX::K_ReplayTimeDiv commandLineReplayTimeDiv(_replayTimeDiv);
+        k_replayTimeDiv = commandLineReplayTimeDiv;
+    }
     FIX::K_Volatility k_volatility;
     if (message.isSetField(k_volatility)) {
         message.getField(k_volatility);
         std::cerr << ">>>>>>>> K_VOLATILITY: " << k_volatility << std::endl;
     }
+    else {
+        FIX::K_Volatility commandLineVolatility(_replayVolatility);
+        k_volatility = commandLineVolatility;
+    }
     
+    // KTK TODO - check if session info exists for this session already
+    // OK - DONE
+    SessionMap::iterator sessionIter = _sessionMap.find(sessionID);
+    if (sessionIter == _sessionMap.end()) {
+       std::cerr << "Session not found" << sessionID << "\n"; 
+       std::cerr << "CHECK THAT SESSSION WAS CREATED ON LOGON" << sessionID << "\n"; 
+    }
+    else {
+       std::cerr << "Found session: " << sessionID.toString() << "\n";
+        if (_sessionMap[sessionID]->hasDispatcher()) {
+            std::cerr << "Session: " << sessionID.toString() << " already has dispatcher" << std::endl;
+            // Add symbols
+            for (int j = 0; j < noRelatedSym; j++) {
+                message.getGroup(j+1, relatedSym);
+                relatedSym.getField(symbol);
+                _sessionMap[sessionID]->addSymbol(symbol.getString());
+            }
+        } 
+        else {
+           std::cerr << "Creating dispatcher for session: " << sessionID.toString() << "\n";
+           MP* pPump = new MP();
+           pPump->setInputFile(k_replayFile);
+           if(!pPump->open()) {
+                    std::cerr << "Error opening replay log" << std::endl;
+           }
+           MsgDispatcher* d = new MsgDispatcher(pPump, _sessionMap[sessionID]);//, s);
+           FIX::Session* psession = FIX::Session::lookupSession(sessionID);
+           if (!psession) {
+                throw FIX::Exception("INVALID SESSION!", "psession is NULL");
+           }
+           FIX::DataDictionaryProvider dp = psession->getDataDictionaryProvider();
+           FIX::DataDictionary dict = dp.getSessionDataDictionary(sessionID.getBeginString());
+           d->setDataDictionary(dict);
+           d->setSpeedFactor(k_replayTimeDiv);
+           _sessionMap[sessionID]->setDispatcher(d);
+           std::cerr << "Starting pump and dispatcher for session: " << sessionID.toString() << std::endl;
+           pPump->start();
+           d->start();
+        }
+    }
+/*
     if (_isReplay) {
     // Start the dispatcher
         // KTK TODO - start the msg dispatcher but this will start for all requests which is not really what we 
         // want but for testing it is fine for now 20110602
         // KTK TODO - create the MsgPump here as well and put in the dispatcher. 
+       IF_DEBUG(std::cout << "isReplay: " << _isReplay << std::endl;)
+        
         if (_sessionMap[sessionID]->hasDispatcher()) {
             std::cerr << "Session: " << sessionID.toString() << " already has dispatcher" << std::endl;
         } 
         else {
-            FIX::Session* psession = FIX::Session::lookupSession(sessionID);
-            if (!psession) {
-                throw FIX::Exception("INVALID SESSION!", "psession is NULL");
+            for (int j = 0; j < noRelatedSym; j++) {
+                message.getGroup(j+1, relatedSym);
+                relatedSym.getField(symbol);
+                sessionIter->second->addSymbol(symbol.getString());
             }
-            //std::set<FIX::SessionID> s = FIX::Session::getSessions();
-            FIX::DataDictionaryProvider dp = psession->getDataDictionaryProvider();
-            FIX::DataDictionary dict = dp.getSessionDataDictionary(sessionID.getBeginString());
-            MsgPump* pPump = new MsgPump();
-            pPump->setInputFile(k_replayFile);
-            if(!pPump->open()) {
-                std::cerr << "Error opening replay log" << std::endl;
-            }
-            IF_DEBUG(std::cout << "isReplay: " << _isReplay << std::endl;)
-            pPump->start();
-            pPump->setDataDictionary(dict);
-            _sessionMap[sessionID]->setPump(pPump); 
-            MsgDispatcher* d = new MsgDispatcher(pPump, _sessionMap[sessionID]);//, s);
-            d->setSpeedFactor(k_replayTimeDiv);
-            _sessionMap[sessionID]->setDispatcher(d);
-            std::cerr << "Starting dispatcher for session: " << sessionID.toString() << std::endl;
-            d->start();
         }
     }
-    else {
-    // Get the orderbook and send what is requested 
-    }
-
+*/
 
     /* KTK - before sending snapshot full refresh we need to get some data from msgPump if 
     * IF we're in replay mode
