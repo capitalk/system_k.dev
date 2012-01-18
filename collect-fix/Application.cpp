@@ -767,9 +767,9 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                         std::cerr << "Book add failed!!!!!!!!!!\n (" << nid << nside << "(" << side << ")" << size << price << evtTime << sndTime << "\n";
                     }
 
-                    *pLog << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
+                    *pLog << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(5) << price << "," << evtTime << "\n"; 
                     if (_config.printDebug) {
-                        std::cerr << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
+                        std::cerr << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(5) << price << "," << evtTime << "\n"; 
                         pBook->dbg();
                     }
 				} else if (action == FIX::MDUpdateAction_CHANGE) { // change  
@@ -796,7 +796,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             //std::cerr << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
                         }
 
-                        *pLog << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
+                        *pLog << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(5) << price << "," << evtTime << "\n"; 
     
                         pBook->remove(nrefId, evtTime, sndTime);
                         pBook->add(nid, nside, size, price, evtTime, sndTime);
@@ -804,7 +804,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                         if (_config.printDebug) {
                             std::cerr << "***** MOD: " << nid << " to size " << size << "\n";
                         }
-                        //std::cerr << "M," << pBook->getOrder(nid)->getSide() << "," << size << "," << std::setprecision(7) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
+                        //std::cerr << "M," << pBook->getOrder(nid)->getSide() << "," << size << "," << std::setprecision(5) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
                         pKOrder pOrder = pBook->getOrder(nid);
                         if (pOrder) {
                             *pLog << 
@@ -813,7 +813,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             "," << 
                             std::setiosflags(std::ios_base::fixed) << size << 
                             "," << 
-                            std::setprecision(7) << pBook->getOrder(nid)->getPrice() << 
+                            std::setprecision(5) << pBook->getOrder(nid)->getPrice() << 
                             "," <<  
                             evtTime << 
                             "\n"; 
@@ -824,7 +824,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             "," << 
                             std::setiosflags(std::ios_base::fixed) << size << 
                             "," << 
-                            std::setprecision(7) << pBook->getOrder(nid)->getPrice() << 
+                            std::setprecision(5) << pBook->getOrder(nid)->getPrice() << 
                             "," <<  
                             evtTime << 
                             "\n"; 
@@ -850,9 +850,10 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             "D," << 
                             pBook->getOrder(nid)->getSide() << 
                             "," << 
+                            std::setprecision(0) << 
                             std::setiosflags(std::ios_base::fixed) << pBook->getOrder(nid)->getSize() << 
                             "," << 
-                            std::setprecision(7) << pBook->getOrder(nid)->getPrice() << 
+                            std::setprecision(5) << pBook->getOrder(nid)->getPrice() << 
                             "," << 
                             evtTime << 
                             "\n"; 
@@ -861,9 +862,10 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             "D," << 
                             pBook->getOrder(nid)->getSide() << 
                             "," << 
+                            std::setprecision(0) << 
                             std::setiosflags(std::ios_base::fixed) << pBook->getOrder(nid)->getSize() << 
                             "," << 
-                            std::setprecision(7) << pBook->getOrder(nid)->getPrice() << 
+                            std::setprecision(5) << pBook->getOrder(nid)->getPrice() << 
                             "," << 
                             evtTime << 
                             "\n"; 

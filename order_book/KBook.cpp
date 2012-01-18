@@ -335,7 +335,7 @@ operator<<(std::ostream& out, const KBook& b)
             << (*bit)->getUpdateTime() << "," 
             << BID << ","
             << i << ","
-            << std::setprecision(8) 
+            << std::setprecision(5) 
             << (*bit)->getPrice() << ","
             << std::setprecision(0) 
             << (*bit)->getTotalVolume() << ",";
@@ -365,7 +365,7 @@ operator<<(std::ostream& out, const KBook& b)
             << (*ait)->getUpdateTime() << "," 
             << ASK << ","
             << i << ","
-            << std::setprecision(8) 
+            << std::setprecision(5) 
             << (*ait)->getPrice() << ","
             << std::setprecision(0)  
             << (*ait)->getTotalVolume() << ",";
