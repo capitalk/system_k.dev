@@ -57,7 +57,7 @@ s_recv (void *socket) {
     if (zmq_recv (socket, &message, 0))
         return (NULL);
     int size = zmq_msg_size (&message);
-    char *string = malloc (size + 1);
+    char *string = (char*)malloc (size + 1);
     memcpy (string, zmq_msg_data (&message), size);
     zmq_msg_close (&message);
     string [size] = 0;
@@ -101,7 +101,7 @@ s_dump (void *socket)
         zmq_recv (socket, &message, 0);
 
         //  Dump the message as text or binary
-        char *data = zmq_msg_data (&message);
+        char *data = (char*)zmq_msg_data (&message);
         int size = zmq_msg_size (&message);
         int is_text = 1;
         int char_nbr;
@@ -176,7 +176,7 @@ s_console (const char *format, ...)
 {
     time_t curtime = time (NULL);
     struct tm *loctime = localtime (&curtime);
-    char *formatted = malloc (20);
+    char *formatted = (char*)malloc (20);
     strftime (formatted, 20, "%y-%m-%d %H:%M:%S ", loctime);
     printf ("%s", formatted);
     free (formatted);

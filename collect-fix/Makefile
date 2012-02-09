@@ -11,7 +11,7 @@ CFLAGS=-Wall -std=c++0x -pthread -O3
 LDFLAGS=-static
 
 PROTOC=protoc
-PROTO=../proto
+PROTODIR=../proto
 
 ifeq ($(dbg),1)
         CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb -g # -DDEBUG_BOOK
@@ -26,8 +26,8 @@ all: collect
 collect : collect.o Application.o  libOrderBook2.a spot_fx_md_1.pb.o
 	$(CC) $(CFLAGS) collect.o spot_fx_md_1.pb.o Application.o $(ORDERBOOK_DIR)/libOrderBook2.a $(LIBS) -o $@ 
 
-spot_fx_md_1.pb.o: $(PROTO)/spot_fx_md_1.pb.cc $(PROTO)/spot_fx_md_1.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/spot_fx_md_1.pb.cc
+spot_fx_md_1.pb.o: $(PROTODIR)/spot_fx_md_1.pb.cc $(PROTODIR)/spot_fx_md_1.pb.h
+	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTODIR)/spot_fx_md_1.pb.cc
 
 collect.o: collect.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
@@ -40,11 +40,11 @@ libOrderBook2.a:
 
 #libOrderBook.a:
 #	cd $(ORDERBOOK_DIR) && make
-protos: $(PROTO)/spot_fx_md_1.proto
-	$(PROTOC) -I$(PROTO) --cpp_out=$(PROTO) $(PROTO)/*.proto
+protos: $(PROTODIR)/spot_fx_md_1.proto
+	$(PROTOC) -I$(PROTODIR) --cpp_out=$(PROTODIR) $(PROTODIR)/*.proto
 
 clean :
-	rm -f *.o collect $(PROTO)/*.cc $(PROTO)/*.h
+	rm -f *.o collect $(PROTODIR)/*.cc $(PROTODIR)/*.h
 	#cd $(ORDERBOOK_DIR) && make clean 
 
 install :

@@ -43,7 +43,6 @@
 namespace fs = boost::filesystem; 
 namespace dt = boost::gregorian; 
 
-
 //using namespace capitalk;
 
 void Application::onLogon(const FIX::SessionID& sessionID )
@@ -129,59 +128,6 @@ throw(FIX::DoNotSend )
 		std::cerr << e.what() << "\n";	
 	}
 
-}
-void Application::onMessage(const FIX43::SecurityDefinition& message, const FIX::SessionID& sessionID) 
-{
-    if (_config.printDebug) {
-	    std::cerr << "Application::onMessage(const FIX43::SecurityDefinition& message, const FIX::SessionID& sessionID)" << "\n";
-    }
-	FIX::SecurityReqID securityReqID; 
-	FIX::SecurityResponseID securityResponseID; 
-	FIX::SecurityResponseType securityResponseType; 
-	FIX::TotalNumSecurities totalNumSecurities; 
-	FIX::Symbol symbol; 
-	FIX::SecurityType securityType; 
-
-	if (message.isSetField(securityReqID)) {
-		message.getField(securityReqID);
-	}	
-	if (message.isSetField(securityResponseID)) {
-		message.getField(securityResponseID);
-	}	
-	if (message.isSetField(securityResponseType)) {
-		message.getField(securityResponseType);
-	}	
-	if (message.isSetField(totalNumSecurities)) {
-		message.getField(totalNumSecurities);
-		std::cout << "\tReceiving " << totalNumSecurities.getValue() << "\n";
-	}	
-}
-
-void Application::onMessage(const FIX42::SecurityDefinition& message, const FIX::SessionID& sessionID) 
-{
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX42::SecurityDefinition& message, const FIX::SessionID& sessionID)" << "\n";
-    }
-	FIX::SecurityReqID securityReqID; 
-	FIX::SecurityResponseID securityResponseID; 
-	FIX::SecurityResponseType securityResponseType; 
-	FIX::TotalNumSecurities totalNumSecurities; 
-	FIX::Symbol symbol; 
-	FIX::SecurityType securityType; 
-
-	if (message.isSetField(securityReqID)) {
-		message.getField(securityReqID);
-	}	
-	if (message.isSetField(securityResponseID)) {
-		message.getField(securityResponseID);
-	}	
-	if (message.isSetField(securityResponseType)) {
-		message.getField(securityResponseType);
-	}	
-	if (message.isSetField(totalNumSecurities)) {
-		message.getField(totalNumSecurities);
-		std::cout << "\tReceiving " << totalNumSecurities.getValue() << "\n";
-	}	
 }
 
 void Application::onMessage(const FIX43::SecurityStatus& message, const FIX::SessionID& sessionID) 
@@ -909,7 +855,8 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
         double bbsize = pBook->bestPriceVolume(BID);
         double baprice = pBook->bestPrice(ASK);
         double basize = pBook->bestPriceVolume(ASK);
-        
+		zmq_msg_t msg;        
+		char zc_msgbuf[256];
         if (isPublishing()) {
             capitalk::mic_bbo bbo;
             bbo.set_symbol(symbol.getValue());
@@ -919,16 +866,20 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
             bbo.set_ask_size(basize);
             bbo.set_mic(_config.mic_code);
             
-            int msgsize = bbo.ByteSize();
-            char* msgbuf = new char[msgsize];
-            zmq::message_t message(msgsize);
-            bbo.SerializeToArray(msgbuf, msgsize);
-            memcpy(message.data(), msgbuf, msgsize);
+            size_t msgsize = bbo.ByteSize();
+			assert(msgsize < sizeof(zc_msgbuf));
+            //char* msgbuf = new char[msgsize];
+            bbo.SerializeToArray(zc_msgbuf, msgsize);
+
+            //zmq::message_t message(msgsize);
+            zmq_msg_init_data(&msg, (void*)zc_msgbuf, msgsize, NULL, NULL);
+            //memcpy(message.data(), msgbuf, msgsize);
             std::cerr << "Sending "  << msgsize << " bytes\n";
-            this->_pzmq_socket->send(message);
-            if (msgbuf) {
-                delete[] msgbuf;
-            }
+            zmq_send(_pzmq_socket, &msg, 0);
+
+            //if (msgbuf) {
+                //delete[] msgbuf;
+            //}
         }
 
         if(bbprice > baprice) {
@@ -1161,6 +1112,8 @@ Application::run()
 		std::cout << "NUM BOOKS: " << _symbolToBook.size() << "\n";
 		it++;
 	}
+
+
 	// Some venues require each market data subscription to be sent in a different message 
 	// - i.e. when we send 35=V we are ONLY allowed to send 146(NoRelatedSymbols)=1 so we send multiple 
 	// 35=V requests
@@ -1191,7 +1144,7 @@ Application::sendTestRequest()
 	case 43: testRequestMessage = sendTestRequest43();
 		break;
 	default: 
-		throw "Unsupport FIX version"; 
+		throw "Unsupported FIX version"; 
 	}
 	FIX::Session::sendToTarget(testRequestMessage, _sessionID.getSenderCompID(), _sessionID.getTargetCompID());
 }

@@ -42,6 +42,7 @@
 #include "quickfix/fix42/TradingSessionStatus.h"
 #include "quickfix/fix42/SecurityStatus.h"
 #include "quickfix/fix42/SecurityDefinition.h"
+#include "quickfix/fix42/SecurityDefinitionRequest.h"
 
 #include "quickfix/fix43/ExecutionReport.h"
 #include "quickfix/fix43/MarketDataIncrementalRefresh.h"
@@ -58,6 +59,7 @@
 #include "quickfix/fix43/TradingSessionStatus.h"
 #include "quickfix/fix43/SecurityStatus.h"
 #include "quickfix/fix43/SecurityDefinition.h"
+#include "quickfix/fix43/SecurityDefinitionRequest.h"
 
 #include <string>
 #include <queue>
@@ -72,12 +74,10 @@
 #include "order_book/KBook.h"
 
 enum FIXVersion {
-	FIX_40 = 40,
-	FIX_41 = 41,
 	FIX_42 = 42,
 	FIX_43 = 43,
 	FIX_44 = 44,
-	FIX_50 = 45
+	FIX_50 = 50
 };
 
 struct ApplicationConfig { 
@@ -125,12 +125,13 @@ public:
     void deleteBooks();
     void flushLogs();
 
-    void setZMQContext(zmq::context_t* c) { this->_pzmq_context = c;}
-    void setZMQSocket(zmq::socket_t* s) { this->_pzmq_socket = s;}
+    void setZMQContext(void* c) { this->_pzmq_context = c;}
+    void setZMQSocket(void* s) { this->_pzmq_socket = s;}
     void setPublishing(bool isPublishing) { this->_isPublishing = isPublishing;}
     inline bool isPublishing() { return _isPublishing;}
-    zmq::socket_t* getZMQSocket() { return this->_pzmq_socket;}
-    zmq::context_t* getZMQContext() { return this->_pzmq_context;}
+    void* getZMQSocket() { return this->_pzmq_socket;}
+    void* getZMQContext() { return this->_pzmq_context;}
+
     
 	//void addStream(const std::string& symbol, boost::shared_ptr<std::ostream> log);
 	//boost::shared_ptr<std::ostream> getStream(const std::string& symbol);
@@ -155,7 +156,6 @@ private:
 
 	void onMessage(const FIX42::TradingSessionStatus&, const FIX::SessionID&);
 	void onMessage(const FIX42::SecurityStatus&, const FIX::SessionID&);
-	void onMessage(const FIX42::SecurityDefinition&, const FIX::SessionID&);
 	void onMessage(const FIX42::TestRequest&, const FIX::SessionID&);
 	void onMessage (const FIX42::Heartbeat& message, const FIX::SessionID& sessionID);
 	//void onMessage(const FIX42::ResendRequest&, const FIX::SessionID&);
@@ -168,7 +168,6 @@ private:
 
 	void onMessage(const FIX43::TradingSessionStatus&, const FIX::SessionID&);
 	void onMessage(const FIX43::SecurityStatus&, const FIX::SessionID&);
-	void onMessage(const FIX43::SecurityDefinition&, const FIX::SessionID&);
 	void onMessage(const FIX43::TestRequest&, const FIX::SessionID&);
 	void onMessage(const FIX43::Heartbeat& message, const FIX::SessionID& sessionID);
 	//void onMessage(const FIX43::ResendRequest&, const FIX::SessionID&);
@@ -183,9 +182,11 @@ private:
 	void sendTestRequest();
 	FIX42::TestRequest sendTestRequest42();
 	FIX43::TestRequest sendTestRequest43();
+
 	void querySingleMarketDataRequest(const std::string& symbols);
 	FIX42::MarketDataRequest querySingleMarketDataRequest42(const std::string& symbol);
 	FIX43::MarketDataRequest querySingleMarketDataRequest43(const std::string& symbol);
+
 	void queryMarketDataRequest(const std::vector<std::string>& symbols);
 	FIX42::MarketDataRequest queryMarketDataRequest42(const std::vector<std::string>& symbols);
 	FIX43::MarketDataRequest queryMarketDataRequest43(const std::vector<std::string>& symbols);
@@ -203,9 +204,10 @@ private:
     unsigned int _appMsgCount;
 	const ApplicationConfig& _config; 
 
-    zmq::socket_t* _pzmq_socket;
-    zmq::context_t* _pzmq_context;
+    void* _pzmq_socket;
+    void* _pzmq_context;
     bool _isPublishing;
+
     
 	//std::ostream _bookLog;
 	//std::ostream _msgLog;

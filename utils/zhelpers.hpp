@@ -63,6 +63,7 @@ s_recv (zmq::socket_t & socket) {
 }
 
 //  Convert string to 0MQ string and send to socket
+
 static bool
 s_send (zmq::socket_t & socket, const std::string & string) {
 
@@ -72,6 +73,7 @@ s_send (zmq::socket_t & socket, const std::string & string) {
     bool rc = socket.send(message);
     return (rc);
 }
+
 
 //  Sends string as 0MQ string, as multipart non-terminal
 static bool
@@ -134,7 +136,7 @@ s_dump (zmq::socket_t & socket)
 
 //  Set simple random printable identity on socket
 //
-std::string
+inline std::string
 s_set_id (zmq::socket_t & socket)
 {
     std::stringstream ss;

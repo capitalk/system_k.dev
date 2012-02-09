@@ -52,12 +52,14 @@ namespace dt = boost::gregorian;
 void sighandler(int sig);
 
 // Global pointers for signal handlers to cleanup properly
-FIX::SocketInitiator* pinitiator;
+FIX::ThreadedSocketInitiator* pinitiator;
 Application* papplication;
 
 // ZMQ Globals - can't have these go out of scope
-zmq::context_t context(1);
-zmq::socket_t publisher(context, ZMQ_PUB);
+//zmq::context_t context(1);
+//zmq::socket_t publisher(context, ZMQ_PUB);
+void *g_zmq_context;
+void *pub_socket;
 
 std::vector<std::string> 
 readSymbols(std::string symbolFileName)
@@ -86,10 +88,16 @@ int main( int argc, char** argv )
 	std::string configFile;
 	std::string password;
 	bool printDebug; 
+    
 
     (void) signal(SIGINT, sighandler);
     (void) signal(SIGTERM, sighandler);
     (void) signal(SIGHUP, sighandler);
+
+	g_zmq_context = zmq_init(1);
+	assert(g_zmq_context);
+	pub_socket = zmq_socket(g_zmq_context, ZMQ_PUB);
+	assert(pub_socket);
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
@@ -115,14 +123,14 @@ int main( int argc, char** argv )
 		}
 		
 		if (vm.count("o")) {
-			std::cout << "Output path: " << vm["o"].as<std::string>() << ".\n";
+			std::cout << "Output path: " << vm["o"].as<std::string>() << "\n";
             argOutputDir = vm["o"].as<std::string>();
 		} else {
 			// set default
 			std::cout << "Output path file was not set \n";
 		}
 		if (vm.count("s")) {
-			std::cout << "Symbol file: " << vm["s"].as<std::string>() << ".\n";
+			std::cout << "Symbol file: " << vm["s"].as<std::string>() << "\n";
 			symbolFile = vm["s"].as<std::string>();
 		} else {
 			// use default name for symbols file name 
@@ -262,18 +270,19 @@ int main( int argc, char** argv )
         // ZMQ initialization
         if (isPublishing) {
             std::cout << "ZMQ: Seting publishing params" << std::endl;
-            publisher.bind(bindAddress.c_str());
-            application.setZMQContext(&context);
-            application.setZMQSocket(&publisher);
+            zmq_bind(pub_socket, bindAddress.c_str());
+            application.setZMQContext(g_zmq_context);
+            application.setZMQSocket(pub_socket);
         }
         application.setPublishing(isPublishing);
         
-
+        // orderbook output setup
 		application.setDataPath(orderBooksOutputDir);
 		FIX::FileStoreFactory storeFactory(storeOutputDir);         
 		FIX::FileLogFactory logFactory(logOutputDir);
 
-		FIX::SocketInitiator initiator(application, storeFactory, settings, logFactory);
+
+		FIX::ThreadedSocketInitiator initiator(application, storeFactory, settings, logFactory);
         pinitiator = &initiator;
 		std::cout << "Starting initiator" << std::endl; 
 		initiator.start();

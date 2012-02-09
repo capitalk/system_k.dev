@@ -219,7 +219,7 @@ book_manager::run() {
                             // check the elapsed time since last update
                             clock_gettime(CLOCK_MONOTONIC, &now);
                             unsigned long last_update_millis = 
-                                timespec_delta_micros(instruments[i].mics[j].last_update, now);
+                                timespec_delta_millis(instruments[i].mics[j].last_update, now);
 
                             if (DBG) {
                                 fprintf(stderr, "<%s:%s> us since last update: %lu\n", 
@@ -337,10 +337,13 @@ worker::run () {
             zmq::message_t msg;
             subscriber.recv(&msg);
             boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
-            bbo.ParseFromArray(msg.data(), msg.size());
-
+            //bbo.ParseFromArray(msg.data(), msg.size());
+			int64_t more;
+			size_t more_size;
+			more_size = sizeof(more);
+			subscriber.getsockopt(ZMQ_RCVMORE, &more, &more_size);
             // send to orderbook on inproc socket - no locks needed according to zmq
-            _inproc->send(msg);
+            _inproc->send(msg, more ? ZMQ_SNDMORE : 0);
 
             boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
             boost::posix_time::time_duration duration(time_end - time_start);
@@ -405,24 +408,18 @@ main(int argc, char** argv)
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    // Make sure counts are less that allocated space 
+    // make sure counts are less that allocated space 
     assert(MIC_COUNT < MAX_MICS);
     assert(SYMBOL_COUNT < MAX_SYMBOLS);
 
-    // Global context for ZMQ
-    zmq::context_t context(1);
-    
-    initialize_instrument_info(&context);
-    bcast_sock = new zmq::socket_t(context, ZMQ_PUB);
-    bcast_sock->bind(BCAST_OUT);
-
+	// check program options
+	// KTK - TODO - use config file  and symbol file
     try {
         po::options_description desc("Allowed options");
         desc.add_options()
             ("help", "produce help message")
             ("c", po::value<std::string>(), "<config file>")
             ("s", po::value<std::string>(), "<symbol file>")
-            ("o", po::value<std::string>(), "<output path>")
             ("d", "debug info")
         ;
 
@@ -430,18 +427,16 @@ main(int argc, char** argv)
         po::store(po::parse_command_line(argc, argv, desc), vm);
         po::notify(vm);
 
-
         if (vm.count("help")) {
             std::cout << desc << "\n";
             return 1;
         }
-
-        if (vm.count("o")) {
-            std::cout << "Output path: " << vm["o"].as<std::string>() << ".\n";
-            std::string argOutputDir = vm["o"].as<std::string>();
+        if (vm.count("c")) {
+            std::cout << "Config file: " << vm["c"].as<std::string>() << ".\n";
+            std::string configFile = vm["c"].as<std::string>();
         } else {
             // set default
-            std::cout << "Output path file was not set \n";
+            std::cerr << "Config file was not set \n";
         }
 
     }
@@ -450,7 +445,15 @@ main(int argc, char** argv)
         return (-1);
     }
 
+	// program options and init are OK - now start sockets and threads
     try { 
+		// Global context for ZMQ
+		zmq::context_t context(1);
+		
+		initialize_instrument_info(&context);
+		bcast_sock = new zmq::socket_t(context, ZMQ_PUB);
+		bcast_sock->bind(BCAST_OUT);
+
         // connect to inproc socket for orderbook
         book_manager ob(&context, AGGREGATE_OB);
         boost::thread* t0 = new boost::thread(boost::bind(&book_manager::run, &ob));
