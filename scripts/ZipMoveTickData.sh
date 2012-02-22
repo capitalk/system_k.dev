@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Added nice to zip commands
+
 remotetickdir="/home/timir"
 localtickdir="/mnt/raid/tickdata"
 
@@ -8,7 +10,8 @@ localtickdir="/mnt/raid/tickdata"
 remoteserver="172.16.2.101"
 
 remoteuser="timir"
-bindir="/home/timir/capitalk.repo/src/dataCollector"
+#bindir="/home/timir/capitalk.repo/src/dataCollector"
+bindir="/home/timir/collectors/collect-fix"
 
 # Pass MIC names to script to move associated ticks and logs
 while [ $# -gt 0 ]
@@ -27,7 +30,6 @@ echo "Today: $today"
 
 # Dispaly some info
 ssh $remoteuser@$remoteserver "df -h $remotetickdir/$MIC/$yesterday/"
-#ssh $remoteuser@172.16.2.101 "ls -alh $remotetickdir/$MIC/$yesterday/"
 
 # Stop the collector
 echo "STOPPING collect"
@@ -40,21 +42,21 @@ ssh $remoteuser@$remoteserver "cd $remotetickdir/$MIC/log && for w in *.log; do 
 # Restart the collector
 echo "RESTARTING collect" 
 # FOR TESTING - remove the uncomment below and comment the next line
-#ssh $remoteuser@$remoteserver "cd $bindir && $bindir/collect.$MIC.sh"
+#ssh $remoteuser@$remoteserver "cd $bindir && $bindir/collect.$MIC.dev.sh"
 ssh $remoteuser@$remoteserver "cd $bindir && $bindir/collect.$MIC.prod.sh"
 
 # Zip up tick files and copy them over to local
 echo "MOVING tick files" 
-ssh $remoteuser@$remoteserver "gzip $remotetickdir/$MIC/$yesterday/*.csv"
+ssh $remoteuser@$remoteserver "nice -n 1 gzip $remotetickdir/$MIC/$yesterday/*.csv"
 scp -rp $remoteuser@$remoteserver:$remotetickdir/$MIC/$yesterday $localtickdir/$MIC/
 
 # Zip up log files and copy them over to local
 echo "MOVING log files" 
-ssh $remoteuser@$remoteserver "gzip $remotetickdir/$MIC/log/$yesterday-*.log"
+ssh $remoteuser@$remoteserver "nice -n 1 gzip $remotetickdir/$MIC/log/$yesterday-*.log"
 mkdir -p $localtickdir/$MIC/$yesterday/log
 scp $remoteuser@$remoteserver:$remotetickdir/$MIC/log/$yesterday-*.log.gz $localtickdir/$MIC/$yesterday/log
 
-# Delete log files that are ZIPPED ONLY - collector will be running again
+# Delete log files that are ZIPPED ONLY - collector will be running again at this point
 echo "DELETE $remotetickdir/$MIC/log/*.log.gz"
 ssh $remoteuser@$remoteserver "rm -rf $remotetickdir/$MIC/log/*.log.gz"
 
@@ -64,9 +66,8 @@ ssh $remoteuser@$remoteserver "rm -rf $remotetickdir/$MIC/$yesterday"
 
 # Dispaly some info
 echo "SPACE REPORT AFTER MOVE AND DELETE"
-ssh $remoteuser@$remoteserver "df -h $remotetickdir"
+ssh $remoteuser@$remoteserver "df -h $remotetickdir/$MIC/$yesterday/"
 
-echo "*** REMEMBER TO RESTART JOBS TO FREE FILE HANDLES *** - $MIC"
 shift
 done
 
