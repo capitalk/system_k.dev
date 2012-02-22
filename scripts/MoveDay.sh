@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Move a single day of data to local disk
+
 remotetickdir="/home/timir/"
 localtickdir="/mnt/raid/tickdata"
 
