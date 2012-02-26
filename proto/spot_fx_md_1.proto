@@ -1,5 +1,7 @@
 package capitalk;
 
+import "capk_globals.proto";
+
 message order_t {
     enum side_t {
         BID = 0;

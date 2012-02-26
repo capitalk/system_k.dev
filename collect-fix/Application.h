@@ -61,6 +61,23 @@
 #include "quickfix/fix43/SecurityDefinition.h"
 #include "quickfix/fix43/SecurityDefinitionRequest.h"
 
+#include "quickfix/fix44/ExecutionReport.h"
+#include "quickfix/fix44/MarketDataIncrementalRefresh.h"
+#include "quickfix/fix44/MarketDataRequest.h"
+#include "quickfix/fix44/MarketDataRequestReject.h"
+#include "quickfix/fix44/MarketDataSnapshotFullRefresh.h"
+#include "quickfix/fix44/MarketDataRequest.h"
+#include "quickfix/fix44/Logout.h"
+#include "quickfix/fix44/Logon.h"
+#include "quickfix/fix44/Heartbeat.h"
+#include "quickfix/fix44/SequenceReset.h"
+#include "quickfix/fix44/ResendRequest.h"
+#include "quickfix/fix44/TestRequest.h"
+#include "quickfix/fix44/TradingSessionStatus.h"
+#include "quickfix/fix44/SecurityStatus.h"
+#include "quickfix/fix44/SecurityDefinition.h"
+#include "quickfix/fix44/SecurityDefinitionRequest.h"
+
 #include <string>
 #include <queue>
 #include <boost/iostreams/device/file.hpp>
@@ -122,6 +139,7 @@ public:
 	const std::vector<std::string>& getSymbols();
 	
 	void setDataPath(const std::string&);
+	void setUpdateType(const long updateType);
     void deleteBooks();
     void flushLogs();
 
@@ -178,18 +196,34 @@ private:
 	void onMessage (const FIX43::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID);
 	void onMessage (const FIX43::MarketDataRequestReject& message, const FIX::SessionID& sessionID);
 	
+	void onMessage(const FIX44::TradingSessionStatus&, const FIX::SessionID&);
+	void onMessage(const FIX44::SecurityStatus&, const FIX::SessionID&);
+	void onMessage(const FIX44::TestRequest&, const FIX::SessionID&);
+	void onMessage(const FIX44::Heartbeat& message, const FIX::SessionID& sessionID);
+	//void onMessage(const FIX44::ResendRequest&, const FIX::SessionID&);
+	void onMessage(const FIX44::Logout&, const FIX::SessionID&);
+	void onMessage(const FIX44::Logon&, const FIX::SessionID&);
+	void onMessage(const FIX44::MarketDataRequest&, const FIX::SessionID&);
+	void onMessage (const FIX44::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID);
+	void onMessage (const FIX44::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID);
+	void onMessage (const FIX44::MarketDataRequestReject& message, const FIX::SessionID& sessionID);
 
 	void sendTestRequest();
 	FIX42::TestRequest sendTestRequest42();
 	FIX43::TestRequest sendTestRequest43();
+	FIX44::TestRequest sendTestRequest44();
 
-	void querySingleMarketDataRequest(const std::string& symbols);
+	void querySingleMarketDataRequest(const std::string& symbols)
+	throw(std::exception);
+
 	FIX42::MarketDataRequest querySingleMarketDataRequest42(const std::string& symbol);
 	FIX43::MarketDataRequest querySingleMarketDataRequest43(const std::string& symbol);
+	FIX44::MarketDataRequest querySingleMarketDataRequest44(const std::string& symbol);
 
 	void queryMarketDataRequest(const std::vector<std::string>& symbols);
 	FIX42::MarketDataRequest queryMarketDataRequest42(const std::vector<std::string>& symbols);
 	FIX43::MarketDataRequest queryMarketDataRequest43(const std::vector<std::string>& symbols);
+	FIX44::MarketDataRequest queryMarketDataRequest44(const std::vector<std::string>& symbols);
 
 	FIX::SessionID _sessionID;
 
@@ -208,6 +242,7 @@ private:
     void* _pzmq_context;
     bool _isPublishing;
 
+	int _MDUpdateType;
     
 	//std::ostream _bookLog;
 	//std::ostream _msgLog;

@@ -101,11 +101,12 @@ class Application :
 			public FIX::MessageCracker
 {
 public:
-	Application(const ApplicationConfig& config) 
+	Application(const bool bReset, const ApplicationConfig& config) 
          :  _loggedIn(false), _loggedOut(false), _loginCount(0), 
             _appMsgCount(0), _config(config) {
 
   	   std::cout << "Application::Application()" << std::endl;
+		_resetSequence = bReset;
         _querySecurityDefinitionComplete = false;
 	}
 	~Application(); //{ std::flush(_bookLog); std::flush(_msgLog); };
@@ -179,6 +180,7 @@ private:
 	unsigned int _loginCount;
     unsigned int _appMsgCount;
 	const ApplicationConfig& _config; 
+	bool _resetSequence;
 
     bool _querySecurityDefinitionComplete;
     

@@ -138,19 +138,21 @@ void protobuf_AddDesc_spot_5ffx_5fmd_5f1_2eproto() {
   already_here = true;
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
+  ::capitalk::protobuf_AddDesc_capk_5fglobals_2eproto();
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\022spot_fx_md_1.proto\022\010capitalk\"\301\001\n\007order"
-    "_t\022\014\n\004name\030\001 \002(\t\022\013\n\003mic\030\002 \002(\t\022\013\n\003qid\030\003 \002"
-    "(\005\022&\n\004side\030\004 \002(\0162\030.capitalk.order_t.side"
-    "_t\022\014\n\004size\030\005 \002(\001\022\r\n\005price\030\006 \002(\001\"\032\n\006side_"
-    "t\022\007\n\003BID\020\000\022\007\n\003ASK\020\001\"-\n\014quote_type_t\022\016\n\nI"
-    "NDICATIVE\020\000\022\r\n\tTRADEABLE\020\001\"p\n\007mic_bbo\022\013\n"
-    "\003mic\030\001 \002(\t\022\016\n\006symbol\030\002 \002(\t\022\020\n\010bid_size\030\003"
-    " \002(\001\022\021\n\tbid_price\030\004 \002(\001\022\020\n\010ask_size\030\005 \002("
-    "\001\022\021\n\task_price\030\006 \002(\001\"\206\001\n\016instrument_bbo\022"
-    "\016\n\006symbol\030\001 \002(\t\022\016\n\006bb_mic\030\002 \002(\t\022\020\n\010bb_pr"
-    "ice\030\003 \002(\001\022\017\n\007bb_size\030\004 \002(\001\022\016\n\006ba_mic\030\005 \002"
-    "(\t\022\020\n\010ba_price\030\006 \002(\001\022\017\n\007ba_size\030\007 \002(\001", 477);
+    "\n\022spot_fx_md_1.proto\022\010capitalk\032\022capk_glo"
+    "bals.proto\"\301\001\n\007order_t\022\014\n\004name\030\001 \002(\t\022\013\n\003"
+    "mic\030\002 \002(\t\022\013\n\003qid\030\003 \002(\005\022&\n\004side\030\004 \002(\0162\030.c"
+    "apitalk.order_t.side_t\022\014\n\004size\030\005 \002(\001\022\r\n\005"
+    "price\030\006 \002(\001\"\032\n\006side_t\022\007\n\003BID\020\000\022\007\n\003ASK\020\001\""
+    "-\n\014quote_type_t\022\016\n\nINDICATIVE\020\000\022\r\n\tTRADE"
+    "ABLE\020\001\"p\n\007mic_bbo\022\013\n\003mic\030\001 \002(\t\022\016\n\006symbol"
+    "\030\002 \002(\t\022\020\n\010bid_size\030\003 \002(\001\022\021\n\tbid_price\030\004 "
+    "\002(\001\022\020\n\010ask_size\030\005 \002(\001\022\021\n\task_price\030\006 \002(\001"
+    "\"\206\001\n\016instrument_bbo\022\016\n\006symbol\030\001 \002(\t\022\016\n\006b"
+    "b_mic\030\002 \002(\t\022\020\n\010bb_price\030\003 \002(\001\022\017\n\007bb_size"
+    "\030\004 \002(\001\022\016\n\006ba_mic\030\005 \002(\t\022\020\n\010ba_price\030\006 \002(\001"
+    "\022\017\n\007ba_size\030\007 \002(\001", 497);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "spot_fx_md_1.proto", &protobuf_RegisterTypes);
   order_t::default_instance_ = new order_t();

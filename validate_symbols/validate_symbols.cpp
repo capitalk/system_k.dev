@@ -159,10 +159,14 @@ int main( int argc, char** argv )
 		config.version = dict.has("FIXVersion") ? (FIXVersion)atoi(dict.getString("FIXVersion").c_str()) : FIX_42;
 		std::cout << "Using FIX version: " << config.version << std::endl;
 
+        // Reset sequence numbers? 
+		bool bReset = dict.has("ResetSeqNo") ? dict.getBool("ResetSeqNo") : false;
+		std::cout << "Resetting sequence numbers: " << bReset << std::endl;
+
         // Debug settings
 		config.printDebug = printDebug; 
         
-		Application application(config);
+		Application application(bReset, config);
         papplication = &application;
 		application.addSymbols(symbols);
     

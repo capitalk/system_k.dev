@@ -83,6 +83,9 @@ void Application::fromAdmin(const FIX::Message& message, const FIX::SessionID& s
 	else if (beginString == FIX::BeginString_FIX43) {
 		((FIX43::MessageCracker&)(*this)).crack((const FIX43::Message&) message, sessionID);
 	}
+	else if (beginString == FIX::BeginString_FIX44) {
+		((FIX44::MessageCracker&)(*this)).crack((const FIX44::Message&) message, sessionID);
+	}
 }
 
 void Application::fromApp(const FIX::Message& message, const FIX::SessionID& sessionID )
@@ -104,6 +107,9 @@ throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX:
 	}
 	else if (beginString == FIX::BeginString_FIX43) {
 		((FIX43::MessageCracker&)(*this)).crack((const FIX43::Message&) message, sessionID);
+	}
+	else if (beginString == FIX::BeginString_FIX44) {
+		((FIX44::MessageCracker&)(*this)).crack((const FIX44::Message&) message, sessionID);
 	}
 }
 
@@ -130,6 +136,13 @@ throw(FIX::DoNotSend )
 
 }
 
+void Application::onMessage(const FIX44::SecurityStatus& message, const FIX::SessionID& sessionID) 
+{
+    if (_config.printDebug) {
+	    std::cout << "Application::onMessage(const FIX44::SecurityStatus& message, const FIX::SessionID& sessionID)" << "\n";		
+    }
+}
+
 void Application::onMessage(const FIX43::SecurityStatus& message, const FIX::SessionID& sessionID) 
 {
     if (_config.printDebug) {
@@ -142,6 +155,34 @@ void Application::onMessage(const FIX42::SecurityStatus& message, const FIX::Ses
     if (_config.printDebug) {
 	    std::cout << "Application::onMessage(const FIX42::SecurityStatus& message, const FIX::SessionID& sessionID)" << "\n";		
     }
+}
+
+void Application::onMessage(const FIX44::TradingSessionStatus& message, const FIX::SessionID& sessionID) 
+{
+	
+    if (_config.printDebug) {
+	    std::cout << "Application::onMessage(const FIX44::TradingSessionStatus& message, const FIX::SessionID& sessionID)" << "\n";		
+    }
+	FIX::TradingSessionID tradingSessionID;
+	FIX::TradSesStatus tradSesStatus;
+	if (message.isSetField(tradingSessionID)) {
+		message.getField(tradingSessionID);
+	}
+	if (message.isSetField(tradSesStatus)) { 
+		message.getField(tradSesStatus);
+		if (tradSesStatus.getValue() == FIX::TradSesStatus_OPEN) {
+			std::cout << "Trading sessions status is OPEN" << "\n";
+		}
+		if (tradSesStatus.getValue() == FIX::TradSesStatus_HALTED) {
+			std::cout << "Trading sessions status is HALTED" << "\n";
+		}
+		if (tradSesStatus.getValue() == FIX::TradSesStatus_CLOSED) {
+			std::cout << "Trading sessions status is CLOSED" << "\n";
+		}
+		if (tradSesStatus.getValue() == FIX::TradSesStatus_PREOPEN) {
+			std::cout << "Trading sessions status is PREOPEN" << "\n";
+		}
+	}
 }
 
 void Application::onMessage(const FIX43::TradingSessionStatus& message, const FIX::SessionID& sessionID) 
@@ -198,6 +239,12 @@ void Application::onMessage(const FIX42::TradingSessionStatus& message, const FI
 	}
 }
 
+void Application::onMessage(const FIX44::TestRequest& message, const FIX::SessionID& sessionID) 
+{
+    if (_config.printDebug) {
+	    std::cout << "Application::onMessage(const FIX44::TestRequest& message, const FIX::SessionID& sessionID)" << "\n";		
+    }
+}
 
 void Application::onMessage(const FIX43::TestRequest& message, const FIX::SessionID& sessionID) 
 {
@@ -213,6 +260,12 @@ void Application::onMessage(const FIX42::TestRequest& message, const FIX::Sessio
     }
 }
 
+void Application::onMessage(const FIX44::Heartbeat& message, const FIX::SessionID& sessionID) 
+{
+    if (_config.printDebug) {
+	    std::cout << "Application::onMessage(const FIX44::Heartbeat& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+    }
+}
 
 void Application::onMessage(const FIX43::Heartbeat& message, const FIX::SessionID& sessionID) 
 {
@@ -225,6 +278,13 @@ void Application::onMessage(const FIX42::Heartbeat& message, const FIX::SessionI
 {
     if (_config.printDebug) {
 	    std::cout << "Application::onMessage(const FIX42::Heartbeat& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+    }
+}
+
+void Application::onMessage(const FIX44::Logout& message, const FIX::SessionID& sessionID) 
+{
+    if (_config.printDebug) {
+	    std::cout << "Logout44(" << message.toString() << ")" << "\n";
     }
 }
 
@@ -242,6 +302,13 @@ void Application::onMessage(const FIX42::Logout& message, const FIX::SessionID& 
     }
 }
 
+void Application::onMessage(const FIX44::Logon& message, const FIX::SessionID& sessionID) 
+{
+    if (_config.printDebug) {
+	    std::cout << "Logon44(" << message.toString() << ")" << "\n";
+    }
+}
+
 void Application::onMessage(const FIX43::Logon& message, const FIX::SessionID& sessionID) 
 {
     if (_config.printDebug) {
@@ -253,6 +320,13 @@ void Application::onMessage(const FIX42::Logon& message, const FIX::SessionID& s
 {
     if (_config.printDebug) {
 	    std::cout << "Logon42(" << message.toString() << ")" << "\n";
+    }
+}
+
+void Application::onMessage(const FIX44::MarketDataRequest& message, const FIX::SessionID& sessionID) 
+{
+    if (_config.printDebug) {
+	    std::cout << "MarketDataRequest44(" << message.toString() << ")" << "\n";
     }
 }
 
@@ -281,11 +355,170 @@ void Application::onMessage(const FIX::Message& message, const FIX::SessionID& s
  * 35=W
  */
 void 
+Application::onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID) 
+{
+    if (_config.printDebug) {
+	    std::cout << "Application::onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID)" << "\n"; //(" << message.toString() << ")" << "\n";
+    }
+    std::ostream* pLog = NULL;
+	FIX::MsgType msgType;
+	message.getHeader().getField(msgType);
+	FIX::SendingTime sendingTime;
+	message.getHeader().getField(sendingTime);
+	FIX::NoMDEntries noMDEntries;
+	FIX::MDEntryType mdEntryType;
+	FIX::MDEntryID mdEntryID;
+
+	FIX::MDEntryPx mdEntryPx;
+	FIX::MDEntrySize mdEntrySize;
+	FIX::QuoteType quoteType;
+	FIX::MDEntryOriginator mdEntryOriginator;
+	FIX::MinQty minQty;
+	FIX::MDEntryPositionNo mdEntryPositionNo;
+	FIX::MDReqID mdReqID;
+	FIX::ExecInst execInst;
+	FIX::QuoteEntryID quoteEntryID;
+	FIX::MaturityMonthYear maturityMonthYear;
+	FIX::Symbol symbol;
+	FIX::SecurityType securityType;
+	int nEntries = 0;
+
+	message.getField(mdReqID);
+	message.getField(symbol);
+	if (message.isSetField(noMDEntries)) {
+		try {
+			message.getField(noMDEntries); 
+			nEntries = noMDEntries.getValue();
+            if (_config.printDebug) {
+			    std::cout << "==> NoMDEntries: " << nEntries << "\n";
+            }
+		}
+		catch (std::exception& e) {
+			std::cerr << e.what() << "\n";
+		}
+		FIX44::MarketDataSnapshotFullRefresh::NoMDEntries mdEntries;
+		
+		// Group indexed on 1 not 0
+		for (int i = 0; i< nEntries; i++) {
+			message.getGroup(i+1, mdEntries);
+			if (mdEntries.isSetField(mdEntryType)) {
+				mdEntries.getField(mdEntryType);
+			}
+			if (mdEntries.isSetField(mdEntryID)) {
+				mdEntries.getField(mdEntryID);
+			}
+			if (mdEntries.isSetField(mdEntryPx)) {
+				mdEntries.getField(mdEntryPx);
+//				std::cout << "====================>mdEntryPx: " << mdEntryPx << "\n"
+			}
+			else {
+				std::cerr << "NO MDEntryPrice SET IN FIX44 SNAPSHOT" << "\n";	
+			}
+			if (mdEntries.isSetField(mdEntrySize)) {
+				mdEntries.getField(mdEntrySize);	
+//				std::cout << "====================>mdEntrySize: " << mdEntrySize << "\n";
+			}
+			else {
+				std::cerr << "NO MDEntrySize SET IN FIX44 SNAPSHOT" << "\n";	
+			}
+			if (mdEntries.isSetField(quoteType)) {
+				mdEntries.getField(quoteType);	
+                if (_config.printDebug) {
+				    std::cout << "QuoteType: " << quoteType.getValue() << "\n"; 
+                }
+			}
+			if (mdEntries.isSetField(mdEntryOriginator)) {
+				mdEntries.getField(mdEntryOriginator);	
+                if (_config.printDebug) {
+				    std::cout << "MDEntryOriginator: " << mdEntryOriginator.getValue() << "\n"; 
+                }
+			}
+			if (mdEntries.isSetField(minQty)) {
+				mdEntries.getField(minQty);	
+                if (_config.printDebug) {
+				    std::cout << "MinQty: " << minQty.getValue() << "\n"; 
+                }
+			}
+			if (mdEntries.isSetField(mdEntryPositionNo)) {
+				mdEntries.getField(mdEntryPositionNo);	
+                if (_config.printDebug) {
+				    std::cout << "MDEntryPositionNo: " << mdEntryPositionNo.getValue() << "\n"; 
+                }
+			}
+			if (mdEntries.isSetField(execInst)) {
+				mdEntries.getField(execInst);	
+			}
+			if (mdEntries.isSetField(quoteEntryID)) {
+				mdEntries.getField(quoteEntryID);	
+			}
+			//if (message.isSetField(securityType)) {
+				//message.getField(securityType);
+			//}
+			//if (message.isSetField(maturityMonthYear)) {
+				//message.getField(maturityMonthYear);
+			//}
+			KBook* pBook;
+			if (NULL != (pBook = getBook(symbol.getValue())))  {
+				FIX::UtcTimeStamp time = FIX::UtcTimeStamp(sendingTime); 
+				char side = mdEntryType.getValue(); 
+                side_t nside = char2side_t(side);
+
+                std::string id = mdEntryID.getValue(); 
+                int nid = hashlittle(id.c_str(), id.size(), 0);
+
+                /* since we sometimes don't get entry IDs in snapshots, 
+                   try using the quote entry ID instead 
+                 */ 
+                if (id.length() == 0) {
+                    id = quoteEntryID.getValue(); 
+                    nid = hashlittle(id.c_str(), id.size(), 0);
+                }				
+                else {
+                    std::cerr << "mdEntryID not set - AND quoteEntryID not set " << "\n";
+                }
+                double price = mdEntryPx.getValue(); 
+				unsigned int size = mdEntrySize.getValue(); 
+				//capitalk::PriceDepthEntry* entry = 
+					//new capitalk::PriceDepthEntry(time, time, side, id, price, size); 
+				
+                //pBook->add(entry); 
+                timespec evtTime, sndTime;
+                clock_gettime(CLOCK_MONOTONIC, &evtTime);
+                FIXConvertors::UTCTimeStampToTimespec(time, &sndTime);
+                pBook->add(nid, nside, size, price, evtTime, sndTime);
+                if (_config.printDebug) {
+                    std::cout << "[FIX 4.4: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n"; 
+                }
+/* KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
+				pLog = getStream(symbol.getValue());
+				if (pLog == NULL) {
+					std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
+				} else {
+					*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
+					*pLog << *pBook;
+				}
+*/
+                 
+			}
+            else {
+                std::cerr << "[FIX 4.4: Full Refresh] Orderbook is null - nothing to add to" << "\n";
+            }
+		}
+	}
+}
+
+
+/*
+ * Full refresh of order book - all existing orders at all levels 
+ * 35=W
+ */
+void 
 Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID) 
 {
     if (_config.printDebug) {
 	    std::cout << "Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID)" << "\n"; //(" << message.toString() << ")" << "\n";
     }
+    std::ostream* pLog = NULL;
 	FIX::MsgType msgType;
 	message.getHeader().getField(msgType);
 	FIX::SendingTime sendingTime;
@@ -414,6 +647,15 @@ Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, cons
                 if (_config.printDebug) {
                     std::cout << "[FIX 4.3: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n"; 
                 }
+/* KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
+				pLog = getStream(symbol.getValue());
+				if (pLog == NULL) {
+					std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
+				} else {
+					*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
+					*pLog << *pBook;
+				}
+*/                 
                  
 			}
             else {
@@ -433,6 +675,7 @@ Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, cons
 	if (_config.printDebug) { 
 	    std::cout << "Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
     }
+    std::ostream* pLog = NULL;
 	FIX::MsgType msgType;
 	message.getHeader().getField(msgType);
 	FIX::SendingTime sendingTime;
@@ -562,6 +805,15 @@ Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, cons
                 if (_config.printDebug) {
                     std::cout << "[FIX4.2: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n";   
                 }
+/* KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
+				pLog = getStream(symbol.getValue());
+				if (pLog == NULL) {
+					std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
+				} else {
+					*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
+					*pLog << *pBook;
+				}
+*/                 
 			}
             else {
                 std::cerr << "{FIX 4.2: Full Refresh] Orderbook is null - nothing to add to" << "\n";
@@ -856,7 +1108,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
         double baprice = pBook->bestPrice(ASK);
         double basize = pBook->bestPriceVolume(ASK);
 		zmq_msg_t msg;        
-		char zc_msgbuf[256];
+		char msgbuf[256];
         if (isPublishing()) {
             capitalk::mic_bbo bbo;
             bbo.set_symbol(symbol.getValue());
@@ -867,18 +1119,16 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
             bbo.set_mic(_config.mic_code);
             
             size_t msgsize = bbo.ByteSize();
-			assert(msgsize < sizeof(zc_msgbuf));
-            //char* msgbuf = new char[msgsize];
-            bbo.SerializeToArray(zc_msgbuf, msgsize);
+			assert(msgsize < sizeof(msgbuf));
+            bbo.SerializeToArray(msgbuf, msgsize);
 
-            //zmq::message_t message(msgsize);
-            zmq_msg_init_data(&msg, (void*)zc_msgbuf, msgsize, NULL, NULL);
-            //memcpy(message.data(), msgbuf, msgsize);
+            zmq_msg_init_size(&msg, msgsize);
+            memcpy(zmq_msg_data(&msg), msgbuf, msgsize);
             std::cerr << "Sending "  << msgsize << " bytes\n";
             zmq_send(_pzmq_socket, &msg, 0);
 
             //if (msgbuf) {
-                //delete[] msgbuf;
+             //   delete[] msgbuf;
             //}
         }
 
@@ -910,6 +1160,16 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
  * This is the FIX 35=X message
  */
 void 
+Application::onMessage(const FIX44::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID) 
+{
+
+	if (_config.printDebug) { 
+		std::cout << "Application::onMessage(const FIX44::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+	}
+    this->incremental_update_template<FIX44::MarketDataIncrementalRefresh>(message,sessionID); 
+}
+
+void 
 Application::onMessage(const FIX43::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID) 
 {
 
@@ -931,6 +1191,14 @@ Application::onMessage(const FIX42::MarketDataIncrementalRefresh& message, const
     this->incremental_update_template<FIX42::MarketDataIncrementalRefresh>(message,sessionID); 
 }
 
+
+void 
+Application::onMessage(const FIX44::MarketDataRequestReject& message, const FIX::SessionID& sessionID) 
+{
+	if (_config.printDebug) { 
+	    std::cout << "Application::onMessage(const FIX44::MarketDataRequestReject& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+    }
+}
 
 void 
 Application::onMessage(const FIX43::MarketDataRequestReject& message, const FIX::SessionID& sessionID) 
@@ -1117,6 +1385,7 @@ Application::run()
 	// Some venues require each market data subscription to be sent in a different message 
 	// - i.e. when we send 35=V we are ONLY allowed to send 146(NoRelatedSymbols)=1 so we send multiple 
 	// 35=V requests
+	
 	if (_config.sendIndividualMarketDataRequests) {
 		for (std::vector<std::string>::const_iterator it = _symbols.begin(); it != _symbols.end(); it++) {
 			if (*it != "") {
@@ -1127,7 +1396,6 @@ Application::run()
 	else {
 		queryMarketDataRequest(_symbols);
 	}
-
 }
 
 void 
@@ -1143,10 +1411,25 @@ Application::sendTestRequest()
 		break;
 	case 43: testRequestMessage = sendTestRequest43();
 		break;
+	case 44: testRequestMessage = sendTestRequest44();
+		break;
 	default: 
-		throw "Unsupported FIX version"; 
+		throw std::runtime_error("Unsupported FIX version"); 
 	}
 	FIX::Session::sendToTarget(testRequestMessage, _sessionID.getSenderCompID(), _sessionID.getTargetCompID());
+}
+
+FIX44::TestRequest 
+Application::sendTestRequest44() 
+{
+	if (_config.printDebug) { 
+		std::cout << "Application::sendTestRequest44()" << "\n";
+	}
+	FIX44::TestRequest tr;
+	// KTK - change to timestamap at some point - better than static string to debug
+	FIX::TestReqID trid("TestRequest");
+	tr.setField(trid);
+	return tr;
 }
 
 FIX43::TestRequest 
@@ -1177,6 +1460,7 @@ Application::sendTestRequest42()
 
 void 
 Application::querySingleMarketDataRequest(const std::string& requestSymbol)
+throw(std::exception)
 {
 	//int version = queryVersion();
 	if (_config.printDebug) {
@@ -1188,10 +1472,63 @@ Application::querySingleMarketDataRequest(const std::string& requestSymbol)
 		break;
 	case 43: md = querySingleMarketDataRequest43(requestSymbol);
 		break;
+	case 44: md = querySingleMarketDataRequest44(requestSymbol);
+		break;
 	default: 
-		throw "Unsupported FIX version"; 
+		throw std::runtime_error("Unsupported FIX version"); 
 	}
 	FIX::Session::sendToTarget(md);
+}
+
+FIX44::MarketDataRequest 
+Application::querySingleMarketDataRequest44(const std::string& requestSymbol)
+{
+
+	if (_config.printDebug) {
+	    std::cout << "Application::querySingleMarketDataRequest44(const std::string& requestSymbol)(" << requestSymbol << ")" << "\n";
+    }
+    std::string reqID("CAPK-");
+    reqID += requestSymbol;
+	FIX::MDReqID mdReqID(reqID.c_str());
+
+	FIX::SubscriptionRequestType 
+	  subType(FIX::SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES);
+// KTK TODO - pull the depth into symbols file
+	FIX::MarketDepth marketDepth(_config.marketDepth);
+	FIX44::MarketDataRequest message(mdReqID, subType, marketDepth);
+	
+	if (_config.aggregatedBook) { 
+        message.set(FIX::AggregatedBook(true));
+	} 
+    else {
+        message.set(FIX::AggregatedBook(false));
+    }
+	
+	FIX44::MarketDataRequest::NoMDEntryTypes marketDataEntryGroup;
+	// Set bid request
+	FIX::MDEntryType mdEntryTypeBid(FIX::MDEntryType_BID);
+	marketDataEntryGroup.set(mdEntryTypeBid);
+	message.addGroup(marketDataEntryGroup);
+
+	// Set ask request
+	FIX::MDEntryType mdEntryTypeOffer(FIX::MDEntryType_OFFER);
+	marketDataEntryGroup.set(mdEntryTypeOffer);
+	message.addGroup(marketDataEntryGroup);
+
+	// Set symbols to subscribe to 
+	// IN THIS CASE IT MUST BE ONLY ONE SYMBOL!!!
+	FIX44::MarketDataRequest::NoRelatedSym symbolGroup;
+	FIX::Symbol symbol(requestSymbol);
+	symbolGroup.set(symbol);
+	message.addGroup(symbolGroup);
+
+	FIX::MDUpdateType updateType(_MDUpdateType);
+	message.set(updateType);
+
+	message.getHeader().setField(_sessionID.getSenderCompID());
+	message.getHeader().setField(_sessionID.getTargetCompID());
+
+	return message;
 }
 
 FIX43::MarketDataRequest 
@@ -1236,7 +1573,7 @@ Application::querySingleMarketDataRequest43(const std::string& requestSymbol)
 	symbolGroup.set(symbol);
 	message.addGroup(symbolGroup);
 
-	FIX::MDUpdateType updateType(FIX::MDUpdateType_INCREMENTAL_REFRESH);
+	FIX::MDUpdateType updateType(_MDUpdateType);
 	message.set(updateType);
 
 	message.getHeader().setField(_sessionID.getSenderCompID());
@@ -1286,7 +1623,7 @@ Application::querySingleMarketDataRequest42(const std::string& requestSymbol)
 	symbolGroup.set(symbol);
 	message.addGroup(symbolGroup);
 
-	FIX::MDUpdateType updateType(FIX::MDUpdateType_INCREMENTAL_REFRESH);
+	FIX::MDUpdateType updateType(_MDUpdateType);
 	message.set(updateType);
 
 /*
@@ -1320,11 +1657,68 @@ Application::queryMarketDataRequest(const std::vector<std::string>& symbols)
 	case 43: 
         md = queryMarketDataRequest43(symbols);
 		break;
+	case 44: 
+        md = queryMarketDataRequest44(symbols);
+		break;
 	default:
-		throw "Unsupported FIX version"; 
+		throw std::runtime_error("Unsupported FIX version"); 
 	}
 	FIX::Session::sendToTarget(md);
 }
+
+FIX44::MarketDataRequest 
+Application::queryMarketDataRequest44(const std::vector<std::string>& symbols)
+{
+
+    if (_config.printDebug) {
+    	std::cout << "Application::queryMarketDataRequest44(const std::vector<std::string>& symbols)" << "\n";
+    }
+	FIX::MDReqID mdReqID("MARKETDATAID");
+
+	FIX::SubscriptionRequestType 
+	  subType(FIX::SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES);
+	FIX::MarketDepth marketDepth(_config.marketDepth);
+	FIX44::MarketDataRequest message(mdReqID, subType, marketDepth);
+	
+	if (_config.aggregatedBook) { 
+          message.set(FIX::AggregatedBook(true));
+	} 
+
+	
+	FIX44::MarketDataRequest::NoMDEntryTypes marketDataEntryGroup;
+	// Set bid request
+	FIX::MDEntryType mdEntryTypeBid(FIX::MDEntryType_BID);
+	marketDataEntryGroup.set(mdEntryTypeBid);
+	message.addGroup(marketDataEntryGroup);
+
+	// Set ask request
+	FIX::MDEntryType mdEntryTypeOffer(FIX::MDEntryType_OFFER);
+	marketDataEntryGroup.set(mdEntryTypeOffer);
+	message.addGroup(marketDataEntryGroup);
+
+	// Set symbols to subscribe to 
+	FIX44::MarketDataRequest::NoRelatedSym symbolGroup;
+	for (std::vector<std::string>::const_iterator it = symbols.begin(); it != symbols.end(); ++it) {
+		// this sucks - use a better check for empty symbols - or better a validator!
+		// but again - premature optimization is the root of all evil
+		if (*it != "") {
+			FIX::Symbol symbol(*it);
+			symbolGroup.set(symbol);	
+			message.addGroup(symbolGroup);
+		}
+	}
+
+	FIX::MDUpdateType updateType(_MDUpdateType);
+	message.set(updateType);
+
+	//queryHeader(message.getHeader());
+	message.getHeader().setField(_sessionID.getSenderCompID());
+	message.getHeader().setField(_sessionID.getTargetCompID());
+
+
+	return message;
+}
+
 
 FIX43::MarketDataRequest 
 Application::queryMarketDataRequest43(const std::vector<std::string>& symbols)
@@ -1368,7 +1762,7 @@ Application::queryMarketDataRequest43(const std::vector<std::string>& symbols)
 		}
 	}
 
-	FIX::MDUpdateType updateType(FIX::MDUpdateType_INCREMENTAL_REFRESH);
+	FIX::MDUpdateType updateType(_MDUpdateType);
 	message.set(updateType);
 
 	//queryHeader(message.getHeader());
@@ -1421,7 +1815,7 @@ Application::queryMarketDataRequest42(const std::vector<std::string>& symbols)
 		}
 	}
 
-	FIX::MDUpdateType updateType(FIX::MDUpdateType_INCREMENTAL_REFRESH);
+	FIX::MDUpdateType updateType(_MDUpdateType);
 	message.set(updateType);
 
 	//queryHeader(message.getHeader());
@@ -1438,6 +1832,16 @@ Application::setDataPath(const std::string& pathStr)
 	_pathToLog = fs::path(pathStr);
 }
 
+void 
+Application::setUpdateType(const long updateType) 
+{
+	if (updateType != -1) {
+		_MDUpdateType = updateType; 
+	}
+	else {
+		_MDUpdateType = FIX::MDUpdateType_INCREMENTAL_REFRESH;
+	}	
+}
 
 void 
 Application::addSymbols(const std::vector<std::string>& symbols)

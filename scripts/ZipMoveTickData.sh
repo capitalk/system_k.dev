@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Added nice to zip commands
-
 remotetickdir="/home/timir"
 localtickdir="/mnt/raid/tickdata"
 
@@ -66,7 +64,7 @@ ssh $remoteuser@$remoteserver "rm -rf $remotetickdir/$MIC/$yesterday"
 
 # Dispaly some info
 echo "SPACE REPORT AFTER MOVE AND DELETE"
-ssh $remoteuser@$remoteserver "df -h $remotetickdir/$MIC/$yesterday/"
+ssh $remoteuser@$remoteserver "df -h $remotetickdir"
 
 shift
 done

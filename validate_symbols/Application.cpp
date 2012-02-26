@@ -365,6 +365,13 @@ Application::toAdmin(FIX::Message& message, const FIX::SessionID& sessionID)
 			    header.setField(FIX::FIELD::Password, _config.password); 
             }
 		} 
+		if (_resetSequence) {
+			#ifdef LOG
+			pan::log_DEBUG("Resetting sequence numbers");
+			#endif 
+            FIX::ResetSeqNumFlag flag = FIX::ResetSeqNumFlag_YES;
+			message.setField(FIX::FIELD::ResetSeqNumFlag, "Y");
+		}
 	}
 	if (_config.printDebug) { 
 		std::cout << "toAdmin(" << "Message: " << message << ")" << "\n";

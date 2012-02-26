@@ -210,6 +210,10 @@ int main( int argc, char** argv )
         config.marketDepth = atoi(depth.c_str());
 		std::cout << "Setting market depth: " << config.marketDepth << std::endl;
 
+        // Update Type 
+		long updateType = dict.has("MDUpdateType") ? dict.getLong("MDUpdateType") : -1; 
+		std::cout << "Setting update type: " << updateType << std::endl;
+
         // Debug settings
 		config.printDebug = printDebug; 
 
@@ -275,6 +279,9 @@ int main( int argc, char** argv )
             application.setZMQSocket(pub_socket);
         }
         application.setPublishing(isPublishing);
+
+		// Set MDUpdateType
+		application.setUpdateType(updateType);
         
         // orderbook output setup
 		application.setDataPath(orderBooksOutputDir);

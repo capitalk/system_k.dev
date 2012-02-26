@@ -23,11 +23,14 @@ ORDERBOOK_DIR=../order_book
 
 all: collect
 
-collect : collect.o Application.o  libOrderBook2.a spot_fx_md_1.pb.o
-	$(CC) $(CFLAGS) collect.o spot_fx_md_1.pb.o Application.o $(ORDERBOOK_DIR)/libOrderBook2.a $(LIBS) -o $@ 
+collect : collect.o Application.o  libOrderBook2.a spot_fx_md_1.pb.o capk_globals.pb.o
+	$(CC) $(CFLAGS) collect.o spot_fx_md_1.pb.o capk_globals.pb.o Application.o  $(ORDERBOOK_DIR)/libOrderBook2.a $(LIBS) -o $@ 
 
-spot_fx_md_1.pb.o: $(PROTODIR)/spot_fx_md_1.pb.cc $(PROTODIR)/spot_fx_md_1.pb.h
+spot_fx_md_1.pb.o: $(PROTODIR)/spot_fx_md_1.pb.cc $(PROTODIR)/spot_fx_md_1.pb.h 
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTODIR)/spot_fx_md_1.pb.cc
+
+capk_globals.pb.o: $(PROTODIR)/capk_globals.pb.cc $(PROTODIR)/capk_globals.pb.h
+	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTODIR)/capk_globals.pb.cc
 
 collect.o: collect.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<

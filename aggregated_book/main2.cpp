@@ -10,11 +10,12 @@
 #include <boost/thread.hpp>
 
 #include <zmq.hpp>
-#include "../utils/zhelpers.hpp"
 
-#include "../order_book/KBBO.h"
-#include "../proto/spot_fx_md_1.pb.h"
-#include "../utils/KTimeUtils.h"
+#include "utils/zhelpers.hpp"
+#include "utils/KTimeUtils.h"
+#include "order_book/KBBO.h"
+
+#include "proto/spot_fx_md_1.pb.h"
 
 namespace po = boost::program_options;
 
