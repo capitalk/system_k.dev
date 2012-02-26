@@ -1,0 +1,15 @@
+package capitalk;
+
+import "capk_globals.proto";
+
+message new_order_single {
+    required bytes		order_id = 1;
+    optional string		symbol = 3;
+	optional side_t		side = 5;
+	optional double		order_qty = 9;
+	optional ot_t		order_type = 11;
+	optional double		price = 6;
+	optional tif_t		time_in_force = 8;
+	optional string		account = 10;
+}
+

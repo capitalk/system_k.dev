@@ -1,0 +1,19 @@
+package capitalk;
+
+enum side_t {
+	BID = 0;
+	ASK = 1;
+}
+
+enum tif_t {
+	GFD = 0;
+	IOC = 1;
+	FOK = 2;
+}
+
+enum ot_t {
+	LIM = 0;
+	MKT = 99;
+}
+
+

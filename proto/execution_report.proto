@@ -1,0 +1,26 @@
+package capitalk;
+
+import "capk_globals.proto";
+
+message execution_report {
+	required bytes		order_id = 1;	
+	optional bytes		orig_order_id = 2;
+	optional bytes		exec_id = 3;
+	optional sfixed32	exec_trans_type = 4;
+	optional sfixed32	order_status = 5;
+	optional sfixed32	exec_type = 6;
+	optional string		symbol = 7;
+	optional string		security_type = 8;
+	optional side_t		side = 9;
+	optional double		order_qty = 10;
+	optional double		order_type = 11;
+	optional double		price = 12;
+	optional double		last_qty = 13;
+	optional double		last_price = 14;
+	optional double		leaves_qty = 15;
+	optional double		cum_qty = 16;
+	optional double		avg_price = 17;
+	optional sfixed32	time_in_force = 18;
+	optional sfixed32	exec_inst = 19;	
+	optional sfixed32	handl_inst = 20;
+}
