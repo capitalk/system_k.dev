@@ -1,0 +1,187 @@
+#include "KMsgProcessor.h"
+
+
+
+KMsgProcessor::KMsgProcessor(zmq::context_t *ctx, 
+							const char* listen_addr, 
+							const char* inproc_addr, 
+							const short int num_threads):
+_ctx(ctx), 
+_listen_addr(listen_addr), 
+_inproc_addr(inproc_addr), 
+_num_threads(num_threads)
+{
+	assert(_ctx);
+	assert(_listen_addr.length()>0);
+	assert(_inproc_addr.length()>0);
+/*
+	_inproc = zmq_socket(_ctx, ZMQ_DEALER);
+	int zero = 0;
+	zmq_setsockopt (_inproc, ZMQ_LINGER, &zero, sizeof(zero));
+*/
+}
+
+KMsgProcessor::~KMsgProcessor()
+{
+
+}
+
+//#define LOG 1
+//
+
+void 
+free_int(void* data, void* hint)
+{
+	if (data) {
+		delete (int*) data;
+	}
+}
+
+int 
+KMsgProcessor::run()
+{
+	#ifdef LOG
+	//pan::log_DEBUG("KMsgProcessor::run()");	
+	#endif
+	zmq::socket_t recv_sock(*_ctx, ZMQ_ROUTER);
+	
+	int zero = 0;
+	recv_sock.setsockopt(ZMQ_LINGER, &zero, sizeof(zero)); 
+
+	recv_sock.bind(_listen_addr.c_str());
+	//recv_sock.connect(_listen_addr.c_str());	
+			
+	while(1) {
+		int req_type = -1;
+		zmq::message_t header;
+		zmq::message_t data;
+		header.rebuild(sizeof(int));
+		int64_t more = 0;
+		size_t more_size = sizeof(more);	
+		bool rc;
+		pan::log_DEBUG("In while loop");
+
+		//do {
+			pan::log_DEBUG("recv header");
+			rc = recv_sock.recv(&header, 0);
+			assert(rc);
+			pan::log_DEBUG("recv data");
+			rc = recv_sock.recv(&data, 0);
+			//pan::log_DEBUG("\tIn do loop");
+			assert(rc);
+			size_t msg_size = data.size();
+			int* s = new int;
+			memset(s, 0, msg_size);
+			memcpy(s, data.data(), msg_size);
+			//pan::log_DEBUG(s);
+			pan::log_DEBUG("Received msg: ", pan::integer(*s));
+			//req_type = *(int*)header.data();
+			//pan::log_DEBUG(pan::integer(req_type));
+/*
+			if (strcmp((char*)header.data(), "OR") == 0) {
+				rc = recv_sock.recv(&data, 0);
+				assert(rc);
+				fprintf(stderr, "%d\n", *(int*)data.data());
+				//req_type = *(int*)data.data();
+				//fprintf(stderr, "%s %d\n", (char*)header.data(), req_type);
+				//fprintf(stderr, "%s %d\n", (char*)header.data(), *(int*)data.data());
+			}
+*/
+/*
+			// can we assume this is the address?
+			else {
+				req_type += 1;
+				zmq::message_t reply((void*)&req_type, sizeof(req_type), NULL, NULL);
+				rc = recv_sock.send(reply);
+			}
+				
+*/
+			//data.rebuild();			
+			//recv_sock.getsockopt(ZMQ_RCVMORE, &more, &more_size);
+			//fprintf(stderr, "MORE: %ld\n", more);
+		//} while (more);	
+		*s+=1;
+		pan::log_DEBUG("Reply with: ", pan::integer(*s));
+		
+		zmq::message_t reply((void*)s, sizeof(*s), free_int, NULL);
+		zmq::message_t empty;
+		rc = recv_sock.send(header, ZMQ_SNDMORE);
+		//rc = recv_sock.send(empty, ZMQ_SNDMORE);
+		rc = recv_sock.send(reply, 0);
+		assert(rc);	
+		header.rebuild();			
+		pan::log_DEBUG("----------------");
+	}	
+		
+}
+
+int 
+KMsgProcessor::foo()
+{
+	#ifdef LOG
+	//pan::log_DEBUG("KMsgProcessor::run()");	
+	#endif
+	int rc;
+
+	void *recv_sock = zmq_socket(_ctx, ZMQ_DEALER);
+	assert(recv_sock);
+	int zero = 0;
+	rc = zmq_setsockopt(recv_sock, ZMQ_LINGER, &zero, sizeof (zero));
+	assert(rc == 0);
+
+	//int hwm = 10;
+	//rc = zmq_setsockopt(recv_sock, ZMQ_HWM, &hwm, sizeof (hwm));
+	//if (rc != 0) fprintf(stderr, "ERRNO: %d %s\n", rc, zmq_strerror(rc));
+	//assert(rc == 0);
+
+
+	rc = zmq_bind(recv_sock, _listen_addr.c_str());
+	assert(rc == 0);
+
+	int i = 0;
+	while(1) {
+
+		int64_t more = 0;
+		size_t more_size = sizeof(more);
+		do {
+			// Create an empty ØMQ message to hold the message part 
+			zmq_msg_t part;
+			int rc = zmq_msg_init (&part);
+			assert (rc == 0);
+			// Block until a message is available to be received from socket 
+			rc = zmq_recv (recv_sock, &part, 0);
+			assert (rc == 0);
+			// Determine if more message parts are to follow 
+			rc = zmq_getsockopt (recv_sock, ZMQ_RCVMORE, &more, &more_size);
+			fprintf(stderr, "%ld", more);
+			assert (rc == 0);
+			zmq_msg_close (&part); 
+		} while (more);
+
+/*
+		//START_PTIME
+		zmq_msg_t msg;
+		rc = zmq_msg_init(&msg);
+		assert(rc == 0);
+		rc = zmq_recv(recv_sock, &msg, 0);
+		if (rc != 0) fprintf(stderr, "ERRNO: %d %s\n", rc, zmq_strerror(rc));
+		assert(rc == 0);
+		fprintf(stderr, "%d\n", *(int*)zmq_msg_data(&msg));
+		zmq_msg_close(&msg);
+		i++;
+		//STOP_PTIME
+		//DIFF_PTIME;
+		//std::cerr << ptime_string(ptime_duration) << "\n";
+*/
+		i++;
+			fprintf(stderr, "%d messages\n", i); 
+		if (i % 100000 == 0) {
+			fprintf(stderr, "%d messages\n", i); 
+		}
+		
+	}	
+
+	zmq_close(recv_sock);
+	zmq_term(recv_sock);
+	return 0;
+}

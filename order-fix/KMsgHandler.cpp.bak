@@ -1,0 +1,176 @@
+#include "KMsgHandler.h"
+
+
+
+KMsgHandler::KMsgHandler(zmq::context_t* context, const std::string& inprocAddr): 
+	_context(context), 
+	_inprocAddr(inprocAddr),  
+	_stopRequested(false)
+{
+
+}
+
+KMsgHandler::~KMsgHandler() 
+{
+    if (_inproc) delete _inproc;
+}
+
+void 
+KMsgHandler::stop() 
+{
+    _stopRequested = true;
+}
+
+void
+KMsgHandler::run () 
+{
+    try {
+        assert(_context != NULL);
+        assert(_connectAddr.c_str() != NULL);
+#ifdef LOG
+		pan::log_DEBUG("KMsgHandler: inproc addr: ", _inprocAddr.c_str());	
+		pan::log_DEBUG("KMsgHandler: stop requested: ", pan::boolean(_stopRequested));	
+#endif
+        
+		pan::log_DEBUG("KMsgHandler creating socket");	
+        _inproc = new zmq::socket_t(*_context, ZMQ_ROUTER);
+        assert(_inproc);
+		pan::log_DEBUG("KMsgHandler connecting");	
+        _inproc->connect(_inprocAddr.c_str());
+        
+		int64_t more;
+		size_t more_size;
+		more_size = sizeof(more);
+		bool rc;
+        while (1 && _stopRequested == false) {
+            zmq::message_t header1;
+            zmq::message_t header2;
+            zmq::message_t msg_type;
+			zmq::message_t data;
+//			do {
+//			KTK TODO - use a stack to process messages rather than assuming 
+//			that all messages will have the same number of frames
+			boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
+			// blocking receive
+			rc = _inproc->recv(&header1, 0);
+			assert(rc);
+			rc = _inproc->recv(&header2, 0);
+			assert(rc);
+			rc = _inproc->recv(&msg_type, 0);
+			assert(rc);
+			rc = _inproc->recv(&data, 0);
+			assert(rc);
+#ifdef DEBUG
+				_inproc->getsockopt(ZMQ_RCVMORE, &more, &more_size);
+				assert(more == 0);
+#endif 
+
+#ifdef LOG
+			std::stringstream sid;
+			sid << boost::this_thread::get_id(); 
+			pan::log_DEBUG("KMsgHandler RCV header 1 [", 
+				pan::integer(header1.size()), "] thread(", sid.str().c_str(), ")", 
+				pan::integer(*(int*)header1.data()));	
+
+			pan::log_DEBUG("KMsgHandler RCV header 2 [", 
+				pan::integer(header2.size()), "] thread(", sid.str().c_str(), ")", 
+				pan::integer(*(int*)header2.data()));	
+
+			pan::log_DEBUG("KMsgHandler RCV msg_type [", 
+				pan::integer(msg_type.size()), "] thread(", sid.str().c_str(), ")", 
+				pan::integer(*(int*)msg_type.data()));	
+
+			pan::log_DEBUG("KMsgHandler RCV data [", 
+				pan::integer(data.size()), "] thread(", sid.str().c_str(), ")", 
+				pan::integer(*(int*)data.data()));	
+#endif
+
+			
+
+			// assemble the reply and the second reply
+			zmq::message_t reply_header1(header1.size());
+			zmq::message_t r2h1(header1.size());
+			memcpy(reply_header1.data(), header1.data(), header1.size());
+			memcpy(r2h1.data(), header1.data(), header1.size());
+#ifdef LOG
+			pan::log_DEBUG("KMsgHandler SND [", 
+				pan::integer(reply_header1.size()), "]", 
+				pan::integer(*(int*)reply_header1.data()));	
+#endif
+			rc = _inproc->send(reply_header1, ZMQ_SNDMORE);
+			assert(rc);
+
+			zmq::message_t reply_header2(header2.size());
+			zmq::message_t r2h2(header2.size());
+			memcpy(reply_header2.data(), header2.data(), header2.size());
+			memcpy(r2h2.data(), header2.data(), header2.size());
+#ifdef LOG
+			pan::log_DEBUG("KMsgHandler SND [", 
+				pan::integer(reply_header2.size()), "]", 
+				pan::integer(*(int*)reply_header2.data()));	
+#endif
+			rc = _inproc->send(reply_header2, ZMQ_SNDMORE);
+			assert(rc);
+
+			zmq::message_t reply(data.size());
+			zmq::message_t r2(data.size());
+			memcpy(reply.data(), data.data(), data.size());
+			memcpy(r2.data(), data.data(), data.size());
+#ifdef LOG
+			pan::log_DEBUG("KMsgHandler SND [", 
+				pan::integer(reply.size()), "]", 
+				pan::integer(*(int*)reply.data()));	
+#endif
+			rc = _inproc->send(reply, 0);
+			assert(rc);
+
+#if 0
+// Try sending a second message
+#ifdef LOG
+				pan::log_DEBUG("Sleeping before sending second message");
+				sleep(1);
+				pan::log_DEBUG("===> Sending msg 2");
+				pan::log_DEBUG("KMsgHandler SND2 [", 
+					pan::integer(r2h1.size()), "]", 
+					pan::integer(*(int*)r2h1.data()));	
+#endif
+				rc = _inproc->send(r2h1, ZMQ_SNDMORE);
+				assert(rc);
+
+#ifdef LOG
+				pan::log_DEBUG("KMsgHandler SND2 [", 
+					pan::integer(r2h2.size()), "]", 
+					pan::integer(*(int*)r2h2.data()));	
+#endif
+				rc = _inproc->send(r2h2, ZMQ_SNDMORE);
+				assert(rc);
+
+				int x = 69;
+				memcpy(r2.data(), &x, sizeof(int));
+#ifdef LOG
+				pan::log_DEBUG("KMsgHandler SND2 [", 
+					pan::integer(r2.size()), "]", 
+					pan::integer(*(int*)r2.data()));	
+#endif
+				rc = _inproc->send(r2, 0);
+				assert(rc);
+
+				std::stringstream  s;
+				s << "Time(us) to recv and parse: " << duration << "\n";
+				pan::log_DEBUG(s.str().c_str());
+
+				// Make sure we've read everything 
+//				_inproc->getsockopt(ZMQ_RCVMORE, &more, &more_size);
+//				assert(more == 0);
+//			} while (more);
+#endif 
+				boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
+				boost::posix_time::time_duration duration(time_end - time_start);
+
+        }
+    } 
+    catch (std::exception& e) {
+        std::cerr << "EXCEPTION: " << __FILE__ << __LINE__ << e.what();
+    }
+}
+

@@ -1,0 +1,154 @@
+#include "logging.h"
+#include "timing.h"
+
+#include <zmq.hpp>
+
+#include "utils/KTimeUtils.h"
+#include "KMsgTypes.h"
+
+#include "proto/new_order_single.pb.h"
+#include "proto/capk_globals.pb.h"
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+#include <uuid/uuid.h>
+
+#define ZC 1
+//#define SND_EMPTY 1
+//#define SND_IDENT 1
+
+#define STRAT_UUID 7020f42e-b6c6-42d1-9b1e-65d968961a06
+
+void 
+free_int(void* data, void* hint)
+{
+	if (data) {
+		free(data);
+	}
+}
+
+int
+main(int argc, char **argv)
+{
+	GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+	logging_init("testcli.log");
+
+	int MSG_COUNT = 10;
+
+	pan::log_DEBUG("Sleeping...");
+	sleep(3);
+
+	void *ctx = zmq_init(1);
+	void *socket = zmq_socket(ctx, ZMQ_DEALER);
+
+	int rc = zmq_connect(socket, "tcp://127.0.0.1:9999");
+	assert(rc == 0);	
+
+	zmq::pollitem_t items[] = {
+		{ socket, NULL, ZMQ_POLLOUT, 0 },
+		{ socket, NULL, ZMQ_POLLIN, 0 }
+	};
+
+	const int mtype = ORDER_CAN; 
+
+	zmq_msg_t msg;
+	zmq_msg_t msg_type;
+	size_t msg_size = sizeof(int);
+
+	int x = 0;
+	if (argc == 2) {
+		x = atoi(argv[1]);
+		pan::log_DEBUG("Msg payload: ", pan::integer(x));
+	}
+
+	
+
+	boost::posix_time::ptime start_ptime(boost::posix_time::microsec_clock::local_time()); 
+	//for (int i = 0; i < MSG_COUNT; i++) {
+	while (1) {
+		zmq::poll(items, 2, -1);	
+		sleep(1);
+
+		if (items[0].revents & ZMQ_POLLOUT) {
+			//pan::log_DEBUG("POLLOUT");
+			
+			int *px = (int*)malloc(1*sizeof(int));
+			*px = x++;
+
+		#ifdef ZC
+			// with zerocopy
+			rc = zmq_msg_init_data(&msg, (void*)px, msg_size, free_int, NULL);
+			rc = zmq_msg_init_data(&msg_type, (void*)&mtype,  sizeof(mtype), NULL, NULL);
+			assert(rc == 0);
+		#else
+			// without zerocopy
+			pan::log_DEBUG("NOT using zerocopy");
+			rc = zmq_msg_init_size(&msg, msg_size);
+			assert(rc == 0);
+			memcpy(zmq_msg_data(&msg), (void*)&x, msg_size);
+		#endif
+
+			//do { /*pan::log_DEBUG("Sending message");*/ rc = zmq_send(socket, &msg, 0);} while (rc != 0);
+			//zmq_msg_t empty;
+			//const char* es = "";
+			//zmq_msg_init_data(&empty, (void*)es, strlen(es)+1, NULL, NULL );
+			
+			//rc = zmq_send(socket, &empty, ZMQ_SNDMORE);
+			//assert(rc == 0);
+#if 0
+		#ifdef SND_IDENT
+			zmq_msg_t ident;
+			zmq_msg_init(&ident);
+			memcpy(zmq_msg_data(&ident), "A", strlen("A"));
+			rc = zmq_send(socket, &ident, ZMQ_SNDMORE);
+			assert(rc == 0);
+		#endif
+		#ifdef SND_EMPTY
+			zmq_msg_t empty;
+			zmq_msg_init(&empty);
+			rc = zmq_send(socket, &empty, ZMQ_SNDMORE);
+			assert(rc == 0);
+		#endif
+#endif
+			pan::log_DEBUG("Sending type: ", pan::integer(ORDER_CAN));
+			rc = zmq_send(socket, &msg_type, ZMQ_SNDMORE);
+
+			pan::log_DEBUG("Sending message: ", pan::integer(*px));
+			rc = zmq_send(socket, &msg, 0);
+			assert(rc == 0);
+			zmq_msg_close(&msg);
+			zmq_msg_close(&msg_type);
+		}
+		if (items[1].revents & ZMQ_POLLIN) {
+			//pan::log_DEBUG("POLLIN");
+			int64_t more = 0;
+			size_t more_size = sizeof(more);
+		
+			do {
+				pan::log_DEBUG("Receiving message");
+				zmq_msg_init(&msg);
+				rc = zmq_recv(socket, &msg, 0); 
+				pan::log_DEBUG("Received msg: ", pan::integer(*(int*)zmq_msg_data(&msg)));
+				pan::log_DEBUG("Received msg size: ", pan::integer(zmq_msg_size(&msg)));
+				//x = (*(int*)zmq_msg_data(&msg));
+				zmq_getsockopt(socket, ZMQ_RCVMORE, &more, &more_size);
+				zmq_close(&msg);
+			} while (more);
+		}
+
+	}
+
+
+
+	boost::posix_time::ptime stop_ptime(boost::posix_time::microsec_clock::local_time()); 
+	boost::posix_time::time_duration ptime_duration(stop_ptime - start_ptime); 
+	std::cerr << ptime_duration << "\n";
+	zmq_close(socket);
+	zmq_term(ctx);
+
+}
+
+
+
+

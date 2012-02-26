@@ -1,0 +1,117 @@
+20120221-13:54:21.945 : Created session
+20120221-13:54:21.947 : Connecting to 127.0.0.1 on port 7778
+20120221-13:54:21.947 : Initiated logon request
+20120221-13:54:22.476 : Socket Error: Connection reset by peer
+20120221-13:54:22.476 : Disconnecting
+20120221-13:57:21.421 : Created session
+20120221-13:57:21.422 : Connecting to 127.0.0.1 on port 7778
+20120221-13:57:21.423 : Initiated logon request
+20120221-13:57:21.950 : Socket Error: Connection reset by peer
+20120221-13:57:21.950 : Disconnecting
+20120221-14:18:08.482 : Created session
+20120221-14:18:08.483 : Connecting to 127.0.0.1 on port 7778
+20120221-14:18:08.484 : Initiated logon request
+20120221-14:18:09.015 : Socket Error: Connection reset by peer
+20120221-14:18:09.015 : Disconnecting
+20120221-15:49:39.036 : Created session
+20120221-15:49:39.037 : Connecting to 127.0.0.1 on port 7778
+20120221-15:49:39.038 : Initiated logon request
+20120221-15:49:39.838 : Received logout request
+20120221-15:49:39.838 : Sending logout response
+20120221-15:49:39.838 : Disconnecting
+20120221-15:50:08.092 : Created session
+20120221-15:50:08.093 : Connecting to 127.0.0.1 on port 7778
+20120221-15:50:08.093 : Initiated logon request
+20120221-15:50:08.970 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20120221-15:50:08.970 : Received logon response
+20120221-15:52:00.331 : Initiated logout request
+20120221-15:52:00.436 : Received logout response
+20120221-15:52:00.436 : Disconnecting
+20120221-15:52:01.630 : Created session
+20120221-15:52:01.631 : Connecting to 127.0.0.1 on port 7778
+20120221-15:52:01.631 : Initiated logon request
+20120221-15:52:02.503 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20120221-15:52:02.503 : Received logon response
+20120221-15:53:15.736 : Initiated logout request
+20120221-15:53:15.841 : Received logout response
+20120221-15:53:15.841 : Disconnecting
+20120221-15:53:56.352 : Created session
+20120221-15:53:56.353 : Connecting to 127.0.0.1 on port 7778
+20120221-15:53:56.354 : Initiated logon request
+20120221-15:53:57.225 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20120221-15:53:57.225 : Received logon response
+20120221-15:54:19.389 : Initiated logout request
+20120221-15:54:19.494 : Received logout response
+20120221-15:54:19.494 : Disconnecting
+20120221-15:54:21.648 : Created session
+20120221-15:54:21.649 : Connecting to 127.0.0.1 on port 7778
+20120221-15:54:21.650 : Initiated logon request
+20120221-15:54:22.529 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20120221-15:54:22.529 : Received logon response
+20120221-15:56:26.729 : Initiated logout request
+20120221-15:56:26.833 : Received logout response
+20120221-15:56:26.833 : Disconnecting
+20120221-16:26:30.825 : Created session
+20120221-16:26:30.826 : Connecting to 127.0.0.1 on port 7778
+20120221-16:26:30.827 : Initiated logon request
+20120221-16:26:31.701 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20120221-16:26:31.701 : Received logon response
+20120221-16:29:27.466 : Initiated logout request
+20120221-16:29:27.570 : Received logout response
+20120221-16:29:27.570 : Disconnecting
+20120221-17:04:24.388 : Created session
+20120221-17:04:24.389 : Connecting to 127.0.0.1 on port 7778
+20120221-17:04:24.390 : Initiated logon request
+20120221-17:04:25.262 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20120221-17:04:25.263 : Received logon response
+20120221-17:04:26.405 : Initiated logout request
+20120221-17:04:26.509 : Received logout response
+20120221-17:04:26.509 : Disconnecting
+20120221-17:04:44.709 : Created session
+20120221-17:04:44.710 : Connecting to 127.0.0.1 on port 7778
+20120221-17:04:44.711 : Initiated logon request
+20120221-17:04:45.580 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20120221-17:04:45.580 : Received logon response
+20120221-17:04:47.722 : Initiated logout request
+20120221-17:04:47.828 : Received logout response
+20120221-17:04:47.829 : Disconnecting
+20120221-17:06:53.815 : Created session
+20120221-17:06:53.816 : Connecting to 127.0.0.1 on port 7778
+20120221-17:06:53.816 : Initiated logon request
+20120221-17:06:54.685 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20120221-17:06:54.685 : Received logon response
+20120221-17:07:01.833 : Initiated logout request
+20120221-17:07:01.937 : Received logout response
+20120221-17:07:01.937 : Disconnecting
+20120221-18:01:22.941 : Created session
+20120221-18:01:22.942 : Connecting to 127.0.0.1 on port 7778
+20120221-18:01:22.943 : Initiated logon request
+20120221-18:01:23.818 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20120221-18:01:23.818 : Received logon response
+20120221-18:01:59.008 : Initiated logout request
+20120221-18:01:59.113 : Received logout response
+20120221-18:01:59.113 : Disconnecting
+20120221-18:02:51.935 : Created session
+20120221-18:02:51.936 : Connecting to 127.0.0.1 on port 7778
+20120221-18:02:51.937 : Initiated logon request
+20120221-18:02:52.805 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20120221-18:02:52.805 : Received logon response
+20120221-18:03:14.969 : Initiated logout request
+20120221-18:03:15.076 : Received logout response
+20120221-18:03:15.076 : Disconnecting
+20120221-18:03:47.120 : Created session
+20120221-18:03:47.121 : Connecting to 127.0.0.1 on port 7778
+20120221-18:03:47.122 : Initiated logon request
+20120221-18:03:47.990 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20120221-18:03:47.990 : Received logon response
+20120221-18:04:29.591 : Initiated logout request
+20120221-18:04:29.695 : Received logout response
+20120221-18:04:29.695 : Disconnecting
+20120222-12:08:10.734 : Created session
+20120222-12:08:10.740 : Connecting to 127.0.0.1 on port 7778
+20120222-12:08:10.754 : Initiated logon request
+20120222-12:08:11.685 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20120222-12:08:11.685 : Received logon response
+20120222-12:09:47.006 : Initiated logout request
+20120222-12:09:47.110 : Received logout response
+20120222-12:09:47.110 : Disconnecting
