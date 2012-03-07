@@ -7,7 +7,7 @@ unsigned long timespec_delta_millis(const timespec& start, const timespec& end)
     return (unsigned long)(usec / 1000) ;
 }
 
-timespec timespec_delta(const timespec start, const timespec end)
+timespec timespec_delta(const timespec& start, const timespec& end)
 {
     timespec temp;
     if ((end.tv_nsec-start.tv_nsec)<0) {
