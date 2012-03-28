@@ -89,6 +89,8 @@
 
 #include "timing.h"
 #include "logging.h"
+#include "OrderInterface.h"
+#include "KMsgCache.h"
 
 
 enum FIXVersion {
@@ -105,8 +107,8 @@ struct ApplicationConfig {
 	bool sendPasswordInRawDataField;
 	bool aggregatedBook;  
 	bool sendIndividualMarketDataRequests;
-	//FIXVersion version;
-	std::string version;
+	FIXVersion version;
+	std::string begin_string;
 	bool printDebug; 
     int marketDepth;
 	std::string zmq_bind_addr;
@@ -116,7 +118,8 @@ struct ApplicationConfig {
 
 class Application :
 			public FIX::Application,
-			public FIX::MessageCracker
+			public FIX::MessageCracker,
+			public capk::OrderInterface
 {
 public:
 	Application(bool bReset, const ApplicationConfig& config);
@@ -139,6 +142,24 @@ public:
 	inline void setUseCurrency15(const bool useCurrency) { this->_useCurrency = useCurrency; };
 
 	inline void setLimitOrderChar40(const char limitOrderChar) { this->_limitOrderChar = limitOrderChar; };
+
+// OrderInterface virtual methods
+	virtual void sndNewOrder(order_id_t& ClOrdID,
+						const char* Symbol,
+						const side_t Side,
+						const double OrderQty,
+						const short int OrdType,
+						const double Price,
+						const short int TimeInForce = 0,
+						const char* Account = NULL);
+
+	void sndCancelOrder(const order_id_t& ClOrdID,
+						const order_id_t& OrigOrderID);
+
+	void sndOrderCancelReplace();
+	void sndOrderStatus();
+	void rcvExecutionReport();
+	void rcvListStatus();
 
 
 private:

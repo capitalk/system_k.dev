@@ -2,12 +2,6 @@
 
 /******************************************************************************
   Copyright (C) 2011,2012 Capital K Partners BV
-   ______            _ __        __   __ __
-  / ____/___ _____  (_) /_____ _/ /  / //_/
- / /   / __ `/ __ \/ / __/ __ `/ /  / ,<   
-/ /___/ /_/ / /_/ / / /_/ /_/ / /  / /| |  
-\____/\__,_/ .___/_/\__/\__,_/_/  /_/ |_|  
-          /_/                            
 
  No part of this code may be reproduced in whole or in part without express
  permission from Capital K partners.  
@@ -27,7 +21,7 @@
 #include "quickfix/FieldConvertors.h"
 #include "utils/KTimeUtils.h"
 #include "utils/FIXConvertors.h"
-#include "utils/hash.cpp"
+#include "utils/JenkinsHash.h"
 
 #include <iostream>
 
@@ -1113,14 +1107,14 @@ void*
 Application::run()
 {
 	#ifdef LOG
-	pan::log_DEBUG("Application::test()");
+	pan::log_DEBUG("Application::run()");
 	#endif
 // SHIT STARTS HERE - move to class or struct
 // KTK - Not sure I like this zthread library czmq and my gut is to change 
 // this to just use standard paradigms and the straight C++ API.
 	//zctx_t *ctx = zctx_new();
 // SHIT ENDS HERE - move to class
-
+	return 0;
 }
 
 void 
@@ -1155,3 +1149,91 @@ Application::test()
 Application::~Application() 
 {
 }
+
+// Order interface methods
+void 
+Application::sndNewOrder(order_id_t& ClOrdID,
+					const char* Symbol,
+					const side_t BuySell,
+					const double OrderQty,
+					const short int OrdType,
+					const double Price,
+					const short int TimeInForce,
+					const char* Account)
+{
+	char oidbuf[UUID_LEN+1];
+	ClOrdID.c_str(oidbuf);
+	FIX::ClOrdID clordid(oidbuf);
+	FIX::OrdType ordtype(OrdType);
+	FIX::Side side(BuySell);
+
+	FIX::HandlInst handlinst(_handlInst);
+	FIX::Symbol symbol(Symbol);
+	FIX::OrderQty qty(OrderQty);
+	FIX::TimeInForce tif(TimeInForce);
+	FIX::Price price(Price);
+
+
+	FIX50::NewOrderSingle nos(clordid, side, FIX::TransactTime(), ordtype);
+
+	nos.set(handlinst);
+	nos.set(symbol);
+	nos.set(qty);
+	nos.set(tif);
+	nos.set(price);
+
+	if (_account != "") {
+		nos.set(FIX::Account(_account));
+	}
+	if (_useCurrency) {
+		FIX::Symbol symbol;
+		nos.getField(symbol);
+		std::string ssym = symbol.getValue();
+		std::string curPrefix = ssym.substr(0,3);
+#ifdef LOG
+		//pan::log_DEBUG("************** CURRENCY PREFIX: ", curPrefix.c_str());
+#endif
+		nos.set(FIX::Currency(curPrefix.c_str()));
+	}
+
+	nos.getHeader().setField(FIX::SenderCompID(_sessionID.getSenderCompID()));
+	nos.getHeader().setField(FIX::TargetCompID(_sessionID.getTargetCompID()));
+
+	FIX::Session::sendToTarget(nos);
+	#ifdef LOG
+	pan::log_DEBUG(nos.toString());
+	#endif
+
+}
+
+void 
+Application::sndCancelOrder(const order_id_t& ClOrdID,
+					const order_id_t& OrigOrderID)
+{
+
+}
+
+void 
+Application::sndOrderCancelReplace()
+{
+
+}
+
+void 
+Application::sndOrderStatus()
+{
+
+}
+
+void
+Application::rcvExecutionReport()
+{
+
+}
+
+void 
+Application::rcvListStatus()
+{
+
+}
+

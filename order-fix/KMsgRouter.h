@@ -18,17 +18,34 @@
 
 #include "logging.h"
 #include "KMsgTypes.h"
-#include "KOrderManager.h"
-#include "proto/new_order_single.pb.h"
+#include "KMsgCache.h"
+#include "OrderInterface.h"
 #include "proto/capk_globals.pb.h"
+#include "proto/new_order_single.pb.h"
+
+#include "quickfix/Application.h"
+
+#include "KMsgProcessor.h"
+
+
+class KMsgProcessor;
+
+// I hate having FIX objects exposed here - should have a class in between 
+// the fix application and the router that implements sending/receiving of orders
 
 class KMsgRouter
 {   
     public:
-        KMsgRouter(zmq::context_t* context, const std::string& inprocAddr);
+        KMsgRouter(zmq::context_t* context, const std::string& inprocAddr, KMsgProcessor* msgProcessor);
+        ~KMsgRouter();
+
         void run();
         void stop();
-        ~KMsgRouter();
+		void rcvMsg();
+		void repMsg(order_id_t& oid);	
+		void setOrderInterface(capk::OrderInterface& interface);
+		capk::OrderInterface* getOrderInterface();
+		KMsgCache* getCache();
  
     private:
         zmq::context_t* _context;
@@ -36,6 +53,10 @@ class KMsgRouter
         std::string _inprocAddr;
         zmq::socket_t* _inproc;
         volatile bool _stopRequested;
+
+		capk::OrderInterface* _interface;
+		KMsgCache _cache;
+		KMsgProcessor* _msgProcessor;
         
 };
 

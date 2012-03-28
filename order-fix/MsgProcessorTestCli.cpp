@@ -14,6 +14,8 @@
 
 #include <uuid/uuid.h>
 
+#include "KMsgCache.h"
+
 using google::dense_hash_map;
 
 #define ZC 1
@@ -38,9 +40,8 @@ main(int argc, char **argv)
 
 	logging_init("testcli.log");
 
-	pan::log_DEBUG("Sleeping...");
+	//pan::log_DEBUG("Sleeping...");
 	//sleep(3);
-	pan::log_DEBUG("starting");
 
 	zmq::context_t ctx(1);
 
@@ -52,27 +53,39 @@ main(int argc, char **argv)
 		//{ socket, NULL, ZMQ_POLLOUT, 0 },
 		{ socket, NULL, ZMQ_POLLIN, 0 }
 	};
-
+	const int NUM_TEST_MSGS = 1;
 	bool rc;
+	pan::log_DEBUG("Starting");
 	boost::posix_time::ptime start_ptime(boost::posix_time::microsec_clock::local_time()); 
-	////while (1) {
+	for (int i = 0; i < NUM_TEST_MSGS; i++) {
+	//while (1) {
 		////zmq::poll(items, 2, -1);	
 		////sleep(1);
 
 		//if (items[0].revents & ZMQ_POLLOUT) {
-			pan::log_DEBUG("Sending message");
+#ifdef LOG
+			pan::log_DEBUG("Preparing message");
+#endif
 			char msgbuf[256];
-			capitalk::new_order_single nos;
-			uuid_t oid;	
-			uuid_generate(oid);
-			nos.set_order_id(oid, 16);			
+			capkproto::new_order_single nos;
+			strategy_id_t sid(true);	
+			nos.set_strategy_id(sid.get_uuid(), UUID_LEN);			
+			order_id oid(true);
+			char buf[UUID_STRLEN + 1];
+#ifdef LOG
+			pan::log_DEBUG("Creating order id: ", oid.c_str(buf));
+#endif
+			nos.set_order_id(oid.get_uuid(), UUID_LEN);	
 			nos.set_symbol("EUR/USD");
-			nos.set_side(capitalk::BID);
+			nos.set_side(capkproto::BID);
 			nos.set_order_qty(100000);
-			nos.set_order_type(capitalk::LIM);
+			nos.set_order_type(capkproto::LIM);
 			nos.set_price(1);
-			nos.set_time_in_force(capitalk::GFD);
+			nos.set_time_in_force(capkproto::GFD);
 			// nos.set_account("FOOBAR");
+#ifdef LOG
+			pan::log_DEBUG(nos.DebugString());
+#endif
 			size_t msgsize = nos.ByteSize();
 			assert(msgsize < sizeof(msgbuf));
 			nos.SerializeToArray(msgbuf, msgsize);	
@@ -81,32 +94,57 @@ main(int argc, char **argv)
 			int order_new_type = ORDER_NEW;
 
 			zmq::message_t msgtype(&order_new_type, sizeof(order_new_type), NULL, NULL);
+#ifdef LOG
 			pan::log_DEBUG("Sending type: ", pan::integer(ORDER_NEW));
+#endif
 			rc = socket.send(msgtype, ZMQ_SNDMORE);
 			assert(rc == true);
 
+#ifdef LOG
 			pan::log_DEBUG("Sending message ");
+#endif
 			rc = socket.send(msg, 0);
 			assert(rc == true);
+			//if (i % 1000 == 0) std::cerr << i << " Messages" << "\n";
 		//}
+	}
+	int rcvcount = 0;
+	for (int i = 0; i < NUM_TEST_MSGS; i++) {
 	while (1) {
 		zmq::poll(items, 1, -1);	
 		if (items[0].revents & ZMQ_POLLIN) {
+#ifdef LOG
 			pan::log_DEBUG("OK to recv");
+#endif
 			int64_t more = 0;
 			size_t more_size = sizeof(more);
-		
+			char oidbuf[UUID_STRLEN + 1];	
 			do {
+#ifdef LOG
 				pan::log_DEBUG("Receiving message");
+#endif
+				zmq::message_t incoming_type;
 				zmq::message_t incoming;
-				socket.recv(&incoming, 0); 
-				pan::log_DEBUG("Received msg size: ", pan::integer(incoming.size()));
+				socket.recv(&incoming_type, 0); 
+#ifdef LOG
+				pan::log_DEBUG("Received msg size: ", pan::integer(incoming_type.size()));
+#endif
+			order_id_t oid;
+			oid.set(static_cast<char*>(incoming_type.data()), incoming_type.size());
+#ifdef LOG
+			pan::log_DEBUG("Received reply for oid: ", oid.c_str(oidbuf));	
+#endif
+				//////socket.recv(&incoming, 0); 
+				//////pan::log_DEBUG("Received msg size: ", pan::integer(incoming.size()));
 				zmq_getsockopt(socket, ZMQ_RCVMORE, &more, &more_size);
 			} while (more);
+			rcvcount++;
 			break; // outer while...
 		}
 	}
+	}
 
+	std::cerr << "Received: " << rcvcount << "\n";	
 	////}
 
 

@@ -143,6 +143,10 @@ int main( int argc, char** argv )
 		config.sendPasswordInRawDataField = dict.has("SendPasswordInRawData") && 
 		    dict.getBool("SendPasswordInRawData");
 
+        // Fix Version string
+		config.version = dict.has("FIXVersion") ? (FIXVersion)atoi(dict.getString("FIXVersion").c_str()) : FIX_42;
+		pan::log_INFORMATIONAL("Using FIX version: ", pan::integer(config.version)); 
+
         // Should we reset sequence numbers? 
 		bool bReset = dict.has("ResetSeqNo") && dict.getBool("ResetSeqNo");  
 		#ifdef LOG
@@ -176,10 +180,10 @@ int main( int argc, char** argv )
 		#endif
 
 
-        // Fix Version string
-		config.version = dict.has("BeginString") ? dict.getString("BeginString").c_str() : "UNKNOWN FIX VERSION";
+        // Fix begin string
+		config.begin_string = dict.has("BeginString") ? dict.getString("BeginString").c_str() : "UNKNOWN FIX VERSION";
 		#ifdef LOG
-		pan::log_INFORMATIONAL("Using FIX version: ", config.version);
+		pan::log_INFORMATIONAL("Using FIX version: ", config.begin_string);
 		#endif
 
         // Debug settings

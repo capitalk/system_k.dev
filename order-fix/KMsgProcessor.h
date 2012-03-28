@@ -17,6 +17,8 @@
 
 #include <boost/thread.hpp>
 
+#include "NullOrderInterface.h"
+
 class KMsgProcessor
 {
 	public:
@@ -28,6 +30,17 @@ class KMsgProcessor
 		~KMsgProcessor();
 
 		int run();
+	
+		void setOrderInterface(capk::OrderInterface& interface);
+		capk::OrderInterface* getOrderInterface();
+
+		inline zmq::socket_t* getFrontendSocket() {
+			return _frontend;
+		}
+
+		inline zmq::socket_t* getBackendSocket() {
+			return _backend;
+		}
 
 	private:
 		// initializer list
@@ -40,6 +53,12 @@ class KMsgProcessor
 		void *_server;
 		void *_inproc;
 
+		// ZMQ sockets
+		zmq::socket_t *_frontend;
+		zmq::socket_t *_backend;
+
+		// order interface to set in KMsgRouter
+		capk::OrderInterface* _interface;
 
 };
 
