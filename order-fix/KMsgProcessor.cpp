@@ -26,8 +26,8 @@ KMsgProcessor::~KMsgProcessor()
 	if (_frontend) {
 		delete _frontend;
 	}
-	if (_backend) {
-		delete _backend;
+	if (_in) {
+		delete _in;
 	}
 }
 
@@ -39,18 +39,19 @@ KMsgProcessor::run()
 	//zmq::socket_t frontend(*_ctx, ZMQ_ROUTER);
 	//zmq::socket_t backend(*_ctx, ZMQ_DEALER);
 	zmq::socket_t *_frontend = new zmq::socket_t(*_ctx, ZMQ_ROUTER);
-	zmq::socket_t *_backend = new zmq::socket_t(*_ctx, ZMQ_DEALER);
+	zmq::socket_t *_in = new zmq::socket_t(*_ctx, ZMQ_DEALER);
 	
 	int zero = 0;
 	_frontend->setsockopt(ZMQ_LINGER, &zero, sizeof(zero)); 
-	_backend->setsockopt(ZMQ_LINGER, &zero, sizeof(zero)); 
+	_in->setsockopt(ZMQ_LINGER, &zero, sizeof(zero)); 
+	_out->setsockopt(ZMQ_LINGER, &zero, sizeof(zero)); 
 
 	#ifdef LOG
 	pan::log_DEBUG("KMsgProcessor binding: ", _listen_addr.c_str());	
 	pan::log_DEBUG("KMsgProcessor binding: ", _inproc_addr.c_str());	
 	#endif
 	_frontend->bind(_listen_addr.c_str());
-	_backend->bind(_inproc_addr.c_str());
+	_in->bind(_inproc_addr.c_str());
 
 	// container for routers 
 	KMsgRouter *routers[_num_threads];
@@ -79,7 +80,7 @@ KMsgProcessor::run()
 	int count = 0;
 	zmq::pollitem_t poll_items[] =  {
 		{ *_frontend, NULL, ZMQ_POLLIN, 0},
-		{ *_backend, NULL, ZMQ_POLLIN, 0}
+		{ *_in, NULL, ZMQ_POLLIN, 0}
 	};
 
 	while(1) {
@@ -95,7 +96,7 @@ KMsgProcessor::run()
 					pan::integer(*(int*)msg.data()), " ", pan::integer(count++));	
 #endif
 				_frontend->getsockopt(ZMQ_RCVMORE, &more, &more_size);
-				rc = _backend->send(msg, more ? ZMQ_SNDMORE : 0);
+				rc = _in->send(msg, more ? ZMQ_SNDMORE : 0);
 				assert(rc);
 			} while (more);	
 		}
@@ -103,14 +104,14 @@ KMsgProcessor::run()
 		if (poll_items[1].revents & ZMQ_POLLIN) {
 			do {
 				zmq::message_t reply;
-				rc = _backend->recv(&reply, 0);
+				rc = _in->recv(&reply, 0);
 				assert(rc);	
 #ifdef LOG
 				pan::log_DEBUG("KMsgProcessor backend recv'd [", 
 					pan::integer(reply.size()), "] ", 
 					pan::integer(*(int*)reply.data()));	
 #endif
-				_backend->getsockopt(ZMQ_RCVMORE, &more, &more_size);
+				_in->getsockopt(ZMQ_RCVMORE, &more, &more_size);
 				rc = _frontend->send(reply, more ? ZMQ_SNDMORE : 0);
 				assert(rc);
 			} while (more);	

@@ -24,8 +24,10 @@ class KMsgProcessor
 	public:
 		KMsgProcessor(zmq::context_t* ctx, 
 					const char* listen_addr, 
-					const char* inproc_addr, 
-					const short int num_threads,
+					const char* in_addr, 
+					const short int in_threads,
+					const char* out_addr, 
+					const short int out_threads,
 					KMsgHandler* handler);
 		~KMsgProcessor();
 
@@ -34,28 +36,35 @@ class KMsgProcessor
 		void setOrderInterface(capk::OrderInterface& interface);
 		capk::OrderInterface* getOrderInterface();
 
-		inline zmq::socket_t* getFrontendSocket() {
-			return _frontend;
+		inline const std::string& getInboundAddr() const {
+			return _in_addr;
 		}
 
-		inline zmq::socket_t* getBackendSocket() {
-			return _backend;
+		inline const std::string& getOutboundAddr() const {
+			return _out_addr;
+		}
+		
+		inline unsigned short int getInThreadCount() const {
+			return _in_threads;
+		}
+
+		inline unsigned short int getOutThreadCount() const {
+			return _out_threads;
 		}
 
 	private:
 		// initializer list
 		zmq::context_t* _ctx;
 		std::string _listen_addr;
-		std::string _inproc_addr;
-		short int _num_threads;
-
-		// sockets
-		void *_server;
-		void *_inproc;
+		std::string _in_addr;
+		short int _in_threads;
+		std::string _out_addr;
+		short int _out_threads;
 
 		// ZMQ sockets
 		zmq::socket_t *_frontend;
-		zmq::socket_t *_backend;
+		zmq::socket_t *_in;
+		zmq::socket_t *_out;
 
 		// order interface to set in KMsgRouter
 		capk::OrderInterface* _interface;
