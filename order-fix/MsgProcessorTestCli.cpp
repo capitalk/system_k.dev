@@ -100,6 +100,20 @@ main(int argc, char **argv)
 			rc = socket.send(msgtype, ZMQ_SNDMORE);
 			assert(rc == true);
 
+			zmq::message_t oidframe(oid.get_uuid(), UUID_LEN,  NULL, NULL);
+#ifdef LOG
+			pan::log_DEBUG("Sending oid: ", oid.c_str(buf));
+#endif
+			rc = socket.send(oidframe, ZMQ_SNDMORE);
+			assert(rc == true);
+
+			zmq::message_t sidframe(sid.get_uuid(), UUID_LEN,  NULL, NULL);
+#ifdef LOG
+			pan::log_DEBUG("Sending sid: ", sid.c_str(buf));
+#endif
+			rc = socket.send(sidframe, ZMQ_SNDMORE);
+			assert(rc == true);
+
 #ifdef LOG
 			pan::log_DEBUG("Sending message ");
 #endif

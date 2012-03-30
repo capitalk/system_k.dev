@@ -26,9 +26,6 @@
 #include <iostream>
 
 
-// For google protobufs
-//#include "../proto/spot_fx_md_1.pb.h"
-
 namespace fs = boost::filesystem; 
 namespace dt = boost::gregorian; 
 
@@ -1109,11 +1106,38 @@ Application::run()
 	#ifdef LOG
 	pan::log_DEBUG("Application::run()");
 	#endif
-// SHIT STARTS HERE - move to class or struct
-// KTK - Not sure I like this zthread library czmq and my gut is to change 
-// this to just use standard paradigms and the straight C++ API.
-	//zctx_t *ctx = zctx_new();
-// SHIT ENDS HERE - move to class
+	zmq::context_t* ctx = getZMQContext();
+	_pMsgProcessor = new KMsgProcessor(ctx, 
+						"tcp://127.0.0.1:9999",
+						"inproc://rin",
+						1,
+						"inproc://rout", 
+						1, 
+						stubHandler, 
+						this);
+
+	_pMsgProcessor->setOrderInterface(this);
+
+	_pMsgProcessor->run();
+		
+/*
+	zmq::socket_t inbound(*ctx, ZMQ_ROUTER);
+	inbound.bind("inproc://iin");
+	
+		
+	zmq::socket_t outbound(*ctx, ZMQ_DEALER);
+	inbound.bind("inproc://iout");
+*/
+/*
+	StubHandler* stubHandler = new StubHandler();
+	zmq::context_t ctx(1);
+	
+	setInAddr("inproc://msgin");
+	setOutAddr("inproc://msgout");
+
+
+*/	
+	
 	return 0;
 }
 
@@ -1151,6 +1175,24 @@ Application::~Application()
 }
 
 // Order interface methods
+bool
+Application::rcv(zmq::message_t& m)
+{
+	pan::log_DEBUG("rcv");
+}
+
+bool
+Application::snd(zmq::message_t& m)
+{
+	pan::log_DEBUG("snd");
+}
+
+void
+Application::dispatch(zmq::message_t& m)
+{
+	pan::log_DEBUG("dispatch");
+}
+/*
 void 
 Application::sndNewOrder(order_id_t& ClOrdID,
 					const char* Symbol,
@@ -1236,4 +1278,4 @@ Application::rcvListStatus()
 {
 
 }
-
+*/

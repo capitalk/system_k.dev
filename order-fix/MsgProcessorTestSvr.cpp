@@ -9,11 +9,6 @@
 
 #include "NullOrderInterface.h"
 
-// C
-//void *g_zmq_ctx;
-// 
-// C++
-//zmq::context_t ctx;
 
 int
 main(int argc, char **argv)
@@ -30,13 +25,16 @@ main(int argc, char **argv)
 
 	StubHandler* stubHandler = new StubHandler();
 
+	capk::NullOrderInterface noi;
+
 	KMsgProcessor k(&ctx,
 				"tcp://127.0.0.1:9999", 
-				"inproc://whatthefuck",
+				"inproc://msgin",
 				1,
-				stubHandler);
-	capk::NullOrderInterface noi;
-	k.setOrderInterface(noi);
+				"inproc://msgout",
+				1,
+				stubHandler,
+				&noi);
 
 	return k.run();
 }

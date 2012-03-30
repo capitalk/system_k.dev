@@ -10,10 +10,16 @@ namespace capk
 class OrderInterface
 {
 	public: 
-		OrderInterface() {};
+
+		OrderInterface():_ctx(NULL), _in(""), _out("") {};
+		OrderInterface(zmq::context_t* ctx, const char* inaddr, const char* outaddr):_ctx(ctx), _in(inaddr), _out(outaddr) {};
 
 		virtual ~OrderInterface() {};
 
+		virtual void dispatch(int msgType,
+								char* data, // DELETE [] WHEN DONE
+								size_t len) {};
+/*
 		virtual void sndNewOrder(order_id_t& ClOrdID, 
 							const char* Symbol,
 							const side_t Side, 
@@ -33,6 +39,18 @@ class OrderInterface
 		virtual void rcvExecutionReport() {};
 
 		virtual void rcvListstatus() {};
+*/
+		const std::string& getInAddr();
+		void setInAddr(const char* inaddr) { _in = inaddr;};
+		const std::string& getOutAddr();	
+		void setOutAddr(const char* outaddr) { _out = outaddr;};	
+		virtual bool rcv(zmq::message_t& in) {};
+		virtual bool snd(zmq::message_t& out) {};
+
+	private:
+		zmq::context_t* _ctx;
+		std::string _in;
+		std::string _out;
 
 };
 };

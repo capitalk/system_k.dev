@@ -415,5 +415,53 @@ class KMsgCache
 		OrderInfo_map _cache;
 };
 
+
+struct MsgBytes 
+{
+	MsgBytes():_data(0), _len(0) {
+	}
+
+	MsgBytes(char* s, size_t len) { 
+		set(s, len);
+	};
+
+
+	~MsgBytes() {
+		destroy();
+	}
+
+	void
+	destroy() {
+		if (_data) {
+			delete[] _data;
+			_data = NULL;
+			_len = 0;
+		}
+	}
+
+	void
+	set(char* s, size_t len) {
+		destroy();
+		assert(_data == NULL);
+		assert(_len == 0);
+		if (s && len > 0) {
+			_data = new char[len];
+			_len = len;
+		}
+	}
+	
+	size_t size() {
+		return _len;
+	}
+
+	char* data() {
+		return _data;
+	}
+
+	char* _data;	
+	size_t _len;
+
+};
+
 #endif // _K_MSG_CACHE
 

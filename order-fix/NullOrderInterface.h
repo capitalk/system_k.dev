@@ -10,18 +10,18 @@ namespace capk
 class NullOrderInterface : public virtual OrderInterface
 {
 	public: 
-		NullOrderInterface() {
+	NullOrderInterface() {
 #ifdef LOG
-			pan::log_DEBUG("NullOrderInterface()");
+		pan::log_DEBUG("NullOrderInterface()");
 #endif
-		}
+	}
 
-		virtual ~NullOrderInterface() {
+	virtual ~NullOrderInterface() {
 #ifdef LOG
-			pan::log_DEBUG("~NullOrderInterface()");
+		pan::log_DEBUG("~NullOrderInterface()");
 #endif
-		}
-
+	}
+/*
 		virtual void sndNewOrder(order_id_t& ClOrdID, 
 							const char* Symbol,
 							const side_t Side, 
@@ -66,6 +66,16 @@ class NullOrderInterface : public virtual OrderInterface
 			pan::log_DEBUG("rcvListStatus()");
 #endif
 		}
+*/
+
+	virtual bool snd(zmq::message_t& rep) {
+		return false;
+	}
+
+	virtual bool rcv(zmq::message_t& req) {
+		return false;
+	}
 };
-};
+
+}; // namespace capk
 #endif // __NULLORDER_INTERFACE__

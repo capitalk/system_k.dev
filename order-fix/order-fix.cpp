@@ -58,7 +58,7 @@ Application* papplication;
 
 // ZMQ Globals - can't have these go out of scope
 zmq::context_t context(1);
-zmq::socket_t publisher(context, ZMQ_PUB);
+//zmq::socket_t publisher(context, ZMQ_PUB);
 
 int main( int argc, char** argv )
 {
@@ -242,11 +242,11 @@ int main( int argc, char** argv )
 
         // ZMQ initialization
         if (isPublishing) {
-            publisher.bind(bindAddress.c_str());
+            //publisher.bind(bindAddress.c_str());
             application.setZMQContext(&context);
-            application.setZMQSocket(&publisher);
+            //application.setZMQSocket(&publisher);
         }
-        application.setPublishing(isPublishing);
+        //application.setPublishing(isPublishing);
         
 		FIX::FileStoreFactory storeFactory(storeOutputDir);         
 		FIX::FileLogFactory logFactory(logOutputDir);

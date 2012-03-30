@@ -125,16 +125,18 @@ public:
 	Application(bool bReset, const ApplicationConfig& config);
 	~Application(); 
 
-	void* run();
+	void run();
 	void test();
 
     void setZMQContext(zmq::context_t* c) { this->_pzmq_context = c;}
+    zmq::context_t* getZMQContext() { return this->_pzmq_context;}
+/*
     void setZMQSocket(zmq::socket_t* s) { this->_pzmq_socket = s;}
     void setPublishing(bool isPublishing) { this->_isPublishing = isPublishing;}
     inline bool isPublishing() { return _isPublishing;}
     zmq::socket_t* getZMQSocket() { return this->_pzmq_socket;}
-    zmq::context_t* getZMQContext() { return this->_pzmq_context;}
 
+*/
 	inline void setAccount1(const std::string& account) { this->_account = account; };
 	
 	inline void setHandlInst21(const char handlInst) { this->_handlInst = handlInst; };
@@ -144,6 +146,10 @@ public:
 	inline void setLimitOrderChar40(const char limitOrderChar) { this->_limitOrderChar = limitOrderChar; };
 
 // OrderInterface virtual methods
+	virtual bool rcv(zmq::message_t& m);	
+	virtual bool snd(zmq::message_t& m);	
+	virtual void dispatch(int msgType, char* data, size_t len);
+/*
 	virtual void sndNewOrder(order_id_t& ClOrdID,
 						const char* Symbol,
 						const side_t Side,
@@ -160,7 +166,7 @@ public:
 	void sndOrderStatus();
 	void rcvExecutionReport();
 	void rcvListStatus();
-
+*/
 
 private:
 
@@ -256,15 +262,13 @@ private:
 	const ApplicationConfig& _config; 
 	bool _resetSequence;
 
-    zmq::socket_t* _pzmq_socket;
-    zmq::context_t* _pzmq_context;
-    bool _isPublishing;
 
 	std::string _account;
 	int _handlInst;
 	bool _useCurrency;
 	char _limitOrderChar;
 	
+	KMsgProcessor* _pMsgProcessor;
 
 };
 

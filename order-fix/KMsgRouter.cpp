@@ -52,13 +52,14 @@ KMsgRouter::rcvMsg()
 	assert(more == 0);
 	boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
 // HandleMsgType?
-	assert(*(int*)msg_type.data() == ORDER_NEW);
+
 	capkproto::new_order_single nos; 
 	if (*(int*)msg_type.data() == ORDER_NEW) {
 		nos.ParseFromArray(data.data(), data.size());
 		capk::OrderInterface* oi = getOrderInterface();
 		order_id_t oid;
 		oid.set(nos.order_id().c_str(), nos.order_id().size());
+/*
 		oi->sndNewOrder(oid, 
 						nos.symbol().c_str(),
 						static_cast<side_t>(nos.side()),
@@ -68,6 +69,7 @@ KMsgRouter::rcvMsg()
 						static_cast<short int>(nos.time_in_force()),
 						nos.account().c_str());
 					
+*/
 /// New order entry in interface
 #ifdef LOG
 		pan::log_DEBUG(nos.DebugString());
@@ -123,36 +125,14 @@ KMsgRouter::rcvMsg()
 
 	boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
 	boost::posix_time::time_duration duration(time_end - time_start);
+
 #ifdef LOG
 	std::stringstream  s;
 	s << "Time(us) to recv and parse: " << duration << "\n";
 	pan::log_DEBUG(s.str().c_str());
 #endif
 
-	//repMsg(oid);
-// TESTING 
-pan::log_DEBUG("***************** TESTING SENDING TEST MESSAGE");
-    zmq::socket_t* test = new zmq::socket_t(*_context, ZMQ_ROUTER);
-	pan::log_DEBUG("Connecting to: ", _inprocAddr.c_str());
-	test->connect(_inprocAddr.c_str());
-	//zmq::socket_t* test = _msgProcessor->getFrontendSocket();
-	zmq::message_t testmsg(UUID_LEN);
-	memset(testmsg.data(), '#', UUID_LEN);
-	zmq::message_t testheader1;
-	testheader1.copy(&header1);
-	zmq::message_t testheader2;
-	testheader2.copy(&header2);
-	pan::log_DEBUG("Routing testmsg to: ", pan::integer(testheader1.size()), " ", pan::integer(*(int*)testheader1.data()));
-	pan::log_DEBUG("Routing testmsg to: ", pan::integer(testheader2.size()), " ", pan::integer(*(int*)testheader2.data()));
-	pan::log_DEBUG("Sending testdata of: ", pan::integer(testmsg.size()), " ", pan::integer(*(int*)testmsg.data()));
-	rc = test->send(testheader1, ZMQ_SNDMORE);
-	assert(rc);
-	rc = test->send(testheader2, ZMQ_SNDMORE);
-	assert(rc);
-	rc = test->send(testmsg, 0);
-	assert(rc);
-pan::log_DEBUG("TESTMSG sent...");
-// TESTING 	*/
+	repMsg(oid);
 
 }
 
@@ -168,7 +148,7 @@ KMsgRouter::run ()
 #endif
         
 		pan::log_DEBUG("KMsgRouter creating socket");	
-        _inproc = new zmq::socket_t(*_context, ZMQ_ROUTER);
+        _inproc = new zmq::socket_t(*_context, ZMQ_DEALER);
         assert(_inproc);
 		pan::log_DEBUG("KMsgRouter connecting");	
         _inproc->connect(_inprocAddr.c_str());
