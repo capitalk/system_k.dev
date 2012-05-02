@@ -2,6 +2,11 @@
 #include <uuid/uuid.h>
 #include <stdio.h>
 
+#include "KMsgCache.h"
+
+#include "utils/JenkinsHash.h"
+
+
 int 
 main()
 {
@@ -17,6 +22,12 @@ main()
 	uuid_unparse(u2, u2str);
 	u2str[36] = 0;
 
+	fprintf(stderr, "sizeof(uuid): %ld\n", sizeof(u1));
+	char zuid[36+1];
+	uuid_t tu;
+	tu = {0};
+	uuid_unparse(tu, zuid);
+	fprintf(stderr, "uuid(0): %s\n",zuid) ;
 	fprintf(stderr, "uuid_generate(): %s\n", u1str);
 	fprintf(stderr, "uuid_generate_random(): %s\n", u2str);
 
@@ -31,3 +42,5 @@ main()
 	assert(uuid_compare(u1, u4) == 0);
 
 }
+
+// TESTING 123

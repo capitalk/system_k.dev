@@ -1802,6 +1802,7 @@
    <value enum='H' description='FOREX_H' />
    <value enum='I' description='FUNARI' />
    <value enum='P' description='PEGGED' />
+   <value enum='7585' description='MATCHING_TYPE' />
   </field>
   <field number='41' name='OrigClOrdID' type='STRING' />
   <field number='42' name='OrigTime' type='UTCTIMESTAMP' />

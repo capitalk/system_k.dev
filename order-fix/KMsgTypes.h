@@ -1,18 +1,30 @@
 #ifndef __KMSG_TYPES_H__
 #define __KMSG_TYPES_H__
 
-#define ORDER_NEW 0x01
-#define ORDER_CAN 0x03
-#define ORDER_REP 0x05
-#define ORDER_REJ 0x07
-#define ORDER_FIL 0x09
-#define ORDER_STA 0x0B
+namespace capk {
 
-#define ORDER_NEW_ACK (ORDER_NEW + 1)
-#define ORDER_CAN_ACK (ORDER_CAN + 1) 
-#define ORDER_REP_ACK (ORDER_REP + 1)
-#define ORDER_REJ_ACK (ORDER_REJ + 1)
-#define ORDER_FIL_ACK (ORDER_FIL + 1)
-#define ORDER_STA_ACK (ORDER_STA + 1)
+typedef unsigned int msg_t;
+typedef int venue_id_t;
+
+// Incoming messages 
+const msg_t ORDER_NEW		= 0x01;
+const msg_t ORDER_CANCEL	= 0x02;
+const msg_t ORDER_REPLACE	= 0x03;
+const msg_t ORDER_STATUS	= 0x04;
+
+const msg_t ORDER_ACK		= 0x05;
+const msg_t ORDER_CANCEL_REJ= 0x06 ;
+
+const msg_t STRATEGY_HELO	= 0xF0;
+const msg_t STRATEGY_HELO_ACK = 0xF1;
+
+const msg_t HEARTBEAT		= 0xA0;
+const msg_t HEARTBEAT_ACK	= 0xA1;
+
+const msg_t EXEC_RPT		= 0xB0;
+
+
+
+}; // namespace capk
 
 #endif // __KMSG_TYPES_H__
