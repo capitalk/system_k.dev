@@ -10,6 +10,8 @@
 #include "pantheios/inserters/args.hpp"
 #include "pantheios/inserters/integer.hpp"
 #include "pantheios/inserters/real.hpp"
+#include "pantheios/inserters/blob.hpp"
+#include "pantheios/inserters/pointer.hpp"
 
 // Simple front end - print all levels 
 #include "pantheios/frontends/fe.simple.h"

@@ -13,7 +13,9 @@
 #include <iostream>
 
 using google::dense_hash_map;
-using std::tr1::hash; // for hash function - TODO change to Murmur3
+using std::tr1::hash; // for hash function - specialized to Jenkns hash 
+
+#include "logging.h"
 
 #define MAX_HOPS 4
 #define MSG_ADDR_LEN 17
@@ -23,6 +25,8 @@ using std::tr1::hash; // for hash function - TODO change to Murmur3
 typedef struct order_id order_id_t;
 typedef struct node node_t;
 typedef struct route route_t;
+
+typedef char uuidbuf_t[UUID_LEN + 1];
 
 struct node 
 {
@@ -51,8 +55,8 @@ struct node
 		return (memcmp(&(rhs.addr[0]), this->addr, MSG_ADDR_LEN) == 0);
 	}
 
-	const inline size_t size() {
-		return MSG_ADDR_LEN;
+	inline size_t size() const {
+		return len;
 	}
 
 	inline char* data() {
@@ -60,18 +64,11 @@ struct node
 	}
 
 	char addr[MSG_ADDR_LEN];
+	static const size_t len = MSG_ADDR_LEN;
+
 	
 }; 
 
-// ZMQ free function for zero copy 
-/*
-void
-freenode(void* data, void* hint) {
-	if (data) {
-		delete(static_cast<node_t*>(data));
-	}
-}
-*/
 
 struct route
 {
@@ -79,9 +76,67 @@ struct route
 		memset(nodes, 0, sizeof(nodes));
 	}
 
-	unsigned short int num_nodes;
+	int addNode(const node_t& node) {
+		//assert(num_nodes < MAX_HOPS);
+		return addNode(node.addr, sizeof(node.addr));
+	}
+	
+	int addNode(const char* addr, size_t len) {
+		assert(addr);
+		if (!addr || len <= 0) {
+			return -1;
+		}
+		if (num_nodes >= MAX_HOPS) {
+			return -2;	
+		}
+		memcpy(&nodes[num_nodes], addr, len);
+		num_nodes += 1;
+		return 0;
+	}
+
+	int getNode(size_t i, node_t* node) {
+		if (num_nodes < 0 || i > num_nodes-1) {
+			return -1;
+		}	
+		assert(node);
+		memcpy(node->addr, &nodes[i], nodes[i].len);	
+		return 0;
+	}
+
+	int delNode() {
+		if (num_nodes <= 0) {
+			return -1;	
+		}
+		// Just decrement to delete since array is static
+		num_nodes -= 1;	
+	}
+
+	size_t size() {
+		return num_nodes;
+	}
+
+	void clear() {
+		num_nodes = 0;
+	}
+	
+#ifdef DEBUG
+	void
+	dbg_print() {
+		for (unsigned i = 0; i< num_nodes; i++) {
+			printf("Node %u: ", i);
+			for (unsigned int j = 0; j < nodes[i].size(); j++) {
+				printf("%c", nodes[i].addr[j]);
+			}
+			printf("\n");
+		}
+	}
+#endif // DEBUG
+
+	size_t num_nodes;
 	node_t nodes[MAX_HOPS];
 };
+
+
 
 
 struct order_id
@@ -100,12 +155,6 @@ struct order_id
 			_oid = {0};
 		}
 	}
-/*
-	// for initializing special values
-	order_id(const char init[UUID_LEN]) {
-		memcpy(oid, init, UUID_LEN);
-	}
-*/
 
 	order_id(const char* c) {
 		if (c) {
@@ -142,24 +191,33 @@ struct order_id
 		memcpy(this->_oid, id, len);
 	};
 
+	int set(const char* id) {
+		return uuid_parse(id, _oid);
+	}
+
 	bool operator==(order_id const & rhs) const {
 		//std::cerr << "ORDER_ID OPERATOR==" << std::endl;
 		return (uuid_compare(rhs._oid, this->_oid) == 0);
 	};
 
-	unsigned char* 
-	get_uuid()
-	{
+	// need a non-const version for ZMQ zero copy constructor
+	unsigned char*
+	uuid() {
+		return _oid;
+	}
+
+	const unsigned char* 
+	get_uuid() const {
 		return _oid;	
 	}
 
-	size_t size() {
+	size_t size() const {
 		return UUID_LEN;
 	}
 
-	// buf must contain enough space - at least UUID_STRLEN for uuid to be written
+	// buf must contain enough space - at least UUID_STRLEN+1 for uuid to be written
 	char*
-	c_str(char *buf)
+	c_str(char *buf) const 
 	{
 		if (buf) {
 			uuid_unparse(_oid, buf);
@@ -217,7 +275,6 @@ struct strategy_id
 		}
 	}
 
-
 	strategy_id(const struct strategy_id& id) {
 		memcpy(this->_sid, id._sid, sizeof(uuid_t));	
 	}
@@ -227,6 +284,7 @@ struct strategy_id
 		memcpy(this->_sid, id, len);
 	};
 
+
 	bool operator==(strategy_id const & rhs) const {
 		return (uuid_compare(rhs._sid, this->_sid) == 0);
 	};
@@ -235,20 +293,32 @@ struct strategy_id
 		memset(this->_sid, c, UUID_LEN);
 	}
 
+	int set(const char* id) {
+		return uuid_parse(id, _sid);
+	}
+
 	void generate() {
 		uuid_generate(_sid);
 	}
 
-	unsigned char* 
-	get_uuid()
-	{
+	// need a non-const version for ZMQ zero copy constructor
+	unsigned char*
+	uuid() {
+		return _sid;
+	}
+
+	const unsigned char* 
+	get_uuid() const {
 		return _sid;	
 	}
 
+	size_t size() const {
+		return UUID_LEN;
+	}
 
 	// buf must contain enough space - at least UUID_STRLEN for uuid to be written
 	char*
-	c_str(char *buf)
+	c_str(char *buf) const
 	{
 		if (buf) {
 			uuid_unparse(_sid, buf);
@@ -279,42 +349,45 @@ class OrderInfo
 		~OrderInfo() {
 			//std::cerr << "~OrderInfo()" << std::endl;
 		};
-
-		uint32_t pushRoute(const node_t& node) {
-			assert(_path.num_nodes < MAX_HOPS);
-			return pushRoute(node.addr, sizeof(node.addr));
+/*
+		int addRoute(const node_t& node) {
+			return _path.addNode(node);
 		}
 
-		uint32_t pushRoute(const char* addr, size_t len) {
-			assert(addr);
-			if (!addr || len <= 0) {
-				return -1;
-			}
-			//std::cerr << "**************NODES IN STACK: " << _path.num_nodes << std::endl;
-			assert(_path.num_nodes < MAX_HOPS);
-			//pan::log_DEBUG("NODES IN STACK: ", pan::integer(_path.num_nodes));
-			memcpy(&_path.nodes[_path.num_nodes], addr, MSG_ADDR_LEN);
-			_path.num_nodes += 1;
-			return 0;
+		int addRoute(const char* addr, size_t len) {
+			return _path.addNode(addr, len);
 		}
 
-		uint32_t popRoute(node_t* node) {
-			if (_path.num_nodes <= 0) {
-				return -1;	
-			}
+		int getRoute(size_t i, node_t* node) {
 			assert(node);
-			memcpy(node->addr, &_path.nodes[_path.num_nodes-1], MSG_ADDR_LEN);
-			_path.num_nodes -= 1;
-			return 0;
+			return _path.getNode(i, node);
 		}
 
-		uint32_t routeSize() {
-			return _path.num_nodes;
+		int getRoute(node_t* node) {
+			assert(node);
+			return _path.getNode(_path.size(), node);
 		}
 
-		// By value!
-		order_id_t getOrderID() {
+		size_t routeSize() {
+			return _path.size();
+		}
+*/
+		// by const ref - should never be changed externally
+		const route_t& getRoute() const {
+			return _path;
+		}
+
+		void setRoute(route_t& r) {
+			_path.clear();
+			_path = r;
+		}	
+
+		const order_id_t& getOrderID() {
 			return this->_oid;
+		}
+
+		const strategy_id_t& getStrategyID() {
+			return this->_sid;
 		}
 
 		uint32_t getStatus() {
@@ -344,7 +417,15 @@ struct eq_order_id
 	}
 };
 
-// Specialized template hash function for order_id_t
+// Equality test for order_id_t
+struct eq_strategy_id
+{
+	bool operator() (const strategy_id_t& s1, const strategy_id_t& s2) const {
+		return (&s1 == &s2) || (uuid_compare(s1._sid, s2._sid) == 0);
+	}
+};
+
+// Specialized template hash function for order_id_t and strategy_id_t
 namespace std {
 	namespace tr1 {
 		template<> class hash< order_id> 
@@ -352,6 +433,15 @@ namespace std {
 			public:
 				size_t operator() (const order_id& x) const {
 					size_t hval = hashlittle(x._oid, UUID_LEN, 0);
+					return hval;
+				}
+		};
+	
+		template<> class hash<strategy_id>
+		{
+			public:
+				size_t operator() (const strategy_id& x) const {
+					size_t hval = hashlittle(x._sid, UUID_LEN, 0);
 					return hval;
 				}
 		};
@@ -380,19 +470,70 @@ struct eq_order_id_ptr
 };
 */
 
-//static const size_t CACHE_INIT_SIZE 2048;
-typedef dense_hash_map<order_id_t, OrderInfo_ptr, std::tr1::hash<order_id>, eq_order_id> OrderInfo_map;
-#define CACHE_INIT_SIZE 512
-class KMsgCache
+
+// TODO - either templatize these two classes or create a common base class
+
+#define STRATEGY_CACHE_INIT_SIZE 64
+typedef dense_hash_map<strategy_id_t, route_t, std::tr1::hash<strategy_id>, eq_strategy_id> StrategyRoute_map;
+class KStrategyCache
 {
 	public:
-		KMsgCache(size_t init_size = CACHE_INIT_SIZE): _cache(init_size) {
+		KStrategyCache(size_t init_size = STRATEGY_CACHE_INIT_SIZE): _cache(init_size) {
+			strategy_id empty("");
+			_cache.set_empty_key(empty);
+			strategy_id deleted("2");
+			_cache.set_deleted_key(deleted);
+		}	
+		
+		~KStrategyCache() {};
+		
+		void add(strategy_id_t& key, route_t& val) {
+			if (_cache.find(key) != _cache.end()) {
+				pan::log_DEBUG("KStrategyCache::add() - Key exists - replacing key with new route");
+			}
+			_cache[key] = val;
+		}
+	
+		size_t del(const strategy_id_t& key) {
+			return _cache.erase(key);
+		}
+
+		// TODO change return by value - sloppy
+		route_t get(strategy_id_t& key) {
+			if (_cache.find(key) != _cache.end()) {
+				return _cache[key];
+			}
+			return route_t();	
+		}
+
+		// TODO should just return a const iterator
+		StrategyRoute_map* getCache() {
+			return &_cache;
+		}	
+
+		void print_stats() {
+			pan::log_DEBUG("Cache size: ", pan::integer(_cache.size()));
+			pan::log_DEBUG("Cache bucket_count: ", pan::integer(_cache.bucket_count()));
+		}
+
+	private:
+		StrategyRoute_map _cache;	
+		
+};
+
+
+#define MSG_CACHE_INIT_SIZE 512
+typedef dense_hash_map<order_id_t, OrderInfo_ptr, std::tr1::hash<order_id>, eq_order_id> OrderInfo_map;
+class KOrderCache
+{
+	public:
+		KOrderCache(size_t init_size = MSG_CACHE_INIT_SIZE): _cache(init_size) {
 			order_id empty("");
 			_cache.set_empty_key(empty);
 			order_id deleted("1");
 			_cache.set_deleted_key(deleted);
 		}
-		~KMsgCache() {};
+		~KOrderCache() {};
 
 		void add(order_id_t& key, OrderInfo_ptr& val) {
 			_cache[key] = val;
@@ -402,10 +543,22 @@ class KMsgCache
 			return _cache.erase(key);
 		};
 
-		OrderInfo_map* 
-		getCache() {
+		OrderInfo_ptr get(order_id_t& key) {
+			if (_cache.find(key) != _cache.end()) {
+				return _cache[key];
+			}
+			return OrderInfo_ptr();
+		}
+
+		// TODO should just return a const iterator
+		OrderInfo_map* getCache() {
 			return &_cache;
 		}	
+
+		void print_stats() {
+			pan::log_DEBUG("Cache size: ", pan::integer(_cache.size()));
+			pan::log_DEBUG("Cache bucket_count: ", pan::integer(_cache.bucket_count()));
+		}
 
 	private:
 		// KTK - use below if using struct hash

@@ -2,3 +2,4 @@
 log/*.log
 store/*
 *.swp
+*.pid

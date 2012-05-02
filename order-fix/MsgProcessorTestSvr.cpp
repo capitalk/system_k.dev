@@ -9,32 +9,35 @@
 
 #include "NullOrderInterface.h"
 
+#include <boost/thread.hpp>
+
+// C
+//g_zmq_ctx = zmq_init(1);
+//
+// C++
+zmq::context_t ctx(1);
+
 
 int
 main(int argc, char **argv)
 {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-	// C
-	//g_zmq_ctx = zmq_init(1);
-	//
-	// C++
-	zmq::context_t ctx(1);
-
 	logging_init("testsvr.log");
 
 	StubHandler* stubHandler = new StubHandler();
 
-	capk::NullOrderInterface noi;
+	capk::NullOrderInterface noi(&ctx);
 
 	KMsgProcessor k(&ctx,
 				"tcp://127.0.0.1:9999", 
-				"inproc://msgin",
-				1,
 				"inproc://msgout",
 				1,
-				stubHandler,
 				&noi);
+	noi.setMsgProcessor(&k);
+	noi.setOutAddr("inproc://msgout");
+	boost::thread* t = new boost::thread(boost::bind(&capk::NullOrderInterface::run, &noi));
+
 
 	return k.run();
 }

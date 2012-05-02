@@ -3,6 +3,9 @@
 
 #include "utils/KTypes.h"
 #include "KMsgCache.h"
+#include "KMsgTypes.h"
+
+class KMsgProcessor;
 
 namespace capk
 {
@@ -11,14 +14,19 @@ class OrderInterface
 {
 	public: 
 
-		OrderInterface():_ctx(NULL), _in(""), _out("") {};
-		OrderInterface(zmq::context_t* ctx, const char* inaddr, const char* outaddr):_ctx(ctx), _in(inaddr), _out(outaddr) {};
+		OrderInterface(venue_id_t venueID): _mp(NULL), _in(""), _out(""), _venueID(venueID) {};
+		OrderInterface(KMsgProcessor* mp, const char* inaddr, const char* outaddr, int venueID):
+			 _mp(mp), _in(inaddr), _out(outaddr), _venueID(venueID) {};
+
 
 		virtual ~OrderInterface() {};
 
-		virtual void dispatch(int msgType,
-								char* data, // DELETE [] WHEN DONE
-								size_t len) {};
+		virtual void dispatch(msg_t msgType,
+							char* data, // DELETE [] WHEN DONE
+							size_t len) = 0;
+		virtual void snd(msg_t msgType, 
+						char* data, 
+						size_t len) = 0;
 /*
 		virtual void sndNewOrder(order_id_t& ClOrdID, 
 							const char* Symbol,
@@ -40,17 +48,22 @@ class OrderInterface
 
 		virtual void rcvListstatus() {};
 */
-		const std::string& getInAddr();
-		void setInAddr(const char* inaddr) { _in = inaddr;};
-		const std::string& getOutAddr();	
-		void setOutAddr(const char* outaddr) { _out = outaddr;};	
-		virtual bool rcv(zmq::message_t& in) {};
-		virtual bool snd(zmq::message_t& out) {};
+		const std::string& getInAddr() { return _in; };
+		void setInAddr(const char* inaddr) { assert(inaddr != NULL); _in = inaddr;};
+
+		const std::string& getOutAddr() { return _out; };	
+		void setOutAddr(const char* outaddr) { assert(outaddr != NULL); _out = outaddr;};	
+
+		KMsgProcessor* getMsgProcessor() { return _mp; };
+		void setMsgProcessor(KMsgProcessor* mp) { _mp = mp; };
+
+		inline const venue_id_t getVenueID() { return _venueID;};
 
 	private:
-		zmq::context_t* _ctx;
+		KMsgProcessor* _mp;
 		std::string _in;
 		std::string _out;
+		venue_id_t _venueID;
 
 };
 };

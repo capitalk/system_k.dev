@@ -4,7 +4,7 @@
 
 #include <uuid/uuid.h>
 
-#include <utils/zhelpers.hpp>
+//#include <utils/zhelpers.hpp>
 #include <zmq.hpp>
 #include <czmq.h>
 
@@ -13,82 +13,97 @@
 
 #include "logging.h"
 #include "timing.h"
-#include "KMsgHandler.h"
-#include "KMsgRouter.h"
-#include "NullOrderInterface.h"
+//#include "KMsgHandler.h"
+//#include "KMsgRouter.h"
+#include "OrderInterface.h"
 #include "KMsgCache.h"
 
 #include <boost/thread.hpp>
 
 
+void freenode(void* data, void* hint);
 
 class KMsgProcessor
 {
 	public:
 		KMsgProcessor(zmq::context_t* ctx, 
 					const char* listen_addr, 
-					const char* in_addr, 
-					const short int in_threads,
+					//const char* in_addr, 
+					//const short int in_threads,
 					const char* out_addr, 
 					const short int out_threads,
-					KMsgHandler* handler, 
 					capk::OrderInterface* oi);
+
 		~KMsgProcessor();
 
-		int run();
+		void init();
 
-		void snd();
-		void rcv();
-	
-		void setOrderInterface(capk::OrderInterface& interface) {
-			this->_interface = &interface;
+		int run();
+		void stop() { _stop = true; };
+
+		void setOrderInterface(capk::OrderInterface* interface) {
+			this->_interface = interface;
 		}
 		capk::OrderInterface* getOrderInterface() {
 			return _interface;
-		}
-
-		inline const std::string& getInboundAddr() const {
-			return _in_addr;
 		}
 
 		inline const std::string& getOutboundAddr() const {
 			return _out_addr;
 		}
 		
-		inline unsigned short int getInThreadCount() const {
-			return _in_threads;
-		}
-
 		inline unsigned short int getOutThreadCount() const {
 			return _out_threads;
 		}
 		
-		inline KMsgCache* getCache() {
-			return &_cache;
+		inline KOrderCache* getOrderCache() {
+			return &_ocache;
 		}
 
+		inline KStrategyCache* getStrategyCache() {
+			return &_scache;
+		}
+
+		inline zmq::context_t* getZMQContext() const { return _ctx;}
+
+		// recv incoming requests from strategies
 		void req();
-		void rep(order_id_t&, const char*, size_t);
+
+		// recv ipc messages from order interface
+		void rcv_internal();
+
+		// admin message handlers
+		//
+		// handle strategy helo ack
+		void snd_STRATEGY_HELO_ACK(const strategy_id_t&);
+
+		// handle heartbeat
+		void snd_HEARTBEAT_ACK(const strategy_id_t&);
 
 	private:
 		// initializer list
 		zmq::context_t* _ctx;
 		std::string _listen_addr;
-		std::string _in_addr;
-		short int _in_threads;
+		//std::string _in_addr;
+		//short int _in_threads;
 		std::string _out_addr;
 		short int _out_threads;
 
 		// ZMQ sockets
 		zmq::socket_t *_frontend;
-		zmq::socket_t *_in;
+		//zmq::socket_t *_in;
 		zmq::socket_t *_out;
+		zmq::socket_t *_admin;
 
 		// order interface 
 		capk::OrderInterface* _interface;
 
 		// cache for current orders
-		KMsgCache _cache;
+		KOrderCache _ocache;
+		// cache for strategy reply routes
+		KStrategyCache _scache;
+
+		bool _stop;
 
 };
 

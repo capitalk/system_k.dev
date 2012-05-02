@@ -91,6 +91,14 @@
 #include "logging.h"
 #include "OrderInterface.h"
 #include "KMsgCache.h"
+#include "KMsgProcessor.h"
+
+#include "proto/capk_globals.pb.h"
+#include "proto/new_order_single.pb.h"
+#include "proto/order_cancel.pb.h"
+#include "proto/order_cancel_reject.pb.h"
+#include "proto/order_cancel_replace.pb.h"
+#include "proto/execution_report.pb.h"
 
 
 enum FIXVersion {
@@ -104,6 +112,8 @@ struct ApplicationConfig {
 	std::string mic_code; 
 	std::string username; 
 	std::string password; 
+	std::string senderCompID;
+	std::string targetCompID;
 	bool sendPasswordInRawDataField;
 	bool aggregatedBook;  
 	bool sendIndividualMarketDataRequests;
@@ -114,6 +124,7 @@ struct ApplicationConfig {
 	std::string zmq_bind_addr;
 	std::string account;
 	int handlInst;
+	capk::venue_id_t venueID;
 }; 
 
 class Application :
@@ -123,8 +134,7 @@ class Application :
 {
 public:
 	Application(bool bReset, const ApplicationConfig& config);
-	~Application(); 
-
+	~Application();
 	void run();
 	void test();
 
@@ -137,18 +147,31 @@ public:
     zmq::socket_t* getZMQSocket() { return this->_pzmq_socket;}
 
 */
-	inline void setAccount1(const std::string& account) { this->_account = account; };
+	inline void setAccount1(const std::string& account) { this->_account1 = account; };
 	
-	inline void setHandlInst21(const char handlInst) { this->_handlInst = handlInst; };
+	inline void setHandlInst21(const char handlInst) { this->_handlInst21 = handlInst; };
 
-	inline void setUseCurrency15(const bool useCurrency) { this->_useCurrency = useCurrency; };
+	inline void setUseCurrency15(const bool useCurrency) { this->_useCurrency15 = useCurrency; };
 
-	inline void setLimitOrderChar40(const char limitOrderChar) { this->_limitOrderChar = limitOrderChar; };
+	inline void setLimitOrderChar40(const char limitOrderChar) { this->_limitOrderChar40 = limitOrderChar; };
 
-// OrderInterface virtual methods
-	virtual bool rcv(zmq::message_t& m);	
-	virtual bool snd(zmq::message_t& m);	
-	virtual void dispatch(int msgType, char* data, size_t len);
+	// OrderInterface virtual methods
+	virtual void dispatch(capk::msg_t msgType, char* data, size_t len);
+	virtual void snd(capk::msg_t msgType, char* data, size_t len);
+
+	// Receive message from MsgProcessor and convert to appropriate FIX request
+	void newOrderSingle42(capkproto::new_order_single& nos);
+	void newOrderSingle43(capkproto::new_order_single& nos);
+	void newOrderSingle44(capkproto::new_order_single& nos);
+	void newOrderSingle50(capkproto::new_order_single& nos);
+	
+	void orderCancel42(capkproto::order_cancel& co);
+	void orderCancel43(capkproto::order_cancel& co);
+	void orderCancel44(capkproto::order_cancel& co);
+	void orderCancel50(capkproto::order_cancel& co);
+
+	void orderCancelReplace42(capkproto::order_cancel_replace& co);
+
 /*
 	virtual void sndNewOrder(order_id_t& ClOrdID,
 						const char* Symbol,
@@ -167,6 +190,7 @@ public:
 	void rcvExecutionReport();
 	void rcvListStatus();
 */
+	KMsgProcessor* _pMsgProcessor;
 
 private:
 
@@ -251,24 +275,36 @@ private:
 	FIX::TimeInForce queryTimeInForce();
 
 	
-	FIX::SessionID _sessionID;
 
-	boost::filesystem::path _pathToLog;
-
+	// Private vars
+	// Current session ID
+	//FIX::SessionID _sessionID;
+	// Indicate login status
 	bool _loggedIn;
 	bool _loggedOut;
+	// Count of number of times we logged in this session
 	unsigned int _loginCount;
+	// Number of msgs received by app
     unsigned int _appMsgCount;
+	// Config file
 	const ApplicationConfig& _config; 
+	// Should we reset the sequence on connect? 
 	bool _resetSequence;
 
+	// FIX field 1 account if needed
+	std::string _account1;
+	// FIX field 21 handling instructions vary by ECN
+	int _handlInst21;
+	// FIX field 15 indicate if we need to specify currency prefix
+	bool _useCurrency15;
+	// FIX field 40 which character to use for limit orders
+	char _limitOrderChar40;
 
-	std::string _account;
-	int _handlInst;
-	bool _useCurrency;
-	char _limitOrderChar;
 	
-	KMsgProcessor* _pMsgProcessor;
+
+	zmq::context_t *_pzmq_context;	
+	zmq::socket_t *_pout_sock;
+
 
 };
 

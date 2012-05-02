@@ -99,9 +99,9 @@ KMsgRouter::rcvMsg()
 					pan::integer(_cache.getCache()->size()));
 #endif
 
-	ret = order_ptr->pushRoute((const char*)header2.data(), header2.size());
+	ret = order_ptr->addRoute((const char*)header2.data(), header2.size());
 	assert(ret == 0);
-	ret = order_ptr->pushRoute((const char*)header1.data(), header1.size());
+	ret = order_ptr->addRoute((const char*)header1.data(), header1.size());
 	assert(ret == 0);
 	_cache.add(oid, order_ptr);
 
@@ -156,7 +156,6 @@ KMsgRouter::run ()
 		int64_t more;
 		size_t more_size;
 		more_size = sizeof(more);
-		int ret;
         while (1 && _stopRequested == false) {
 #if 0 
             zmq::message_t header1;
@@ -200,9 +199,9 @@ KMsgRouter::run ()
 			order_id_t oid;
 			oid.set(nos.order_id().c_str(), nos.order_id().size());
 			OrderInfo_ptr order_ptr = boost::make_shared<OrderInfo>(oid, sid);
-			ret = order_ptr->pushRoute((const char*)header2.data(), header2.size());
+			ret = order_ptr->addRoute((const char*)header2.data(), header2.size());
 			assert(ret == 0);
-			ret = order_ptr->pushRoute((const char*)header1.data(), header1.size());
+			ret = order_ptr->addRoute((const char*)header1.data(), header1.size());
 			assert(ret == 0);
 			_cache.add(oid, order_ptr);
 // Add to cache
@@ -262,11 +261,18 @@ KMsgRouter::run ()
 void
 freenode(void* data, void* hint) {
     if (data) {
+		node_t* tmp = static_cast<node_t*>(data);
+		std::cerr << "freenode: ", pan::integer(*(int*)tmp->data());
         delete(static_cast<node_t*>(data));
 #ifdef LOG
-		pan::log_DEBUG("freenode called with non-null data");
+		pan::log_DEBUG("freenode called with non-null data - this is OK");
 #endif
     }
+	else {
+#ifdef LOG
+		pan::log_INFORMATIONAL("freenode called with NULL data - maybe not OK ");
+#endif
+	}
 }
 
 
@@ -287,12 +293,14 @@ KMsgRouter::repMsg(order_id_t& oid)
 
 	// send routing headers
 	bool rc = false;
+	int ret;
 	size_t num_nodes = p->routeSize();
 	if (num_nodes > 0) {
-		for (size_t i = 0; i<num_nodes; i++) {
+		for (size_t i = 1; i<num_nodes; i++) {
 			node_t* pnode = new node_t();
 			assert(pnode);
-			assert(p->popRoute(pnode) == 0);
+			ret = p->getRoute(pnode);
+			assert(ret == 0);
 			zmq::message_t m(pnode->data(), pnode->size(), freenode,  NULL);
 			rc = _inproc->send(m, ZMQ_SNDMORE);
 		}
