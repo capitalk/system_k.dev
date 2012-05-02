@@ -147,7 +147,7 @@ book_manager::run() {
         fprintf(stdout, "book_manager: connect address: %s\n", _connectAddr.c_str());
         fprintf(stdout, "book_manager: stop requested: %d\n", _stopRequested);
 
-        capitalk::mic_bbo bbo;
+        capkproto::mic_bbo bbo;
         while (1 && _stopRequested == false) {
             // Extract the message from protobufs
             zmq::message_t msg;
@@ -253,7 +253,7 @@ book_manager::run() {
             
             // Setup BBO and re-broadcast
             fprintf(stderr, "<%s> BB: %s:%f-%f BA: %s:%f-%f\n", sym, bbmic, bb, bbvol, bamic, ba, bavol);
-            capitalk::instrument_bbo ins_bbo;
+            capkproto::instrument_bbo ins_bbo;
 
             ins_bbo.set_symbol(sym);
 
@@ -328,7 +328,7 @@ worker::run () {
         subscriber.connect(_connectAddr.c_str());
         const char* filter = "";
         subscriber.setsockopt(ZMQ_SUBSCRIBE, filter, strlen(filter));
-        capitalk::mic_bbo bbo;
+        capkproto::mic_bbo bbo;
         
         _inproc = new zmq::socket_t(*_context, ZMQ_PUB);
         assert(_inproc);

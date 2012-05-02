@@ -17,7 +17,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "utils/hash.cpp"
+#include "utils/JenkinsHash.cpp"
 
 using namespace std;
 using namespace boost::posix_time;

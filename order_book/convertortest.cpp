@@ -1,6 +1,7 @@
-#include <../utils/FIXConvertors.h>
-#include <../utils/KTimeUtils.h>
+
 #include "gtest/gtest.h"
+#include "../utils/FIXConvertors.h"
+#include "../utils/KTimeUtils.h"
 
 #include "quickfix/Message.h"
 #include "quickfix/Parser.h"
@@ -36,7 +37,7 @@ TEST(TimeTests, ToTimeSpec) {
     // Get fix time
     std::string timeString = FIX::UtcTimeStampConvertor::convert(fixts, true);
     std::cout << "FIX::UTCTimeStamp: " << timeString << "\n";
-    EXPECT_EQ(FIXConvertors::UTCTimeStampToTimespec(fixts, &ts2), true);
+    FIXConvertors::UTCTimeStampToTimespec(fixts, &ts2);
     std::cout << "TS Seconds: " << ts2.tv_sec << " nanoseconds: " << ts2.tv_nsec << "\n";
     time_t secSinceEpoch = ts2.tv_sec;
     struct tm* utc;
@@ -117,7 +118,7 @@ main(int argc, char** argv)
         //std::cout << x << "\n";
     }
     clock_gettime(CLOCK_MONOTONIC, &stop);
-    timespec d = diff(start, stop);
+    timespec d = timespec_delta(start, stop);
     std::cout << "Seconds: " << d.tv_sec << " nanseconds: " << d.tv_nsec << "\n";
 
 }

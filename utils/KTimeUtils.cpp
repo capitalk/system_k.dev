@@ -1,5 +1,7 @@
 #include <KTimeUtils.h>
 
+#include <assert.h>
+
 // Calculate milliseconds between two timespecs.
 unsigned long timespec_delta_millis(const timespec& start, const timespec& end)
 {
@@ -12,7 +14,7 @@ timespec timespec_delta(const timespec& start, const timespec& end)
     timespec temp;
     if ((end.tv_nsec-start.tv_nsec)<0) {
         temp.tv_sec = end.tv_sec-start.tv_sec-1;
-        temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
+        temp.tv_nsec = NANOS_PER_SECOND+end.tv_nsec-start.tv_nsec;
     } else {
         temp.tv_sec = end.tv_sec-start.tv_sec;
         temp.tv_nsec = end.tv_nsec-start.tv_nsec;
@@ -25,4 +27,17 @@ operator<<(std::ostream& out, const timespec ts)
 {
     out << ts.tv_sec << ":" << ts.tv_nsec;
     return out;
+}
+
+char*
+timespec2str(timespec ts, char* buf, size_t buflen) {
+	time_t t_secs = ts.tv_sec + (ts.tv_nsec/NANOS_PER_SECOND);
+	assert(buf);
+	if (buf && (buflen >= TIME_STR_LEN)) {
+		return ctime_r(&t_secs, buf);
+	}
+	else {
+		buf[0] = NULL;
+		return buf;
+	}
 }

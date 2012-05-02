@@ -1,4 +1,4 @@
-package capitalk;
+package capkproto;
 
 import "capk_globals.proto";
 

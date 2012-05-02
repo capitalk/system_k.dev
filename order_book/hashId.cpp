@@ -15,7 +15,7 @@
 #include "KOrder.h"
 #include "KLimit.h"
 
-#include "utils/hash.cpp"
+#include "utils/JenkinsHash.cpp"
 #include "utils/KTimeUtils.h"
 #include "utils/FIXConvertors.h"
 #include <boost/date_time/posix_time/posix_time.hpp>

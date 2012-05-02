@@ -35,7 +35,7 @@ TEST(TimeTests, ToTimeSpec) {
     clock_gettime(CLOCK_REALTIME, &ts1);
     std::string timeString = FIX::UtcTimeStampConvertor::convert(fixts, true);
     std::cout << "FIX::UTCTimeStamp: " << timeString << "\n";
-    EXPECT_EQ(FIXConvertors::UTCTimeStampToTimespec(fixts, &ts2), true);
+    FIXConvertors::UTCTimeStampToTimespec(fixts, &ts2);
     time_t secSinceEpoch = ts2.tv_sec;
     struct tm* utc;
     utc = gmtime(&secSinceEpoch);

@@ -1,8 +1,10 @@
 CC=g++
 
-INCLUDE=-I/usr/local/boost/ -I/usr/local/include/ -I/usr/local/src/quickfix/include -I../gtest/include -I../ -I./ -I../utils
+UTILS=../utils
 
-LIBS=-L../utils --L/usr/local/src/quickfix/lib -L/usr/local/boost_1_45_0/stage/lib/ -lquickfix -lboost_date_time -lgtest -rpath=/usr/local/src/quickfix/lib
+INCLUDE=-I/usr/local/boost/ -I/usr/local/include/ -I/usr/local/src/quickfix/include -I../gtest/include -I../ -I./ -I$(UTILS)
+
+#LIBS=-L../utils --L/usr/local/src/quickfix/lib -L/usr/local/boost_1_45_0/stage/lib/ -lquickfix -lboost_date_time -lgtest -rpath=/usr/local/src/quickfix/lib
 
 LIBS=-L../utils -L/usr/local/src/quickfix/lib/ -L/usr/local/boost_1_45_0/stage/lib/ -L../gtest/lib/.libs -Wl,-rpath,../gtest/lib/.libs -lquickfix -lboost_date_time -lgtest 
 
@@ -14,7 +16,7 @@ CFLAGS=-Wall  -std=c++0x -O3 # -g -D DEBUG
 
 all: libOrderBook2.a libOrderBook.a
 
-tests: book_tests book_tests2
+tests: book_tests book_tests2 hashId convertorTest ts2fix
 
 libOrderBook.a: OrderBookEntry.o KOrderBook.o PriceDepthEntry.o KPriceDepthOrderBook.o 
 	ar rcs libOrderBook.a $+
@@ -62,7 +64,20 @@ FIXConvertors.o: ../utils/FIXConvertors.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) ../utils/FIXConvertors.cpp
 
 
+hashId:
+	$(CC) $(CFLAGS) hashId.cpp $(UTILS)/FIXConvertors.cpp $(UTILS)/KTimeUtils.cpp -I../  $(INCLUDE) -L $(UTILS) $(LIBS) -o $@
 
+convertorTest: 
+	$(CC) $(CFLAGS) convertortest.cpp $(UTILS)/FIXConvertors.cpp $(UTILS)/KTimeUtils.cpp -I../  $(INCLUDE) -L $(UTILS) $(LIBS) -o $@
+	
+ts2fix: 
+	$(CC) $(CFLAGS) ts2fix.cpp $(UTILS)/FIXConvertors.cpp $(UTILS)/KTimeUtils.cpp -I../  $(INCLUDE) -L $(UTILS) $(LIBS) -o $@
+	
+testclean:
+	rm -f hashId convertorTest	
 clean :
-	rm -f  *.o book_tests2 *.a *.o book_tests
+	rm -f  *.o book_tests2 *.a *.o book_tests libOrderBook.a libOrderBook2.a hashId convertorTest
+
+
+
 
