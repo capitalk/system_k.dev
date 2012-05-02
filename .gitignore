@@ -1,0 +1,6 @@
+*.log
+log/*.log
+store/
+*.swp
+*.pid
+*.o
