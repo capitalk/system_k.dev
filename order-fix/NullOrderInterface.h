@@ -10,13 +10,15 @@
 
 #include "KMsgTypes.h"
 
+#define NULL_INTERFACE_ID 123
+
 namespace capk
 {
 
 class NullOrderInterface : public OrderInterface
 {
 	public: 
-	NullOrderInterface(zmq::context_t* ctx): _ctx(ctx) {
+	NullOrderInterface(zmq::context_t* ctx): OrderInterface(NULL_INTERFACE_ID),  _ctx(ctx) {
 #ifdef LOG
 		pan::log_DEBUG("NullOrderInterface()");
 #endif
