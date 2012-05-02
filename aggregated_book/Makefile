@@ -7,7 +7,8 @@ INCLUDE=-I/usr/local/boost/ \
 		-I/usr/local/include/ \
         -I/usr/local/src/quickfix/include \
 		-I.. \
-		-I$(UTILS)
+		-I$(UTILS) \
+		-I$(PROTO)
 
 LIBS= -L/usr/local/src/quickfix/lib/ \
 		-L/usr/local/lib \
@@ -21,20 +22,16 @@ LIBS= -L/usr/local/src/quickfix/lib/ \
 		-lprotobuf \
 
 CFLAGS=-Wall -std=c++0x -pthread -O3 
-LDFLAGS=-static
 
-PROTOC=protoc
 
 ifeq ($(dbg),1)
         CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb -g # -DDEBUG_BOOK
 endif
 
-LDFLAGS=-static
+PROTOBUF_OBJS = spot_fx_md_1.pb.o \
+				capk_globals.pb.o 
 
-ORDERBOOK_DIR=../order_book
-
-aggregated_book : aggregated_book.o spot_fx_md_1.pb.o KTimeUtils.o
-	$(CC) $(CFLAGS) aggregated_book.o spot_fx_md_1.pb.o KTimeUtils.o $(LIBS) -o $@ 
+all: aggregated_book
 
 aggregated_book.o: aggregated_book.cpp
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) aggregated_book.cpp 
@@ -42,11 +39,17 @@ aggregated_book.o: aggregated_book.cpp
 spot_fx_md_1.pb.o: $(PROTO)/spot_fx_md_1.pb.cc $(PROTO)/spot_fx_md_1.pb.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/spot_fx_md_1.pb.cc 
 
+capk_globals.pb.o: $(PROTO)/capk_globals.pb.cc $(PROTO)/capk_globals.pb.h
+	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/capk_globals.pb.cc
+
 KTimeUtils.o: $(UTILS)/KTimeUtils.cpp $(UTILS)/KTimeUtils.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS)/KTimeUtils.cpp
 
-protos : $(PROTO)/spot_fx_md_1.proto 
-	protoc -I $(PROTO)  --cpp_out=$(PROTO) $(PROTO)/*.proto
+aggregated_book : aggregated_book.o KTimeUtils.o $(PROTOBUF_OBJS)
+	$(CC) $(CFLAGS) aggregated_book.o KTimeUtils.o $(PROTOBUF_OBJS) $(LIBS) -o $@ 
+
+protos : 
+	cd $(PROTO) && make 
 
 clean :
 	rm -f *.o aggregated_book
