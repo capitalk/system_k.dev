@@ -29,10 +29,9 @@
 #include "KFixFields.h"
 #include "quickfix/Session.h"
 #include "quickfix/FieldConvertors.h"
-//#include "VenueSpecificFields.h"
 #include "utils/KTimeUtils.h"
 #include "utils/FIXConvertors.h"
-#include "utils/hash.cpp"
+#include "utils/JenkinsHash.cpp"
 #include "order_book/KBook.h"
 #include <iostream>
 
@@ -1110,7 +1109,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 		zmq_msg_t msg;        
 		char msgbuf[256];
         if (isPublishing()) {
-            capitalk::mic_bbo bbo;
+            capkproto::mic_bbo bbo;
             bbo.set_symbol(symbol.getValue());
             bbo.set_bid_price(bbprice);
             bbo.set_ask_price(baprice);

@@ -129,7 +129,8 @@ int main( int argc, char** argv )
 		return 1;
 	}
 	if (err > 0) {
-		std::cout << "Aborting due to missing parameters.\n";
+		std::cout << "Usage: validate_symbols --c <config_file> --s <symbol_file> \n";
+		std::cout << "Will save files to MIC.validated-symbols";
 		return 1;
 	}
 	

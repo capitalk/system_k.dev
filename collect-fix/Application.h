@@ -87,7 +87,6 @@
 #include <boost/make_shared.hpp>
 
 #include <zmq.hpp>
-//#include "orderBook/KPriceDepthOrderBook.h"
 #include "order_book/KBook.h"
 
 enum FIXVersion {
@@ -116,10 +115,9 @@ class Application :
 public:
 	Application(bool bReset, const ApplicationConfig& config) 
          :  _loggedIn(false), _loggedOut(false), _loginCount(0), 
-            _appMsgCount(0), _resetSequence(bReset), _config(config)
-            /*, _bookLog(0), _msgLog(0)*/  {
+            _appMsgCount(0), _resetSequence(bReset), _config(config) {
 
-  	   std::cout << "Application::Application()" << std::endl;
+		std::cout << "Application::Application()" << std::endl;
 	      /* _msgLog.rdbuf(&_msgBuf); _msgBuf.open("msgBuf.log");
 	       *_bookLog.rdbuf(&_bookBuf);
 	       *_bookLog.rdbuf(&_bookBuf); _bookBuf.open("baxterOrderBook.log");*/
@@ -234,8 +232,8 @@ private:
 	bool _loggedIn;
 	bool _loggedOut;
 	unsigned int _loginCount;
-	bool _resetSequence;
     unsigned int _appMsgCount;
+	bool _resetSequence;
 	const ApplicationConfig& _config; 
 
     void* _pzmq_socket;

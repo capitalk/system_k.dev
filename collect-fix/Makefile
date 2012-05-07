@@ -1,17 +1,32 @@
 CC=g++
 
-INCLUDE=-I/usr/local/boost/ -I/usr/local/include/ \
-        -I/usr/local/src/quickfix/include -I.. -I../orderBook2
-LIBS= -L/usr/local/src/quickfix/lib/ -L/usr/local/lib \
-	  -L../order_book/ \
-      -lquickfix -lboost_date_time -lboost_program_options -lboost_filesystem -lOrderBook2 -lzmq -lprotobuf
-	#-lquickfix -lboost_date_time -lboost_program_options -lboost_filesystem -lOrderBook
+PROTODIR=../proto
+
+UTILS=../utils
+
+INCLUDE=-I/usr/local/boost/ \
+		-I/usr/local/include/ \
+        -I/usr/local/src/quickfix/include \
+		-I.. \
+		-I../orderBook2 \
+		-I$(UTILS) \
+
+LIBS= -L/usr/local/src/quickfix/lib/ \
+		-L/usr/local/lib \
+		-L../order_book/ \
+      	-lquickfix \
+		-lboost_date_time \
+		-lboost_program_options \
+		-lboost_filesystem \
+		-lOrderBook2 \
+		-lzmq \
+		-lprotobuf \
+		-lgtest
 
 CFLAGS=-Wall -std=c++0x -pthread -O3
 LDFLAGS=-static
 
 PROTOC=protoc
-PROTODIR=../proto
 
 ifeq ($(dbg),1)
         CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb -g # -DDEBUG_BOOK
@@ -39,16 +54,16 @@ Application.o: Application.cpp
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) Application.cpp  
 
 libOrderBook2.a:
-	cd $(ORDERBOOK_DIR) && make -f Makefile.book2 lib
+	cd $(ORDERBOOK_DIR) && make
 
 #libOrderBook.a:
 #	cd $(ORDERBOOK_DIR) && make
-protos: $(PROTODIR)/spot_fx_md_1.proto
-	$(PROTOC) -I$(PROTODIR) --cpp_out=$(PROTODIR) $(PROTODIR)/*.proto
+protos: 
+	cd $(PROTODIR) && make
 
 clean :
-	rm -f *.o collect $(PROTODIR)/*.cc $(PROTODIR)/*.h
-	#cd $(ORDERBOOK_DIR) && make clean 
+	rm -f *.o collect 
+	cd $(PROTODIR) && make clean
 
 install :
 	cp -r ./cfg /usr/local/capk

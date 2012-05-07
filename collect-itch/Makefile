@@ -5,7 +5,7 @@ INC=-I/usr/local/boost
 
 CXXFLAGS=-g -O2 $(INC)
 
-ORDERBOOK_DIR=../orderBook
+ORDERBOOK_DIR=../order_book
 
 OBJS=main.o \
 	Session.o \
@@ -38,14 +38,14 @@ OBJS=main.o \
 	./msg/client/ClientMarketDataUnsubscribeMessage.o \
 	./msg/PacketBase.o
 
-LIBS=-L/usr/local/boost_1_45_0/stage/lib/ -L../orderBook
-LDFLAGS=-lrt -lpthread -lboost_program_options -lboost_filesystem -lOB2
+LIBS=-L/usr/local/boost_1_45_0/stage/lib/ -L$(ORDERBOOK_DIR)
+LDFLAGS=-lrt -lpthread -lboost_program_options -lboost_filesystem -lOrderBook2
 
 itch: $(OBJS) libOB2.a
 	g++ $(INC) -o itch $(LIBS) $(LDFLAGS) $(OBJS)
 
 libOB2.a:
-	cd $(ORDERBOOK_DIR) && make -f Makefile.book2
+	cd $(ORDERBOOK_DIR) && make 
 
 
 clean:

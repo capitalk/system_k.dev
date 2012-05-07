@@ -11,7 +11,7 @@ LIBS=-L../utils -L/usr/local/src/quickfix/lib/ -L/usr/local/boost_1_45_0/stage/l
 CFLAGS=-Wall  -std=c++0x -O3 # -g -D DEBUG
 
 %.o: %.cpp
-	$(CC) $(CFLAGS) $(INCLUDES) -c $(input) -o $(output)
+	$(CC) $(CFLAGS) $(INCLUDE) -c $(input) -o $(output)
 
 
 all: libOrderBook2.a libOrderBook.a
@@ -57,11 +57,11 @@ KBook.o: KBook.cpp
 KLimit.o: KLimit.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) KLimit.cpp
 
-KTimeUtils.o: ../utils/KTimeUtils.cpp
-	$(CC) -c $(INCLUDE) $(CFLAGS) ../utils/KTimeUtils.cpp
+KTimeUtils.o: $(UTILS)/KTimeUtils.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $(UTILS)/KTimeUtils.cpp
 
 FIXConvertors.o: ../utils/FIXConvertors.cpp
-	$(CC) -c $(INCLUDE) $(CFLAGS) ../utils/FIXConvertors.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $(UTILS)/FIXConvertors.cpp
 
 
 hashId:
