@@ -48,6 +48,7 @@ protos: $(PROTODIR)/spot_fx_md_1.proto
 
 clean :
 	rm -f *.o collect $(PROTODIR)/*.cc $(PROTODIR)/*.h
+	rm -f *.pid
 	#cd $(ORDERBOOK_DIR) && make clean 
 
 install :
