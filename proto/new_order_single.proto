@@ -8,9 +8,9 @@ message new_order_single {
     optional string		symbol = 3;
 	optional side_t		side = 4;
 	optional double		order_qty = 5;
-	optional sfixed32		order_type = 6;
+	optional sfixed32	ord_type = 6;
 	optional double		price = 7;
-	optional sfixed32		time_in_force = 8;
+	optional sfixed32	time_in_force = 8;
 	optional string		account = 9;
 }
 

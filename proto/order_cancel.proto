@@ -9,5 +9,6 @@ message order_cancel {
     optional string		symbol = 4;
 	optional side_t		side = 5;
 	optional double		order_qty = 6;
+	optional string		fut_sett_date = 7;
 }
 

@@ -13,7 +13,7 @@ message execution_report {
 	optional string		security_type = 8;
 	optional side_t		side = 9;
 	optional double		order_qty = 10;
-	optional double		order_type = 11;
+	optional sfixed32	ord_type = 11;
 	optional double		price = 12;
 	optional double		last_shares = 13;
 	optional double		last_price = 14;

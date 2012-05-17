@@ -12,7 +12,7 @@ message order_cancel_replace {
 	optional double		order_qty = 7;
 	optional double		price = 8;
 	optional string		transact_time = 9;
-	optional sfixed32		order_type = 10;
+	optional sfixed32		ord_type = 10;
 	optional sfixed32		time_in_force = 11;
 }
 

@@ -34,7 +34,6 @@ message instrument_bbo {
     required string bb_mic = 2;
     required double bb_price = 3;
     required double bb_size = 4;
-
     required string ba_mic = 5;
     required double ba_price = 6;
     required double ba_size = 7;
