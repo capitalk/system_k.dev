@@ -6,7 +6,9 @@
 
 #define MIC_LEN 5
 
-struct KBBO
+namespace capk {
+
+struct BBO
 {
     char MIC_name[MIC_LEN];
     double bid_price;
@@ -17,7 +19,10 @@ struct KBBO
     
 };
 
+typedef struct BBO BBO_t;
+
 #define MAX_MICS 126
 
+} // namespace capk
 
 #endif // CAPK_BBO
