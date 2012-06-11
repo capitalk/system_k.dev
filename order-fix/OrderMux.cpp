@@ -32,14 +32,15 @@ OrderMux::run()
 	//try {
 		assert(_context != NULL);
 
-		_inproc = new zmq::socket_t(*_context, ZMQ_DEALER);
+		_inproc = new zmq::socket_t(*_context, ZMQ_PAIR);
 		assert(_inproc);
-		pan::log_DEBUG("Binding inproc addr: ", _inprocAddr.c_str());
+		pan::log_DEBUG("Binding OrderMux inproc addr: ", _inprocAddr.c_str());
 		_inproc->bind(_inprocAddr.c_str());
-
+/*
 		for (size_t i = 0; i<_oiArraySize; i++) {
 			_oiArray[i]->init();					
 		}
+*/
 		
 		// 0th item in poll_items is always inproc socket
 		_poll_items = new zmq::pollitem_t[_oiArraySize + 1];
@@ -150,6 +151,7 @@ OrderMux::rcv_RESPONSE(zmq::socket_t* sock)
 						" data=", 
 						pan::blob(static_cast<const void*>(msgtypeframe.data()), msgtypeframe.size()));
 
+		
 		zmq::message_t msgframe;
 		sock->recv(&msgframe, 0);
 		pan::log_DEBUG("Received msgframe: size=", 
@@ -157,12 +159,22 @@ OrderMux::rcv_RESPONSE(zmq::socket_t* sock)
 						" data=", 
 						pan::blob(static_cast<const void*>(msgframe.data()), msgframe.size()));
 
+		
+
 		if (*(static_cast<capk::msg_t*>(msgtypeframe.data())) == capk::STRATEGY_HELO_ACK) {
 			pan::log_DEBUG("Received msg type: ", pan::integer(capk::STRATEGY_HELO_ACK),
 							" - capk::STRATEGY_HELO_ACK from venue ID: ",
 							pan::integer(*(static_cast<capk::venue_id_t*>(msgframe.data()))));
 		}
 		
+        else {
+			_inproc->send(msgtypeframe, ZMQ_SNDMORE);
+			_inproc->send(msgframe, 0);
+        }
+/* Don't inspect the protobufs here - just pass them up to the inrpoc socket 
+ * and then let the application thread process the messages - more synchronous - easier
+ * to digest, understand, debug */
+/* 
 		if (*(static_cast<capk::msg_t*>(msgtypeframe.data())) == capk::EXEC_RPT) {
 			bool parseOK;
 			pan::log_DEBUG("Received msg type: ", pan::integer(capk::EXEC_RPT), " - capk::EXEC_RPT");
@@ -170,6 +182,9 @@ OrderMux::rcv_RESPONSE(zmq::socket_t* sock)
 			parseOK = er.ParseFromArray(msgframe.data(), msgframe.size());
 			assert(parseOK);
 			pan::log_DEBUG(er.DebugString());
+			// forward msg to application thread
+			_inproc->send(msgtypeframe, ZMQ_SNDMORE);
+			_inproc->send(msgframe, 0);
 		}
 		if (*(static_cast<capk::msg_t*>(msgtypeframe.data())) == capk::ORDER_CANCEL_REJ) {
 			bool parseOK;
@@ -178,8 +193,11 @@ OrderMux::rcv_RESPONSE(zmq::socket_t* sock)
 			parseOK = ocr.ParseFromArray(msgframe.data(), msgframe.size());
 			assert(parseOK);
 			pan::log_DEBUG(ocr.DebugString());
+			// forward msg to application thread
+			_inproc->send(msgtypeframe, ZMQ_SNDMORE);
+			_inproc->send(msgframe, 0);
 		}
-
+*/
 		zmq_getsockopt(*sock, ZMQ_RCVMORE, &more, &more_size);
 		assert(more == 0);
 	} while (more);

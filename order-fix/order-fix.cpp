@@ -77,7 +77,7 @@ int main( int argc, char** argv )
 			("help", "produce help message")
 			("c", po::value<std::string>(), "<config file>")
 			("d", "debug info")
-			("t", "run interactive mode")
+			("i", "run interactive mode")
 		;
 		
 		po::variables_map vm;        
@@ -97,7 +97,7 @@ int main( int argc, char** argv )
 			pan::log_ERROR("Config file not set"); 
 			err++;
 		}
-		if (vm.count("t")) {
+		if (vm.count("i")) {
 			pan::log_NOTICE("Running interactive TEST MODE ");
 			runInteractive = true;
 		}

@@ -1,7 +1,7 @@
 #ifndef __ORDER_INTERFACE__
 #define __ORDER_INTERFACE__
 
-#include "utils/KTypes.h"
+#include "KTypes.h"
 #include "KMsgCache.h"
 #include "KMsgTypes.h"
 

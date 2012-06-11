@@ -1,10 +1,10 @@
-#include "ClientOrderInterface.h"
+#include "ClientMarketDataInterface.h"
 #include "logging.h"
 
 #include <zmq.hpp>
 
 
-ClientOrderInterface::~ClientOrderInterface()
+ClientMarketDataInterface::~ClientMarketDataInterface()
 {
 	if (_interface) {
 		delete _interface;
@@ -13,14 +13,14 @@ ClientOrderInterface::~ClientOrderInterface()
 
 /*
 void
-ClientOrderInterface::stop()
+ClientMarketDataInterface::stop()
 {
 	_stopRequested = true;
 }
 */
 
 void
-ClientOrderInterface::init()
+ClientMarketDataInterface::init()
 {
 	/* 
 	 * N.B.  
@@ -34,11 +34,12 @@ ClientOrderInterface::init()
 		assert(_context != NULL);
 		assert(_interfaceAddr.c_str() != NULL);
 		try {
-			_interface = new zmq::socket_t(*_context, ZMQ_DEALER);
+			_interface = new zmq::socket_t(*_context, ZMQ_SUB);
 			assert(_interface);
 			_interface->connect(_interfaceAddr.c_str());
+			const char* filter = "";
+			_interface->setsockopt(ZMQ_SUBSCRIBE, filter, strlen(filter));
 		}
-
 		catch (std::exception& e) {
 			pan::log_CRITICAL("EXCEPTION: ", __FILE__, pan::integer(__LINE__), " ", e.what());
 		}
@@ -47,12 +48,34 @@ ClientOrderInterface::init()
 	_initComplete = true;
 }
 
+bool
+ClientMarketDataInterface::subscribe(const char* sub)
+{
+    if (_interface && sub && *sub) {   
+        _interface->setsockopt(ZMQ_SUBSCRIBE, sub, strlen(sub));
+        return true;
+    }
+    return false;
+}
+
+bool
+ClientMarketDataInterface::unsubscribe(const char* sub)
+{
+    if (_interface && sub && *sub) {   
+        _interface->setsockopt(ZMQ_UNSUBSCRIBE, sub, strlen(sub));
+        return true;
+    }
+    return false;
+}
+
+
+
 /* 
  * Use run() for running in a separate thread only!
  */
 /*
 int 
-ClientOrderInterface::run()
+ClientMarketDataInterface::run()
 {
 	try {
 		init();

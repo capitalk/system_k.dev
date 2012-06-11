@@ -1,26 +1,33 @@
 #ifndef _K_MSG_CACHE
 #define _K_MSG_CACHE
 
+
 #include <google/dense_hash_map>
 #include <uuid/uuid.h>
 
 #include <memory.h>
 
-#include "utils/JenkinsHash.h"
+#include "JenkinsHash.h"
 
 #include <boost/make_shared.hpp>
 
+
 #include <iostream>
+
+#include "logging.h"
 
 using google::dense_hash_map;
 using std::tr1::hash; // for hash function - specialized to Jenkns hash 
 
-#include "logging.h"
 
 #define MAX_HOPS 4
 #define MSG_ADDR_LEN 17
 #define UUID_LEN 16
 #define UUID_STRLEN 36+1
+
+static const char* STRATEGY_CACHE_FILENAME = "StrategyRouteMap.cache";
+static const char* ORDER_CACHE_FILENAME = "OrderStatusMap.cache";
+
 
 typedef struct order_id order_id_t;
 typedef struct node node_t;
@@ -117,6 +124,18 @@ struct route
 
 	void clear() {
 		num_nodes = 0;
+	}
+
+	bool operator==(route_t const & rhs) const {
+		if (rhs.num_nodes != num_nodes) {
+			return false;
+		}
+		for (size_t i=0; i<num_nodes; i++) {
+			if (!(rhs.nodes[i] == nodes[i])) {
+				return false;
+			}
+		}
+		return true;
 	}
 	
 #ifdef DEBUG
@@ -334,64 +353,56 @@ struct strategy_id
 };
 typedef struct strategy_id strategy_id_t;
 
+typedef uint32_t OrderStatus_t;
 class OrderInfo
 {
 	public:
 		OrderInfo() {
-			//std::cerr << "OrderInfo()" << std::endl;
 		};
 
-		OrderInfo(const order_id_t& oid, const strategy_id_t& sid) {
+		OrderInfo(const order_id_t& oid, 
+					const strategy_id_t& sid) {
 			memcpy(_oid._oid, oid._oid, sizeof(order_id_t));
 			memcpy(_sid._sid, sid._sid, sizeof(strategy_id_t));
 		}
 
 		~OrderInfo() {
-			//std::cerr << "~OrderInfo()" << std::endl;
 		};
-/*
-		int addRoute(const node_t& node) {
-			return _path.addNode(node);
-		}
 
-		int addRoute(const char* addr, size_t len) {
-			return _path.addNode(addr, len);
-		}
-
-		int getRoute(size_t i, node_t* node) {
-			assert(node);
-			return _path.getNode(i, node);
-		}
-
-		int getRoute(node_t* node) {
-			assert(node);
-			return _path.getNode(_path.size(), node);
-		}
-
-		size_t routeSize() {
-			return _path.size();
-		}
-*/
 		// by const ref - should never be changed externally
+/*
 		const route_t& getRoute() const {
-			return _path;
+			return _route;
 		}
 
 		void setRoute(route_t& r) {
-			_path.clear();
-			_path = r;
+			_route.clear();
+			_route = r;
 		}	
+*/
 
-		const order_id_t& getOrderID() {
+		const order_id_t& getOrderID() const {
 			return this->_oid;
 		}
+		
+		void setOrderID(order_id_t& oid) {
+			this->_oid = oid;
+		}
 
-		const strategy_id_t& getStrategyID() {
+		const strategy_id_t& getStrategyID() const {
 			return this->_sid;
 		}
 
-		uint32_t getStatus() {
+		void setStrategyID(strategy_id_t& sid) {
+			this->_sid = sid;
+		}
+
+		const OrderStatus_t& getStatus() const {
 			return this->_status;
+		}
+
+		void setStatus(OrderStatus_t st) {
+			_status = st;
 		}
 
 		void shit() {
@@ -401,13 +412,14 @@ class OrderInfo
 	private:
 		strategy_id_t _sid;
 		order_id_t _oid;
-		route_t _path;
-		uint32_t _status;
+		OrderStatus_t _status;
 };
 
 typedef boost::shared_ptr<order_id_t> order_id_ptr;
 typedef boost::shared_ptr<route_t> route_ptr;
 typedef boost::shared_ptr<OrderInfo> OrderInfo_ptr;
+// typedef struct OrderInfo OrderInfo_t
+// typedef OrderInfo_t OrderInfo_ptr
 
 // Equality test for order_id_t
 struct eq_order_id
@@ -447,6 +459,127 @@ namespace std {
 		};
 	};
 };
+
+namespace std {
+	template <>
+	inline bool operator==(const std::pair<const strategy_id_t, route_t>& p1, 
+				const std::pair<const strategy_id_t, route_t>& p2) 
+	{
+		std::cerr << "bool operator==(const std::pair<const strategy_id_t, route_t>)" << std::endl;
+		return (p1.first == p2.first && p1.second == p2.second);
+	};
+	
+	template <>
+	inline bool operator==(const std::pair<const order_id_t, OrderInfo_ptr>& p1, 
+				const std::pair<const order_id_t, OrderInfo_ptr>& p2) 
+	{
+		std::cout << "bool operator==(const std::pair<order_id_t, OrderInfo_ptr>)" << std::endl;
+		return (p1.first == p2.first);// && p1.second == p2.second);
+	};
+};
+
+struct StrategyCacheSerializer {
+	bool operator()(FILE* fp, const std::pair<const strategy_id_t, route_t>& value) const {
+		// Write the key
+		if (fwrite(&value.first._sid, sizeof(value.first._sid), 1, fp) != 1) {
+			return false;
+		}
+	
+		// Write the size of the route table - number of entries
+		if (fwrite(&value.second.num_nodes, sizeof(value.second.num_nodes), 1, fp) != 1) {
+			return false;
+		}
+	
+		// Write the route table
+		if (fwrite(&value.second.nodes, sizeof(value.second.nodes), 1, fp) != 1) {
+			return false;
+		}
+	
+		return true;
+	};
+
+	bool operator()(FILE* fp, std::pair<const strategy_id_t, route_t>* value) const {
+	// Read the key.  Note the need for const_cast to get around
+	// the fact hash_map keys are always const.
+	// Read the sid
+		if (fread(const_cast<uuid_t*>(&value->first._sid), sizeof(value->first._sid), 1, fp) != 1) {
+			return false;
+		}
+
+		// Read the number of nodes in route.
+		if (fread(&value->second.num_nodes, sizeof(value->second.num_nodes), 1, fp) != 1) {
+			return false;
+		}
+
+		// Read the route
+		if (fread(&value->second.nodes, sizeof(value->second.nodes), 1, fp) != 1) {
+			return false;
+		}
+
+		return true;
+	};
+};
+
+struct OrderCacheSerializer {
+	bool operator()(FILE* fp, const std::pair<const order_id_t, OrderInfo_ptr>& value) const {
+
+		// Write the key
+		if (fwrite(&value.first._oid, sizeof(value.first._oid), 1, fp) != 1) {
+			return false;
+		}
+
+		if (value.second == OrderInfo_ptr()) {
+			std::cerr << "SOMETHING IS ROTTEN HERE" << std::endl;
+		}
+		// Write the order id
+		const order_id_t& oid = value.second->getOrderID();
+		if (fwrite(&oid._oid, sizeof(oid._oid), 1, fp) != 1) {
+			return false;
+		}
+
+		// Write the strategy id
+		const strategy_id_t& sid = value.second->getStrategyID();
+		if (fwrite(&sid._sid, sizeof(sid._sid), 1, fp) != 1) {
+			return false;
+		}
+
+		// Write the status
+		const OrderStatus_t& status = value.second->getStatus();
+		if (fwrite(&status, sizeof(status), 1, fp) != 1) {
+			return false;
+		}
+	
+		return true;
+	};
+
+	bool operator()(FILE* fp, std::pair<const order_id_t, OrderInfo_ptr>* value) const {
+		if (fread(const_cast<uuid_t*>(&(value->first._oid)), sizeof(value->first._oid), 1, fp) != 1) {
+			return false;	
+		}
+
+		value->second = boost::make_shared<OrderInfo>();
+		order_id_t oid;
+		if (fread(&oid._oid, sizeof(oid._oid), 1, fp) != 1) {
+			return false;
+		}
+		value->second->setOrderID(oid);
+
+		strategy_id_t sid;
+		if (fread(&sid._sid, sizeof(sid._sid), 1, fp) != 1) {
+			return false;
+		}
+		value->second->setStrategyID(sid);
+
+		OrderStatus_t status;
+		if (fread(&status, sizeof(status), 1, fp) != 1) {
+			return false;
+		}
+		value->second->setStatus(status);
+
+		return true;
+	};
+};
+
 
 
 /*
@@ -511,6 +644,39 @@ class KStrategyCache
 			return &_cache;
 		}	
 
+		bool read(const char* filename) {
+			if (!filename && *filename) {
+				return false;
+			}
+			bool bOK;
+			FILE* fp = fopen(filename, "r");
+			if (!fp) {
+				pan::log_CRITICAL("Can't open strategy cache file: ", filename);
+				return false;
+			}	
+			bOK = _cache.unserialize(StrategyCacheSerializer(), fp);	
+			fclose(fp);	
+			return bOK;
+		}
+		
+		bool write(const char* filename) {
+			if (!filename && *filename) {
+				return false;
+			}
+			bool bOK;
+			FILE* fp = fopen(filename, "w");
+			if (!fp) {
+				pan::log_CRITICAL("Can't open strategy cache file: ", filename);
+				return false;
+			}
+			bOK = _cache.serialize(StrategyCacheSerializer(), fp);
+			fclose(fp);
+			return bOK;
+
+		}
+	
+		size_t size() { return _cache.size(); };
+
 		void print_stats() {
 			pan::log_DEBUG("Cache size: ", pan::integer(_cache.size()));
 			pan::log_DEBUG("Cache bucket_count: ", pan::integer(_cache.bucket_count()));
@@ -554,6 +720,37 @@ class KOrderCache
 		OrderInfo_map* getCache() {
 			return &_cache;
 		}	
+
+		bool read(const char* filename) {
+			if (!filename && *filename) {
+				return false;
+			}
+			bool bOK;
+			FILE* fp = fopen(filename, "r");
+			if (!fp) {
+				pan::log_CRITICAL("Can't open strategy cache file: ", filename);
+				return false;
+			}	
+			bOK = _cache.unserialize(OrderCacheSerializer(), fp);	
+			fclose(fp);	
+			return bOK;
+		}
+		
+		bool write(const char* filename) {
+			if (!filename && *filename) {
+				return false;
+			}
+			bool bOK;
+			FILE* fp = fopen(filename, "w");
+			if (!fp) {
+				pan::log_CRITICAL("Can't open strategy cache file: ", filename, " - ABORTING");
+				return false;
+			}
+			bOK = _cache.serialize(OrderCacheSerializer(), fp);
+			fclose(fp);
+			return bOK;
+
+		}
 
 		void print_stats() {
 			pan::log_DEBUG("Cache size: ", pan::integer(_cache.size()));
@@ -615,6 +812,5 @@ struct MsgBytes
 	size_t _len;
 
 };
-
 #endif // _K_MSG_CACHE
 

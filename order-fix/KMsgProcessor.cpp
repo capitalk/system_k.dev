@@ -10,12 +10,12 @@ freenode(void* data, void* hint) {
 		std::cerr << "freenode: ", pan::integer(*(int*)tmp->data());
         delete(static_cast<node_t*>(data));
 #ifdef LOG
-		pan::log_DEBUG("freenode called with non-null data - this is OK");
+		//pan::log_DEBUG("freenode called with non-null data - this is OK");
 #endif
     }
 	else {
 #ifdef LOG
-		pan::log_INFORMATIONAL("freenode called with NULL data - maybe not OK ");
+		pan::log_CRITICAL("freenode called with NULL data - maybe not OK ");
 #endif
 	}
 }
@@ -161,19 +161,26 @@ KMsgProcessor::req()
 	strategy_id_t sid;
 	sid.set(static_cast<const char*>(sidframe.data()), sidframe.size());
 
-	// Trap the admin msgs
+	// TRAP THE ADMIN MESSAGES
 	if (msgType == capk::STRATEGY_HELO) {
 #ifdef LOG 
 		pan::log_DEBUG("KMsgProcessor::req() rcvd STRATEGY_HELO from SID: ", sid.c_str(sidbuf), " - adding route to cache");
 #endif
 		_scache.add(sid, ret_route);
-		
+		T0(a)	
+		_scache.write(STRATEGY_CACHE_FILENAME);	
+		TN(b)
+#ifdef LOG
+		TDIFF(tdiff, a, b)	
+		pan::log_DEBUG("Strategy cache write time: ", ptime_string(tdiff));
+#endif
 		snd_STRATEGY_HELO_ACK(sid);
 	}
 	else if (msgType == capk::HEARTBEAT) {
 		pan::log_DEBUG("KMsgProcessor::req() rcvd HEARTBEAT from SID: ", sid.c_str(sidbuf));
 		snd_HEARTBEAT_ACK(sid);
 	}
+	// PROCESS ALL ORDER RELATED MESSAGES
 	else {
 		rc = _frontend->recv(&oidframe, 0);
 		assert(rc);
@@ -197,6 +204,13 @@ KMsgProcessor::req()
 		pan::log_DEBUG("Adding to order cache: ", oidbuf);	
 #endif 
 		_ocache.add(oid, op);
+		T0(a)	
+		_ocache.write(ORDER_CACHE_FILENAME);	
+		TN(b)
+#ifdef LOG
+		TDIFF(tdiff, a, b)	
+		pan::log_DEBUG("Order cache write time: ", ptime_string(tdiff));
+#endif
 
 		// Dispatch all other messages to interface
 		char* d = new char[data.size()];		
@@ -278,6 +292,12 @@ KMsgProcessor::rcv_internal()
 void
 KMsgProcessor::init()
 {
+	bool bOK;
+	bOK =_scache.read(STRATEGY_CACHE_FILENAME);
+	//assert(bOK);// blow up if we can't read the cache file
+	bOK =_ocache.read(ORDER_CACHE_FILENAME);
+	//assert(bOK);// blow up if we can't read the cache file
+
 
 	_frontend = new zmq::socket_t(*_ctx, ZMQ_ROUTER);
 	//_in = new zmq::socket_t(*_ctx, ZMQ_DEALER);

@@ -1,19 +1,22 @@
 CC=g++
 
 PROTOC=protoc
-PROTO=../../collectors/proto
+PROTO=../../../collectors/proto
+
+
+SRC=..
 
 BOOST=/usr/local/boost
-COLLECTORS=../../collectors
-UTILS=../../collectors/utils
-TESTS=./tests
+COLLECTORS=../../../collectors
+UTILS=../../../collectors/utils
 
-INCLUDE=-I $(BOOST) -I /usr/local/include/ \
-        -I/usr/local/src/quickfix/include -I.. -I $(COLLECTORS) \
+INCLUDE=-I$(BOOST) -I/usr/local/include/ \
+        -I/usr/local/src/quickfix/include -I.. -I$(COLLECTORS) \
 		-I $(PANTHEIOS_ROOT)/include -I $(STLSOFT)/include \
 		-I $(UTILS)
 
-LIBS= -L/usr/local/lib \
+LIBS= -L/usr/local/src/quickfix/lib/ \
+		-L/usr/local/lib \
       	-lquickfix -lboost_date_time \
 		-lboost_program_options \
 		-lboost_filesystem \
@@ -34,7 +37,7 @@ PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
         -l pantheios.1.util.gcc44.file64bit \
         -l pantheios.1.core.gcc44.file64bit 
 
-CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG
+CFLAGS=-Wall -std=c++0x -pthread -O3 -DLOG #-ULOG
 LDFLAGS=-static
 
 PROTOBUF_OBJS = new_order_single.pb.o \
@@ -43,6 +46,7 @@ PROTOBUF_OBJS = new_order_single.pb.o \
 				order_cancel_replace.pb.o \
 				capk_globals.pb.o \
 				execution_report.pb.o \
+				spot_fx_md_1.pb.o \
 				order_status.pb.o
 				
 
@@ -54,15 +58,15 @@ endif
 
 LDFLAGS=-static
 
-all: order-fix
+all: tests 
 
 order-fix : order-fix.o Application.o logging.o JenkinsHash.o timing.o  KMsgProcessor.o $(PROTOBUF_OBJS)
 	$(CC) $(CFLAGS) order-fix.o Application.o logging.o JenkinsHash.o timing.o  KMsgProcessor.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
 
-logging.o: logging.cpp 
+logging.o: $(SRC)/logging.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
-timing.o: timing.cpp 
+timing.o: $(SRC)/timing.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 	
 new_order_single.pb.o: $(PROTO)/new_order_single.pb.cc $(PROTO)/new_order_single.pb.h
@@ -85,21 +89,24 @@ order_cancel_replace.pb.o: $(PROTO)/order_cancel_replace.pb.cc $(PROTO)/order_ca
 
 execution_report.pb.o: $(PROTO)/execution_report.pb.cc $(PROTO)/execution_report.pb.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/execution_report.pb.cc
- 
+
 spot_fx_md_1.pb.o: $(PROTO)/spot_fx_md_1.pb.cc $(PROTO)/spot_fx_md_1.pb.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/spot_fx_md_1.pb.cc
 
-order-fix.o: order-fix.cpp
+order-fix.o: $(SRC)/order-fix.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-Application.o: Application.cpp
+Order.o: $(SRC)/Order.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+Application.o: $(SRC)/Application.cpp
 	#$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) Application.cpp  
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<  
 
-KMsgProcessor.o: KMsgProcessor.cpp
+KMsgProcessor.o: $(SRC)/KMsgProcessor.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-KMsgRouter.o: KMsgRouter.cpp
+KMsgRouter.o: $(SRC)/KMsgRouter.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 KTimeUtils.o:  $(UTILS)/KTimeUtils.cpp
@@ -108,45 +115,82 @@ KTimeUtils.o:  $(UTILS)/KTimeUtils.cpp
 JenkinsHash.o: $(UTILS)/JenkinsHash.cpp
 	$(CC) -c -I $(UTILS) $(INCLUDE) $(CFLAGS) $<
 
-ClientOrderInterface.o: ClientOrderInterface.cpp
+ClientOrderInterface.o: $(SRC)/ClientOrderInterface.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-ClientMarketDataInterface.o: ClientMarketDataInterface.cpp
+OrderMux.o: $(SRC)/OrderMux.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-MarketDataMux.o: MarketDataMux.cpp
+ClientMarketDataInterface.o: $(SRC)/ClientMarketDataInterface.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-OrderMux.o: OrderMux.cpp
+MarketDataMux.o: $(SRC)/MarketDataMux.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-Specializations.o: Specializations.cpp
-	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
-
-Order.o: Order.cpp
+Specializations.o: $(SRC)/Specializations.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
 # TESTS
 
-#MsgProcessorTestSvr.o: MsgProcessorTestSvr.cpp 
-	#$(CC) -c $(INCLUDE) $(CFLAGS) $<
+MsgProcessorTestSvr.o: $(SRC)/MsgProcessorTestSvr.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 	#$(CC) -c $(UTILS)/zhelpers.hpp $(INCLUDE) $(CFLAGS) $<
 
-#MsgProcessorTestCli.o: MsgProcessorTestCli.cpp
-	#$(CC) -c $(INCLUDE) $(CFLAGS) $<
+MsgProcessorTestCli.o: $(SRC)/MsgProcessorTestCli.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+testsvr: MsgProcessorTestSvr.o JenkinsHash.o logging.o KMsgProcessor.o timing.o $(PROTOBUF_OBJS)
+	$(CC) $(CFLAGS) KMsgProcessor.o JenkinsHash.o  MsgProcessorTestSvr.o logging.o timing.o $(PROTOBUF_OBJS) $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+
+testcli: MsgProcessorTestCli.o ClientOrderInterface.o OrderMux.o logging.o KTimeUtils.o timing.o MarketDataMux.o ClientMarketDataInterface.o Order.o $(PROTOBUF_OBJS) 
+	$(CC) $(CFLAGS) MsgProcessorTestCli.o JenkinsHash.o ClientOrderInterface.o OrderMux.o logging.o KTimeUtils.o timing.o MarketDataMux.o ClientMarketDataInterface.o Order.o $(PROTOBUF_OBJS) $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+
+req.o: req.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+rep.o: rep.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+req: req.o logging.o timing.o
+	$(CC) $(CFLAGS) req.o logging.o timing.o $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+
+rep: rep.o logging.o timing.o
+	$(CC) $(CFLAGS) rep.o logging.o timing.o $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+
+uuid_test.o: uuid_test.cpp $(SRC)/KMsgCache.h
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+uuid_test: uuid_test.o JenkinsHash.o logging.o
+	$(CC) $(CFLAGS) uuid_test.o logging.o JenkinsHash.o $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+
+cache_test.o: cache_test.cpp $(SRC)/KMsgCache.h
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+cache_test: cache_test.o $(SRC)/KMsgCache.h JenkinsHash.o logging.o
+	$(CC) $(CFLAGS) logging.o  cache_test.o JenkinsHash.o $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+
+hash_test.o: hash_test.cpp $(SRC)/KMsgCache.h
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+hash_test: hash_test.o $(SRC)/KMsgCache.h JenkinsHash.o
+	$(CC) $(CFLAGS) hash_test.o JenkinsHash.o $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+
+serialize_cache_test: serialize_cache_test.o logging.o JenkinsHash.o
+	$(CC) $(CFLAGS) serialize_cache_test.o logging.o JenkinsHash.o $(LIBS) $(PANTHEIOS_LIBS) -o $@
+
+serialize_cache_test.o: serialize_cache_test.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
 
 
 # PROTOS
 protos: 
 	cd $(PROTO) && make
 
-test: 
-	cd $(TESTS) && make 
-
-#protos testsvr testcli req rep uuid_test cache_test serialize_cache_test
+tests: protos testsvr testcli req rep uuid_test cache_test serialize_cache_test
 
 clean :
-	rm -f *.o order-fix req rep testsvr testcli uuid_test cache_test hash_test serialize_cache_test
+	rm -f *.o order-fix req rep testsvr testcli uuid_test cache_test hash_test serialize_cache_test ../*.o
 
 install :
 	echo "No install available yet"

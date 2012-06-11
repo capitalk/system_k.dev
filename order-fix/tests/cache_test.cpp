@@ -10,11 +10,49 @@
 //#define TEST_SIZE 2048
 static const int TEST_SIZE = 2048;
 
-KOrderCache mc(TEST_SIZE);
+KOrderCache ocache(TEST_SIZE);
 
 // create a list of oids
 order_id_t oid_list[TEST_SIZE];
 strategy_id_t sid_list[TEST_SIZE];
+
+TEST(CacheTest, StratgyID_copy_assign) {
+	strategy_id_t s1(true);
+	strategy_id_t s2(true);
+	s1 = s2;
+	ASSERT_TRUE(s1 == s2);
+
+	strategy_id_t s3(true);
+	strategy_id_t s4(true);
+	// Don't assign
+	//s1 = s2;
+	ASSERT_FALSE(s3 == s4);
+}
+
+TEST(CacheTest, Route_copy_assign) {
+    route_t r1;
+    r1.addNode("11111111111111111", 17);
+    r1.addNode("22222222222222222", 17);
+    r1.addNode("33333333333333333", 17);
+
+    route_t r2;
+    r2.addNode("44444444444444444", 17);
+    r2.addNode("55555555555555555", 17);
+    r2.addNode("66666666666666666", 17);
+	
+    r2.addNode("77777777777777777", 17);
+	r2.delNode();
+
+	route_t r3;
+	r3 = r2;
+	ASSERT_TRUE(r3 == r2);
+
+	route_t r4(r2);
+	ASSERT_TRUE(r2 == r4);
+	
+	ASSERT_FALSE(r1 == r2);
+
+}
 
 TEST(CacheTest, InitCache) {
 	std::cerr << "Creating strategy and order ids [" << TEST_SIZE << "]" << std::endl;
@@ -26,10 +64,10 @@ TEST(CacheTest, InitCache) {
 	std::cerr << "Inserting oids and order info" << std::endl;
 	for (int i=0; i<TEST_SIZE; i++) {
 		OrderInfo_ptr info_ptr(new OrderInfo(oid_list[i], sid_list[i]));
-		mc.add(oid_list[i], info_ptr);
+		ocache.add(oid_list[i], info_ptr);
 	}
-	std::cerr << "Cache size(): " << (mc.getCache())->size() << std::endl;
-	ASSERT_EQ(TEST_SIZE, mc.getCache()->size());
+	std::cerr << "Cache size(): " << (ocache.getCache())->size() << std::endl;
+	ASSERT_EQ(TEST_SIZE, ocache.getCache()->size());
 }
 
 
@@ -38,9 +76,9 @@ TEST(CacheTest, GetSet) {
 	order_id_t o2(true);
 	order_id_t o3(true);
 	OrderInfo_ptr oi1 = boost::make_shared<OrderInfo>();
-	mc.add(o1,oi1);
-	mc.add(o2,oi1);
-	mc.add(o3,oi1);
+	ocache.add(o1,oi1);
+	ocache.add(o2,oi1);
+	ocache.add(o3,oi1);
 
 	// check get(...) method
 	std::cerr << "Testing cache.get(oid)" << std::endl;
@@ -53,15 +91,15 @@ TEST(CacheTest, GetSet) {
 	// clear the buffer!
 	memset(sidbuf, 0, sizeof(sidbuf));
 	OrderInfo_ptr oi2 = boost::make_shared<OrderInfo>(o4, s1);
-	mc.add(o4, oi2);
-	OrderInfo_ptr foundoi = mc.get(o4);
+	ocache.add(o4, oi2);
+	OrderInfo_ptr foundoi = ocache.get(o4);
 	EXPECT_NE(foundoi, OrderInfo_ptr());
 	std::cerr << "Found strategy id: " << foundoi->getStrategyID().c_str(sidbuf) << std::endl;
-	std::cerr << "Cache size(): " << (mc.getCache())->size() << std::endl;
+	std::cerr << "Cache size(): " << (ocache.getCache())->size() << std::endl;
 
 	// EXPECT FAILURE
 	order_id_t o5(true);
-	OrderInfo_ptr oi3 = mc.get(o5);	
+	OrderInfo_ptr oi3 = ocache.get(o5);	
 	EXPECT_EQ(oi3, OrderInfo_ptr());
 	//assert(oi3 != OrderInfo_ptr());	
 }
@@ -207,16 +245,16 @@ TEST(CacheTest, DeleteAll)
 {
 	size_t deleted_count;
 	for (int j=0; j<TEST_SIZE; j++) {
-		deleted_count = mc.del(oid_list[j]);
+		deleted_count = ocache.del(oid_list[j]);
 	}
-	std::cerr << "Cache size(): " << (mc.getCache())->size() << std::endl;
-	ASSERT_EQ(4, mc.getCache()->size());
+	std::cerr << "Cache size(): " << (ocache.getCache())->size() << std::endl;
+	ASSERT_EQ(4, ocache.getCache()->size());
 }
 
 void
-print_all(KOrderCache& mc) {
+print_all(KOrderCache& ocache) {
 	std::cerr << "*********************************Begin all items " << std::endl;
-	OrderInfo_map* map = mc.getCache();			
+	OrderInfo_map* map = ocache.getCache();			
 	OrderInfo_map::iterator it = map->begin();
 	char idbuf[UUID_STRLEN + 1] ;
 	while (it != map->end()) {
@@ -235,7 +273,7 @@ int main(int argc, char** argv)
 	// Sizing questions
 	std::cerr << "sizeof(order_id_t): "		<< sizeof(order_id_t) << std::endl;
 	std::cerr << "sizeof(strategy_id_t): "	<< sizeof(strategy_id_t) << std::endl;
-	std::cerr << "sizeof(mc): "				<< sizeof(mc) << std::endl;
+	std::cerr << "sizeof(ocache): "			<< sizeof(ocache) << std::endl;
 	std::cerr << "sizeof(OrderInfo): "		<< sizeof(OrderInfo) << std::endl;
 	std::cerr << "sizeof(OrderInfo_ptr): "	<< sizeof(OrderInfo_ptr) << std::endl;
 

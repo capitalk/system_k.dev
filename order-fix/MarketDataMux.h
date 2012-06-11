@@ -1,41 +1,37 @@
-#ifndef __ORDER_MUX__
-#define __ORDER_MUX__
+#ifndef __MARKET_DATA_MUX__
+#define __MARKET_DATA_MUX__
 
 #include <zmq.hpp>
 
 #include <string>
 
-#include "ClientOrderInterface.h"
+#include "ClientMarketDataInterface.h"
 #include "logging.h"
 
-const size_t MAX_OE_INTERFACES = 10;
+const int MAX_MD_INTERFACES = 10;
 
-class OrderMux
+class MarketDataMux
 {
 	public: 
-		OrderMux(zmq::context_t* context, 
+		MarketDataMux(zmq::context_t* context, 
 				const std::string& inprocAddr):
 				_context(context),
 				_inprocAddr(inprocAddr),
-				_oiArraySize(0),
+				_mdArraySize(0),
 				_stopRequested(false),
 				_msgCount(0)
 		{
 		};
 
-		~OrderMux();
+		~MarketDataMux();
 
 		// TODO - change to return int = num of installed interfaces
-		bool addOrderInterface(ClientOrderInterface* oi) {
-			if (!oi) { 
-				return false;
+		void addMarketDataInterface(ClientMarketDataInterface* mdi) {
+			if (!mdi) { 
+				return;
 			}
-            if (_oiArraySize+1 < MAX_OE_INTERFACES) {
-			    _oiArray[_oiArraySize] = oi;	
-			    _oiArraySize++;
-                return true;
-            }
-            return false;
+			_mdArray[_mdArraySize] = mdi;	
+			_mdArraySize++;
 		}
 
 		int run();
@@ -46,15 +42,15 @@ class OrderMux
 		// initializer list 
 		zmq::context_t* _context;
 		std::string _inprocAddr;
-		size_t _oiArraySize;
+		size_t _mdArraySize;
 		volatile bool _stopRequested;
 		int64_t _msgCount;
 
-		ClientOrderInterface* _oiArray[MAX_OE_INTERFACES];
+		ClientMarketDataInterface* _mdArray[MAX_MD_INTERFACES];
 		zmq::pollitem_t* _poll_items;
 		zmq::socket_t* _inproc;	// from strategy->venue
 		
 
 };
 
-#endif // __ORDER_MUX__
+#endif // __MARKET_DATA_MUX__

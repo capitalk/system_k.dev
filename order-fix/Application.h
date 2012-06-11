@@ -38,6 +38,9 @@
 #include "quickfix/fix42/OrderCancelRequest.h"
 #include "quickfix/fix42/OrderCancelReject.h"
 #include "quickfix/fix42/OrderCancelReplaceRequest.h"
+#include "quickfix/fix42/OrderStatusRequest.h"
+#include "quickfix/fix42/ListStatusRequest.h"
+#include "quickfix/fix42/ListStatus.h"
 
 #include "quickfix/fix43/Logout.h"
 #include "quickfix/fix43/Logon.h"
@@ -99,6 +102,7 @@
 #include "proto/order_cancel_reject.pb.h"
 #include "proto/order_cancel_replace.pb.h"
 #include "proto/execution_report.pb.h"
+#include "proto/order_status.pb.h"
 
 
 enum FIXVersion {
@@ -172,6 +176,8 @@ public:
 
 	void orderCancelReplace42(capkproto::order_cancel_replace& co);
 
+	void orderStatus42(capkproto::order_status& os);
+
 /*
 	virtual void sndNewOrder(order_id_t& ClOrdID,
 						const char* Symbol,
@@ -216,6 +222,7 @@ private:
 	void onMessage(const FIX42::TradingSessionStatus&, const FIX::SessionID&);
 	void onMessage(const FIX42::ExecutionReport&, const FIX::SessionID&);
 	void onMessage(const FIX42::OrderCancelReject&, const FIX::SessionID&);
+	void onMessage(const FIX42::ListStatus& message, const FIX::SessionID& sessionID);
 
 	void onMessage(const FIX43::Logon&, const FIX::SessionID&);
 	void onMessage(const FIX43::Logout&, const FIX::SessionID&);

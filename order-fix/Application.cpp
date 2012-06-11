@@ -35,9 +35,9 @@ Application::Application(bool bReset, const ApplicationConfig& config)
 {
 	_handlInst21 = -1;
 	_account1 = "";
-	#ifdef LOG
+#ifdef LOG
 	pan::log_INFORMATIONAL("Application::Application()");
-	#endif
+#endif
 }
 
 Application::~Application()
@@ -57,25 +57,25 @@ void Application::onLogon(const FIX::SessionID& sessionID )
 	_loggedOut = false;
 	//_sessionID = sessionID;
 	_loginCount++;
-	#ifdef LOG
+#ifdef LOG
 	pan::log_INFORMATIONAL("onLogon:", sessionID.toString().c_str());
-	#endif
+#endif
 }
 
 void Application::onLogout(const FIX::SessionID& sessionID )
 {
 	_loggedIn = false;
 	_loggedOut = true;
-	#ifdef LOG
+#ifdef LOG
 	pan::log_INFORMATIONAL("onLogout:", sessionID.toString().c_str());
-	#endif
+#endif
 }
 
 void Application::onCreate(const FIX::SessionID& sessionID )
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_INFORMATIONAL("onCreate:", sessionID.toString().c_str());
-	#endif
+#endif
 }
 
 /*****************************************************************************
@@ -89,9 +89,9 @@ void Application::fromAdmin(const FIX::Message& message,
     FIX::IncorrectTagValue, 
     FIX::RejectLogon )
 {
-	#ifdef LOG
+#ifdef LOG
 		pan::log_DEBUG("RECEIVED MSG fromAdmin(", message.toString() ,")");
-    #endif 
+#endif 
 	FIX::BeginString beginString;
 	message.getHeader().getField(beginString);
     crack(message, sessionID);
@@ -115,47 +115,47 @@ void
 Application::toAdmin(FIX::Message& message, 
                     const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 		pan::log_DEBUG("SENDING MSG toAdmin(", message.toString(), ")");
-	#endif
+#endif
 	FIX::MsgType msgType;
 	message.getHeader().getField(msgType);
 	if (msgType.getValue() == "1") { 
-		#ifdef LOG
+#ifdef LOG
 		pan::log_DEBUG("Sending TestRequest");
-		#endif 
+#endif 
 	}	
 	if (msgType.getValue() == "2") {
-		#ifdef LOG
+#ifdef LOG
 		pan::log_DEBUG("Sending ResendRequest");
-		#endif 
+#endif 
 	}
 	if (msgType.getValue() == "3") {
-		#ifdef LOG
+#ifdef LOG
 		pan::log_DEBUG("Sending Reject");
 		pan::log_CRITICAL("Sending Reject");
-		#endif 
+#endif 
     }
 	if (msgType.getValue() == "0") { 
-		#ifdef LOG
+#ifdef LOG
 		pan::log_DEBUG("Sending Heartbeat");
-		#endif 
+#endif 
 	}	
 	if (msgType.getValue() == "4") {
-		#ifdef LOG
+#ifdef LOG
 		pan::log_DEBUG("Sending SequenceReset(", message.toString(), ")");
-		#endif 
+#endif 
 	}
 	if (msgType.getValue() == "5") {
-		#ifdef LOG
+#ifdef LOG
 		pan::log_DEBUG("Sending Logout(", message.toString(), ")");
-		#endif 
+#endif 
 	}
 	// logon message 
 	if (msgType.getValue() == "A") {
-		#ifdef LOG
+#ifdef LOG
 		pan::log_DEBUG("Sending Login(", message.toString(), ")");
-		#endif 
+#endif 
 		FIX::Header& header = message.getHeader(); 
 
 		// some exchanges want both a password and username,
@@ -177,16 +177,16 @@ Application::toAdmin(FIX::Message& message,
 
 		
 		if (_resetSequence) {
-			#ifdef LOG
+#ifdef LOG
 			pan::log_DEBUG("Resetting sequence numbers");
-			#endif 
+#endif 
             FIX::ResetSeqNumFlag flag = FIX::ResetSeqNumFlag_YES;
 			message.setField(FIX::FIELD::ResetSeqNumFlag, "Y");
 		}
 	}
-	#ifdef LOG
+#ifdef LOG
 		//pan::log_DEBUG("toAdmin(", message.toString(), ")");
-	#endif
+#endif
 }
 
 void Application::fromApp(const FIX::Message& message, 
@@ -196,15 +196,15 @@ void Application::fromApp(const FIX::Message& message,
         FIX::IncorrectTagValue, 
         FIX::UnsupportedMessageType )
 {
-	#ifdef LOG
+#ifdef LOG
 		//pan::log_DEBUG("fromApp(", message.toString(), ")");
-	#endif
+#endif
     _appMsgCount++;
     if (_appMsgCount % 10000 == 0) {
 		std::cout << "Received: " << _appMsgCount << " application messages\n";
-		#ifdef LOG
+#ifdef LOG
 		pan::log_NOTICE("Received: ", pan::integer(_appMsgCount), " application messages"); 
-		#endif
+#endif
 	}
     crack(message, sessionID);
 /*
@@ -224,9 +224,9 @@ Application::toApp(FIX::Message& message,
                         const FIX::SessionID& sessionID )
     throw(FIX::DoNotSend )
 {
-	#ifdef LOG
+#ifdef LOG
 	    //pan::log_DEBUG("toApp(", message.toString() , ")");
-    #endif
+#endif
 	try {
 		// Don't send potenially duplicate requests for market data
 		FIX::PossDupFlag possDupFlag;
@@ -236,17 +236,17 @@ Application::toApp(FIX::Message& message,
 		}
 	}
 	catch (FIX::FieldNotFound& e) {
-		#ifdef LOG
+#ifdef LOG
 		pan::log_CRITICAL("toApp - Field not found (" , 
 							e.what(), 
 							e.detail.c_str(), 
 							pan::integer(e.field), ")") ;	
-		#endif
+#endif
 	}
 	catch (FIX::Exception& e) {
-		#ifdef LOG
+#ifdef LOG
 		pan::log_CRITICAL("toApp - Exception (" , e.what(), ")") ;	
-		#endif
+#endif
 	}
 
 }
@@ -258,28 +258,28 @@ void
 printTradSesStatus(FIX::TradingSessionID id, 
                     FIX::TradSesStatus status) 
 {
-    #ifdef LOG
+#ifdef LOG
 	pan::log_NOTICE("Trading session ID: ", id.getString().c_str()); 
-	#endif
+#endif
     if (status.getValue() == FIX::TradSesStatus_OPEN) {
-		#ifdef LOG
+#ifdef LOG
 		pan::log_NOTICE("Trading session status is OPEN"); 
-		#endif
+#endif
     }
     if (status.getValue() == FIX::TradSesStatus_HALTED) {
-		#ifdef LOG
+#ifdef LOG
 		pan::log_NOTICE("Trading session status is HALTED"); 
-		#endif
+#endif
     }
     if (status.getValue() == FIX::TradSesStatus_CLOSED) {
-		#ifdef LOG
+#ifdef LOG
 		pan::log_NOTICE("Trading session status is CLOSED"); 
-		#endif
+#endif
     }
     if (status.getValue() == FIX::TradSesStatus_PREOPEN) {
-		#ifdef LOG
+#ifdef LOG
 		pan::log_NOTICE("Trading session status is PREOPEN"); 
-		#endif
+#endif
     }
 }
 
@@ -287,9 +287,9 @@ void
 Application::onMessage(const FIX42::TradingSessionStatus& message, 
                         const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG(message.toString());		
-    #endif
+#endif
 	FIX::TradingSessionID tradingSessionID;
 	FIX::TradSesStatus tradSesStatus;
 	if (message.isSetField(tradingSessionID)) {
@@ -305,9 +305,9 @@ void
 Application::onMessage(const FIX43::TradingSessionStatus& message, 
                             const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG(message.toString());		
-    #endif
+#endif
 	FIX::TradingSessionID tradingSessionID;
 	FIX::TradSesStatus tradSesStatus;
 
@@ -324,9 +324,9 @@ void
 Application::onMessage(const FIX44::TradingSessionStatus& message, 
                             const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG(message.toString());		
-    #endif
+#endif
 	FIX::TradingSessionID tradingSessionID;
 	FIX::TradSesStatus tradSesStatus;
 
@@ -343,9 +343,9 @@ void
 Application::onMessage(const FIX50::TradingSessionStatus& message, 
                             const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG(message.toString());		
-    #endif
+#endif
 	FIX::TradingSessionID tradingSessionID;
 	FIX::TradSesStatus tradSesStatus;
 
@@ -366,36 +366,36 @@ void
 Application::onMessage(const FIX42::Heartbeat& message, 
                         const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG(message.toString());		
-    #endif
+#endif
 }
 
 void 
 Application::onMessage(const FIX43::Heartbeat& message, 
                         const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG(message.toString());		
-    #endif
+#endif
 }
 
 void 
 Application::onMessage(const FIX44::Heartbeat& message, 
                         const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG(message.toString());		
-    #endif
+#endif
 }
 
 void 
 Application::onMessage(const FIXT11::Heartbeat& message, 
                         const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG(message.toString());		
-    #endif
+#endif
 }
 /*****************************************************************************
  * LOGON/LOGOUT
@@ -404,63 +404,63 @@ void
 Application::onMessage(const FIX42::Logon& message, 
                         const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG("Logon:FIX42 ", message.toString());		
-    #endif
+#endif
 }
 
 void 
 Application::onMessage(const FIX43::Logon& message, 
                         const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG("Logon:FIX43 ", message.toString());		
-    #endif
+#endif
 }
 
 void 
 Application::onMessage(const FIX44::Logon& message, 
                         const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG("Logon:FIX44 ", message.toString());		
-    #endif
+#endif
 }
 
 void 
 Application::onMessage(const FIXT11::Logon& message, 
                         const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG("Logon:FIXT11 ", message.toString());		
-    #endif
+#endif
 }
 
 void 
 Application::onMessage(const FIX42::Logout& message, 
                         const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG("Logout:FIX42 ",message.toString());		
-    #endif
+#endif
 }
 
 void 
 Application::onMessage(const FIX43::Logout& message, 
                         const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG("Logout:FIX43 ", message.toString());		
-    #endif
+#endif
 }
 
 void 
 Application::onMessage(const FIX44::Logout& message, 
                         const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG("Logout:FIX44", message.toString());		
-    #endif
+#endif
 }
 
 void 
@@ -570,7 +570,7 @@ Application::onMessage(const FIX42::ExecutionReport& message,
 	}
 	if (message.isSetField(ordType)) {
 		message.getField(ordType);
-		er->set_order_type(ordType);
+		er->set_ord_type(ordType);
 //pan::log_DEBUG("K");
 	}
 	if (message.isSetField(price)) {
@@ -774,13 +774,22 @@ Application::onMessage(const FIX42::OrderCancelReject& message,
 	
 }
 
+void 
+Application::onMessage(const FIX42::ListStatus& message, 
+						const FIX::SessionID& sessionID)
+{
+#ifdef LOG
+	pan::log_DEBUG(message.toString());
+#endif
+}
+
 void
 Application::onMessage(const FIX43::ExecutionReport& message, 
 						const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG( message.toString());		
-    #endif
+#endif
 
 }
 
@@ -788,9 +797,9 @@ void
 Application::onMessage(const FIX43::OrderCancelReject& message, 
 						const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG( message.toString());		
-    #endif
+#endif
 
 }
 
@@ -798,9 +807,9 @@ void
 Application::onMessage(const FIX44::ExecutionReport& message, 
 						const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG( message.toString());		
-    #endif
+#endif
 
 }
 
@@ -808,9 +817,9 @@ void
 Application::onMessage(const FIX44::OrderCancelReject& message, 
 						const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG( message.toString());		
-    #endif
+#endif
 
 }
 
@@ -818,9 +827,9 @@ void
 Application::onMessage(const FIX50::ExecutionReport& message, 
 						const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG( message.toString());		
-    #endif
+#endif
 
 }
 
@@ -828,9 +837,9 @@ void
 Application::onMessage(const FIX50::OrderCancelReject& message, 
 						const FIX::SessionID& sessionID) 
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG( message.toString());		
-    #endif
+#endif
 
 }
 
@@ -861,9 +870,9 @@ void Application::queryEnterOrder()
 
 	if ( queryConfirm( "Send order" ) ) {
 		FIX::Session::sendToTarget( order );
-		#ifdef LOG
+#ifdef LOG
 		pan::log_DEBUG(order.toString());
-		#endif
+#endif
 	}
 	else {
 		pan::log_DEBUG("Not sending order");
@@ -1182,17 +1191,9 @@ Application::queryCancelReplaceRequest50()
 void 
 Application::queryHeader( FIX::Header& header )
 {
-//header.setField( querySenderCompID() );
-//header.setField( queryTargetCompID() );
 	header.setField(FIX::SenderCompID(_config.senderCompID));
 	header.setField(FIX::TargetCompID(_config.targetCompID));
-	#if 0
-	pan::log_DEBUG("SenderCompID: ", _sessionID.getSenderCompID());
-	pan::log_DEBUG("TargetCompID: ", _sessionID.getTargetCompID());
-	#endif
 
-//  if ( queryConfirm( "Use a TargetSubID" ) )
- //   header.setField( queryTargetSubID() );
 }
 
 char 
@@ -1402,9 +1403,9 @@ FIX::TimeInForce Application::queryTimeInForce()
 void
 Application::run()
 {
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG("Application::run()");
-	#endif
+#endif
 	zmq::context_t* ctx = getZMQContext();
 	_pMsgProcessor = new KMsgProcessor(ctx,
                 "tcp://127.0.0.1:9999",
@@ -1431,9 +1432,9 @@ void
 Application::test()
 {
 
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG("Application::test()");
-	#endif
+#endif
     
     while (1) {
 		try {
@@ -1473,13 +1474,15 @@ Application::dispatch(capk::msg_t msgType,
 				pan::log_CRITICAL(__FILE__, " ", 
 					pan::integer(__LINE__), " ", 
 					"NewOrderSingle - Parsing protobuf failed!");
+					// KTK TODO broadcast error
 			}
-
-			if (_config.version == 42) {
-				newOrderSingle42(nos);
-			}
-			else {
-				pan::log_CRITICAL("NO SUPPORTED FIX VERSION FOUND FOR NEW ORDER REQUEST");
+			else {	
+				if (_config.version == 42) {
+					newOrderSingle42(nos);
+				}
+				else {
+					pan::log_CRITICAL("NO SUPPORTED FIX VERSION FOUND FOR NEW ORDER REQUEST");
+				}
 			}
 			break;
 		}
@@ -1492,15 +1495,17 @@ Application::dispatch(capk::msg_t msgType,
 				pan::log_CRITICAL(__FILE__, " ", 
 					pan::integer(__LINE__), " ", 
 					"OrderCancel - Parsing protobuf failed!");
-			}
-
-			if (_config.version == 42) {
-				orderCancel42(oc);
+					// KTK TODO broadcast error
 			}
 			else {
-				pan::log_CRITICAL("NO SUPPORTED FIX VERSION FOUND FOR CANCEL REQUEST");
+				if (_config.version == 42) {
+					orderCancel42(oc);
+				}
+				else {
+					pan::log_CRITICAL("NO SUPPORTED FIX VERSION FOUND FOR CANCEL REQUEST");
+				}
+				break;
 			}
-			break;
 		}
 
 		case capk::ORDER_REPLACE: 
@@ -1511,13 +1516,35 @@ Application::dispatch(capk::msg_t msgType,
 				pan::log_CRITICAL(__FILE__, " ", 
 					pan::integer(__LINE__), " ", 
 					"OrderCancelReplace - Parsing protobuf failed!");
+					// KTK TODO broadcast error
 			}
-			
-			if (_config.version == 42) {
-				orderCancelReplace42(ocr);
+			else {	
+				if (_config.version == 42) {
+					orderCancelReplace42(ocr);
+				}
+				else {
+					pan::log_CRITICAL("NO SUPPORTED FIX VERSION FOUND FOR CANCEL REPLACE REQUEST");
+				}
+			}
+		}
+		
+		case capk::ORDER_STATUS: 
+		{
+			capkproto::order_status os;
+			parseOK = os.ParseFromArray(data, len);
+			if (!parseOK) {
+				pan::log_CRITICAL(__FILE__, " ", 
+					pan::integer(__LINE__), " ", 
+					"OrderStatus - Parsing protobuf failed!");
+					// KTK TODO broadcast error
 			}
 			else {
-				pan::log_CRITICAL("NO SUPPORTED FIX VERSION FOUND FOR CANCEL REPLACE REQUEST");
+				if (_config.version == 42) {
+					orderStatus42(os);	
+				}
+				else {
+					pan::log_CRITICAL("NO SUPPORTED FIX VERSION FOUND FOR CANCEL REPLACE REQUEST");
+				}
 			}
 		}
 	}
@@ -1565,13 +1592,13 @@ void Application::newOrderSingle42(capkproto::new_order_single& nos)
 	// order type
 	FIX::OrdType ordType;
 
-	pan::log_DEBUG("ORDER TYPE: ", pan::integer(nos.order_type()));
-	if (nos.order_type() == capkproto::LIM) {
+	pan::log_DEBUG("ORDER TYPE: ", pan::integer(nos.ord_type()));
+	if (nos.ord_type() == capkproto::LIM) {
 		pan::log_DEBUG("SETTING ORDER TYPE LIMIT");
 		ordType = _limitOrderChar40;
 	}
 	else {
-		ordType = nos.order_type();
+		ordType = nos.ord_type();
 	}
 
 	FIX42::NewOrderSingle nos42(clOrdID, FIX::HandlInst(_handlInst21), symbol, side,
@@ -1694,14 +1721,20 @@ void Application::newOrderSingle42(capkproto::new_order_single& nos)
 
 	#ifdef LOG
 	pan::log_DEBUG("Sending FIX message: ", nos42.toString());
-	#endif
+#endif
 */
 
 	//FIX::Session::sendToTarget(nos42, FIX::SenderCompID("GSF"), FIX::TargetCompID("BAXTERtest"));
 	nos42.getHeader().setField(FIX::SenderCompID(_config.senderCompID));
 	nos42.getHeader().setField(FIX::TargetCompID(_config.targetCompID));
 	pan::log_DEBUG("SendToTarget(nos42)");
-	FIX::Session::sendToTarget(nos42);
+	bool sendOK = FIX::Session::sendToTarget(nos42);
+    if (sendOK == false) {
+        pan::log_CRITICAL("SendToTarget(nos42) FAILED for OID: ", pan::blob(cloid.get_uuid(), UUID_LEN), 
+                " full order information follows: \n", 
+                nos42.toString().c_str());
+    }
+
 
 }
 
@@ -1754,13 +1787,13 @@ void Application::orderCancelReplace42(capkproto::order_cancel_replace& ocr)
 	
 	// order type
 	FIX::OrdType ordType;
-	if (ocr.order_type() == capkproto::LIM) {
+	if (ocr.ord_type() == capkproto::LIM) {
 		pan::log_DEBUG("SETTING ORDER TYPE LIMIT");
 		ordType = _limitOrderChar40;
 	}
 	else {
-		pan::log_DEBUG("SETTING ORDER TYPE: ", pan::integer(ocr.order_type()));
-		ordType = ocr.order_type();
+		pan::log_DEBUG("SETTING ORDER TYPE: ", pan::integer(ocr.ord_type()));
+		ordType = ocr.ord_type();
 	}
 	// order quantity
 	FIX::OrderQty orderQty(ocr.order_qty());
@@ -1796,7 +1829,13 @@ void Application::orderCancelReplace42(capkproto::order_cancel_replace& ocr)
 	ocr42.getHeader().setField(FIX::SenderCompID(_config.senderCompID));
 	ocr42.getHeader().setField(FIX::TargetCompID(_config.targetCompID));
 	pan::log_DEBUG("SendToTarget(ocr42)");
-	FIX::Session::sendToTarget(ocr42);
+	bool sendOK = FIX::Session::sendToTarget(ocr42);
+    if (sendOK == false) {
+        pan::log_CRITICAL("SendToTarget(ocr42) FAILED for OID: ", pan::blob(clordid.get_uuid(), UUID_LEN), 
+                " full order information follows: \n", 
+                ocr42.toString().c_str());
+    }
+
 }
 
 
@@ -1813,8 +1852,8 @@ void Application::orderCancel42(capkproto::order_cancel& oc)
 	// ClOrdID
 	char clordidbuf[UUID_LEN+1];
 	order_id_t clordid;
-	origoid.set(oc.cl_order_id().c_str(), oc.cl_order_id().size());
-	origoid.c_str(clordidbuf);
+	clordid.set(oc.cl_order_id().c_str(), oc.cl_order_id().size());
+	clordid.c_str(clordidbuf);
 	FIX::ClOrdID clOrdID(clordidbuf);
 	
 	FIX::Symbol symbol(oc.symbol().c_str());
@@ -1841,7 +1880,13 @@ void Application::orderCancel42(capkproto::order_cancel& oc)
 	oc42.set(orderQty);
 	oc42.getHeader().setField(FIX::SenderCompID(_config.senderCompID));
 	oc42.getHeader().setField(FIX::TargetCompID(_config.targetCompID));
-	FIX::Session::sendToTarget(oc42);
+	bool sendOK = FIX::Session::sendToTarget(oc42);
+    if (sendOK == false) {
+        pan::log_CRITICAL("SendToTarget(oc42) FAILED for OID: ", pan::blob(clordid.get_uuid(), UUID_LEN), 
+                " full order information follows: \n", 
+                oc42.toString().c_str());
+    }
+
 }
 
 void Application::orderCancel43(capkproto::order_cancel& oc)
@@ -1857,6 +1902,51 @@ void Application::orderCancel44(capkproto::order_cancel& oc)
 void Application::orderCancel50(capkproto::order_cancel& oc)
 {
 	pan::log_DEBUG("Application::orderCancel50()");
+}
+
+void Application::orderStatus42(capkproto::order_status& os)
+{
+	pan::log_DEBUG("Application::orderStatus42()");
+	// OrigOrdID
+	char oidbuf[UUID_LEN+1];
+	order_id_t oid;
+	oid.set(os.order_id().c_str(), os.order_id().size());
+	oid.c_str(oidbuf);
+	FIX::OrderID orderID(oidbuf);
+	// ClOrdID
+	char clordidbuf[UUID_LEN+1];
+	order_id_t clordid;
+	clordid.set(os.cl_order_id().c_str(), os.cl_order_id().size());
+	clordid.c_str(clordidbuf);
+	FIX::ClOrdID clOrdID(clordidbuf);
+	
+	FIX::Symbol symbol(os.symbol().c_str());
+	// side
+	FIX::Side side;
+	pan::log_DEBUG("SIDE: ", pan::integer(os.side()));
+	if (os.side() == capkproto::BID) {
+		pan::log_DEBUG("SETTING BID");
+		side = FIX::Side_BUY;
+	}
+	else if (os.side() == capkproto::ASK) {
+		pan::log_DEBUG("SETTING ASK");
+		side = FIX::Side_SELL;
+	}
+
+
+	FIX42::OrderStatusRequest os42(clOrdID,
+								symbol,
+								side);
+
+	os42.set(orderID);
+	os42.getHeader().setField(FIX::SenderCompID(_config.senderCompID));
+	os42.getHeader().setField(FIX::TargetCompID(_config.targetCompID));
+	bool sendOK = FIX::Session::sendToTarget(os42);
+    if (sendOK == false) {
+        pan::log_CRITICAL("SendToTarget(ocr42) FAILED for OID: ", pan::blob(clordid.get_uuid(), UUID_LEN), 
+                " full order information follows: \n", 
+                os42.toString().c_str());
+    }
 }
 
 
@@ -1910,9 +2000,9 @@ Application::sndNewOrder(order_id_t& ClOrdID,
 	nos.getHeader().setField(FIX::TargetCompID(_sessionID.getTargetCompID()));
 
 	FIX::Session::sendToTarget(nos);
-	#ifdef LOG
+#ifdef LOG
 	pan::log_DEBUG(nos.toString());
-	#endif
+#endif
 
 }
 

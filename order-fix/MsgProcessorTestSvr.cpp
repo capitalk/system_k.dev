@@ -27,7 +27,7 @@ main(int argc, char **argv)
 
 	StubHandler* stubHandler = new StubHandler();
 
-	capk::NullOrderInterface noi(&ctx);
+	capk::NullOrderInterface noi(123456, &ctx);
 
 	KMsgProcessor k(&ctx,
 				"tcp://127.0.0.1:9999", 

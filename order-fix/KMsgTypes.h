@@ -13,7 +13,9 @@ const msg_t ORDER_REPLACE	= 0x03;
 const msg_t ORDER_STATUS	= 0x04;
 
 const msg_t ORDER_ACK		= 0x05;
-const msg_t ORDER_CANCEL_REJ= 0x06 ;
+const msg_t ORDER_CANCEL_REJ= 0x06;
+
+const msg_t LIST_STATUS		= 0x07;
 
 const msg_t STRATEGY_HELO	= 0xF0;
 const msg_t STRATEGY_HELO_ACK = 0xF1;

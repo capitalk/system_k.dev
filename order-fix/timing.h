@@ -27,6 +27,12 @@ const char* ptime_string(const boost::posix_time::time_duration&);
 				clock_gettime(CLOCK_MONOTONIC, &stop_mtime); \
 				}
 
+#define T0(NAME) boost::posix_time::ptime NAME(boost::posix_time::microsec_clock::local_time()); 
+
+#define TN(NAME) boost::posix_time::ptime NAME(boost::posix_time::microsec_clock::local_time()); 
+
+#define TDIFF(RES, START, STOP)  boost::posix_time::time_duration RES(STOP - START); 
+
 
 #define DIFF_MTIME { unsigned long mtime_duration = timespec_delta_micros(start_mtime, stop_mtime); }
 #endif // TIMING_68575056-e387-462b-a9a4-f677e9b77288
