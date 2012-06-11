@@ -21,7 +21,7 @@ class FIXConvertors
     static bool UTCTimeStampToPTime(FIX::UtcTimeStamp& t, char* buf, const int buflen, ptime& pt);
     static void UTCTimeStampToTimespec(FIX::UtcTimeStamp& t, timespec* pt);
     static void TimespecToUTCTimeStamp(const timespec& ts, FIX::UtcTimeStamp& t);
-
+    static void UTCTimestampStringToTimespec(const std::string& s, timespec* pt);
 };
 
 

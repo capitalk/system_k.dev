@@ -5,7 +5,7 @@ import "capk_globals.proto";
 message execution_report {
 	required bytes		cl_order_id = 1;	
 	optional bytes		orig_cl_order_id = 2;
-	optional bytes		exec_id = 3;
+	optional string		exec_id = 3;
 	optional sfixed32	exec_trans_type = 4;
 	optional sfixed32	order_status = 5;
 	optional sfixed32	exec_type = 6;

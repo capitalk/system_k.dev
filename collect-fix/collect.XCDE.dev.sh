@@ -1,1 +1,1 @@
-./collect --c ./cfg/XCDE.dev.cfg --s ./cfg/EURUSD.cfg --o /home/timir/XCDE
+./collect --c ./cfg/XCDE.dev.cfg --s ./cfg/symbols.XCDE.cfg --o /home/timir/XCDE --d 

@@ -55,6 +55,8 @@ all: test
 KTimeUtils.o: $(SRC)/KTimeUtils.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
+FIXConvertors.o: $(SRC)/FIXConvertors.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 # TESTS
 test_time_compare.o: test_time_compare.cpp
@@ -78,8 +80,8 @@ zmq_version: zmq_version.o
 timespec2str_test.o: timespec2str_test.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-timespec2str_test: timespec2str_test.o KTimeUtils.o
-	$(CC) $(CFLAGS) timespec2str_test.o KTimeUtils.o $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+timespec2str_test: timespec2str_test.o KTimeUtils.o FIXConvertors.o
+	$(CC) $(CFLAGS) timespec2str_test.o KTimeUtils.o FIXConvertors.o $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
 
 test: uuidgen_test zmq_version timespec2str_test test_time_compare 
 

@@ -8,7 +8,7 @@ FIXConvertors::UTCTimeStampToPTime(FIX::UtcTimeStamp& t, char* buf, const int bu
 #ifdef DEBUG
     ptime time_start(microsec_clock::local_time());
 #endif // DEBUG
-    // 2011-01-01 12:02:09.987654 = 27 chars including null
+    // 2011-01-01-12:02:09.987654 = 27 chars including null
     if (!buf || buflen < 27) {
         return false;
     }
@@ -76,3 +76,24 @@ FIXConvertors::UTCTimeStampToTimespec(FIX::UtcTimeStamp& t, timespec* pt)
     pt->tv_nsec = millis*1000000;
     //std::cout << "OUT: " << pt->tv_sec << ":" << pt->tv_nsec << "\n";
 }
+
+void
+FIXConvertors::UTCTimestampStringToTimespec(const std::string& s, timespec* pt)
+{
+#ifdef DEBUG
+    ptime time_start(microsec_clock::local_time());
+#endif // DEBUG
+    // 2011-01-01-12:02:09.987 = 24 chars including null
+    
+    FIX::UtcTimeStamp ts = FIX::UtcTimeStampConvertor::convert(s);
+    UTCTimeStampToTimespec(ts, pt); 
+
+#ifdef DEBUG
+    ptime time_end(microsec_clock::local_time());
+    time_duration duration(time_end - time_start);
+    std::cout << __FILE__ << " " <<  __FUNCTION__ << " execution time: " << duration << '\n';
+#endif // DEBUG
+
+}
+
+

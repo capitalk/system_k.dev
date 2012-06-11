@@ -302,8 +302,8 @@ book_manager::run() {
 #endif
             }
 
-                s_sendmore(*bcast_sock, sym);
-                s_send(*bcast_sock, msg_str);
+			s_sendmore(*bcast_sock, sym);
+			s_send(*bcast_sock, msg_str);
             
             boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
             boost::posix_time::time_duration duration(time_end - time_start);

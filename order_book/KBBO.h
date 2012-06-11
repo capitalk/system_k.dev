@@ -5,12 +5,14 @@
 #include "KTypes.h"
 
 #define MIC_LEN 5
+#define SYMBOL_LEN 8
 
 namespace capk {
 
 struct BBO
 {
     char MIC_name[MIC_LEN];
+	char symbol[SYMBOL_LEN];
     double bid_price;
     double ask_price;
     double bid_size;
@@ -20,6 +22,8 @@ struct BBO
 };
 
 typedef struct BBO BBO_t;
+
+
 
 #define MAX_MICS 126
 

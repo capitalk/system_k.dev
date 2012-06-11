@@ -26,7 +26,7 @@
 #endif
 
 #include "Application.h"
-#include "KFixFields.h"
+#include "fix_dictionary_extensions.h"
 #include "quickfix/Session.h"
 #include "quickfix/FieldConvertors.h"
 #include "utils/KTimeUtils.h"
