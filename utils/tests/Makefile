@@ -52,18 +52,18 @@ LDFLAGS=-static
 
 all: test
 
-KTimeUtils.o: $(SRC)/KTimeUtils.cpp 
+time_utils.o: $(SRC)/time_utils.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-FIXConvertors.o: $(SRC)/FIXConvertors.cpp 
+fix_convertors.o: $(SRC)/fix_convertors.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 # TESTS
 test_time_compare.o: test_time_compare.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-test_time_compare: test_time_compare.o KTimeUtils.o
-	$(CC) $(CFLAGS) test_time_compare.o KTimeUtils.o $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+test_time_compare: test_time_compare.o time_utils.o
+	$(CC) $(CFLAGS) test_time_compare.o time_utils.o $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
 
 uuidgen_test.o: uuidgen_test.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
@@ -71,7 +71,7 @@ uuidgen_test.o: uuidgen_test.cpp
 uuidgen_test: uuidgen_test.o
 	$(CC) $(CFLAGS) uuidgen_test.o $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
 
-zmq_version.o: $(SRC)/zmq_version.cpp 
+zmq_version.o: zmq_version.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 zmq_version: zmq_version.o 
@@ -80,8 +80,8 @@ zmq_version: zmq_version.o
 timespec2str_test.o: timespec2str_test.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-timespec2str_test: timespec2str_test.o KTimeUtils.o FIXConvertors.o
-	$(CC) $(CFLAGS) timespec2str_test.o KTimeUtils.o FIXConvertors.o $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+timespec2str_test: timespec2str_test.o time_utils.o fix_convertors.o
+	$(CC) $(CFLAGS) timespec2str_test.o time_utils.o fix_convertors.o $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
 
 test: uuidgen_test zmq_version timespec2str_test test_time_compare 
 

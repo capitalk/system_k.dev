@@ -26,13 +26,11 @@
 #endif
 
 #include "Application.h"
-#include "fix_dictionary_extensions.h"
 #include "quickfix/Session.h"
 #include "quickfix/FieldConvertors.h"
-#include "utils/KTimeUtils.h"
-#include "utils/FIXConvertors.h"
-#include "utils/JenkinsHash.cpp"
-#include "order_book/KBook.h"
+#include "utils/time_utils.h"
+#include "utils/fix_convertors.h"
+#include "utils/jenkins_hash.h"
 #include <iostream>
 
 #include <boost/lexical_cast.hpp>
@@ -456,11 +454,11 @@ Application::onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, cons
 			//if (message.isSetField(maturityMonthYear)) {
 				//message.getField(maturityMonthYear);
 			//}
-			KBook* pBook;
+            capk::KBook* pBook;
 			if (NULL != (pBook = getBook(symbol.getValue())))  {
 				FIX::UtcTimeStamp time = FIX::UtcTimeStamp(sendingTime); 
 				char side = mdEntryType.getValue(); 
-                side_t nside = char2side_t(side);
+                capk::Side_t nside = char2side_t(side);
 
                 std::string id = mdEntryID.getValue(); 
                 int nid = hashlittle(id.c_str(), id.size(), 0);
@@ -614,11 +612,11 @@ Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, cons
 			//if (message.isSetField(maturityMonthYear)) {
 				//message.getField(maturityMonthYear);
 			//}
-			KBook* pBook;
+            capk::KBook* pBook;
 			if (NULL != (pBook = getBook(symbol.getValue())))  {
 				FIX::UtcTimeStamp time = FIX::UtcTimeStamp(sendingTime); 
 				char side = mdEntryType.getValue(); 
-                side_t nside = char2side_t(side);
+                capk::Side_t nside = char2side_t(side);
 
                 std::string id = mdEntryID.getValue(); 
                 int nid = hashlittle(id.c_str(), id.size(), 0);
@@ -776,11 +774,11 @@ Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, cons
 				//message.getField(maturityMonthYear);
 			//}
 
-			KBook* pBook;
+            capk::KBook* pBook;
 			if (NULL != (pBook = getBook(symbol.getValue())))  {
 				FIX::UtcTimeStamp time = FIX::UtcTimeStamp(sendingTime); 
 				char side = mdEntryType.getValue(); 
-                side_t nside = char2side_t(side);
+                capk::Side_t nside = char2side_t(side);
 				std::string id = mdEntryID.getValue(); 
                 int nid = hashlittle(id.c_str(), id.size(), 0);
 
@@ -852,7 +850,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 	FIX::MDEntryPositionNo mdEntryPositionNo;
 	FIX::SecurityExchange securityExchange;
 	int nEntries = 0;
-	KBook* pBook = NULL;
+    capk::KBook* pBook = NULL;
     std::ostream* pLog = NULL;
 
     static double dbar, dcount, dsum;
@@ -936,7 +934,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                 // KTK MOVED TO MATCH CONFLUENCE 12/9/2011
                 //*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
     		    char side = mdEntryType.getValue();
-                side_t nside = char2side_t(side);
+                capk::Side_t nside = char2side_t(side);
 
 //		        double price = mdEntryPx.getValue();
 
@@ -1006,7 +1004,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             std::cerr << "***** MOD: " << nid << " to size " << size << "\n";
                         }
                         //std::cerr << "M," << pBook->getOrder(nid)->getSide() << "," << size << "," << std::setprecision(5) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
-                        pKOrder pOrder = pBook->getOrder(nid);
+                        capk::pKOrder pOrder = pBook->getOrder(nid);
                         if (pOrder) {
                             *pLog << 
                             "M," << 
@@ -1045,7 +1043,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                     if (_config.printDebug) { 
                         std::cerr << "***** DEL: " << nid << "\n";
                     }
-                    pKOrder pOrder = pBook->getOrder(nid);
+                    capk::pKOrder pOrder = pBook->getOrder(nid);
                     if (pOrder) {
                         *pLog << 
                             "D," << 
@@ -1093,8 +1091,8 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 			}
 		}
         // PRINT BOOK HERE
-        double bbid = pBook->bestPrice(BID);
-        double bask = pBook->bestPrice(ASK);
+        double bbid = pBook->bestPrice(capk::BID);
+        double bask = pBook->bestPrice(capk::ASK);
         if(bbid > bask) {
             std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK " << pBook->getName() << " (" << (double) bbid <<  ", " << (double) bask << ") XXXXXXXXXXXXXXXXX\n";
             //assert(false);
@@ -1102,10 +1100,10 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 			    
         ptime time_start(microsec_clock::local_time());
         
-        double bbprice = pBook->bestPrice(BID);
-        double bbsize = pBook->bestPriceVolume(BID);
-        double baprice = pBook->bestPrice(ASK);
-        double basize = pBook->bestPriceVolume(ASK);
+        double bbprice = pBook->bestPrice(capk::BID);
+        double bbsize = pBook->bestPriceVolume(capk::BID);
+        double baprice = pBook->bestPrice(capk::ASK);
+        double basize = pBook->bestPriceVolume(capk::ASK);
 		zmq_msg_t msg;        
 		char msgbuf[256];
         if (isPublishing()) {
@@ -1344,7 +1342,7 @@ Application::run()
 	std::string logFileName;
 	std::ofstream* pLog;
 	//capitalk::PriceDepthOrderBook* pBook = NULL;
-	KBook* pBook = NULL;
+    capk::KBook* pBook = NULL;
 	std::string MIC_prefix = _config.mic_code.length() > 0 ? _config.mic_code + "_" : ""; 
 	std::string symbol; 
 	fs::path fullPathToLog;
@@ -1352,7 +1350,7 @@ Application::run()
         bool isRestart = false;
 		symbol = *it; 
 		//pBook = new capitalk::PriceDepthOrderBook(symbol, 5);	
-		pBook = new KBook(symbol.c_str(), _config.marketDepth);	
+		pBook = new capk::KBook(symbol.c_str(), _config.marketDepth);	
 		std::cerr << "Created new order book: " << symbol << "(" << pBook->getDepth() << ")" << "\n";
 		logFileName = MIC_prefix + remove_bad_filename_chars(symbol) + "_" + dateToday;
 		logFileName.append(".csv");
@@ -1874,13 +1872,13 @@ Application::getStream(const std::string& symbol)
 
 void 
 //Application::addBook(const std::string& symbol, capitalk::PriceDepthOrderBook* book) 
-Application::addBook(const std::string& symbol, KBook* book) 
+Application::addBook(const std::string& symbol, capk::KBook* book) 
 {
 	std::cout << "Adding book for symbol: " << symbol << "\n";
 	_symbolToBook[symbol] = book;
 }
 
-KBook*
+capk::KBook*
 Application::getBook(const std::string& symbol) 
 {
 	symbolToBookIterator it = _symbolToBook.find(symbol);

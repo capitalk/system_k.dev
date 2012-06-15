@@ -87,7 +87,10 @@
 #include <boost/make_shared.hpp>
 
 #include <zmq.hpp>
-#include "order_book/KBook.h"
+#include "order_book.v2/order_book.h"
+#include "order_book.v2/book_types.h"
+#include "utils/types.h"
+#include "utils/time_utils.h"
 
 enum FIXVersion {
 	FIX_42 = 42,
@@ -127,8 +130,8 @@ public:
 
 	//void addBook(const std::string& symbol, capitalk::PriceDepthOrderBook* book);
 	//capitalk::PriceDepthOrderBook*  getBook(const std::string& symbol);
-	void addBook(const std::string& symbol, KBook* book);
-	KBook*  getBook(const std::string& symbol);
+	void addBook(const std::string& symbol, capk::KBook* book);
+    capk::KBook*  getBook(const std::string& symbol);
 
 	void addStream(const std::string& symbol, std::ostream* log);
 	std::ostream*  getStream(const std::string& symbol);
@@ -253,8 +256,8 @@ private:
 
 	//std::map<std::string, capitalk::PriceDepthOrderBook* > _symbolToBook;
 	//typedef std::map<std::string, capitalk::PriceDepthOrderBook* >::iterator symbolToBookIterator;
-	std::map<std::string, KBook* > _symbolToBook;
-	typedef std::map<std::string, KBook* >::iterator symbolToBookIterator;
+	std::map<std::string, capk::KBook* > _symbolToBook;
+	typedef std::map<std::string, capk::KBook* >::iterator symbolToBookIterator;
 };
 
 #endif

@@ -31,7 +31,7 @@ endif
 PROTOBUF_OBJS = spot_fx_md_1.pb.o \
 				capk_globals.pb.o 
 
-all: aggregated_book
+all: protos aggregated_book
 
 aggregated_book.o: aggregated_book.cpp
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) aggregated_book.cpp 
@@ -42,11 +42,11 @@ spot_fx_md_1.pb.o: $(PROTO)/spot_fx_md_1.pb.cc $(PROTO)/spot_fx_md_1.pb.h
 capk_globals.pb.o: $(PROTO)/capk_globals.pb.cc $(PROTO)/capk_globals.pb.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/capk_globals.pb.cc
 
-KTimeUtils.o: $(UTILS)/KTimeUtils.cpp $(UTILS)/KTimeUtils.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS)/KTimeUtils.cpp
+time_utils.o: $(UTILS)/time_utils.cpp $(UTILS)/time_utils.h
+	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS)/time_utils.cpp
 
-aggregated_book : aggregated_book.o KTimeUtils.o $(PROTOBUF_OBJS)
-	$(CC) $(CFLAGS) aggregated_book.o KTimeUtils.o $(PROTOBUF_OBJS) $(LIBS) -o $@ 
+aggregated_book : aggregated_book.o time_utils.o $(PROTOBUF_OBJS)
+	$(CC) $(CFLAGS) aggregated_book.o time_utils.o $(PROTOBUF_OBJS) $(LIBS) -o $@ 
 
 protos : 
 	cd $(PROTO) && make 

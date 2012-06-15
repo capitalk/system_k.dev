@@ -29,10 +29,9 @@
 #include "KFixFields.h"
 #include "quickfix/Session.h"
 #include "quickfix/FieldConvertors.h"
-#include "utils/KTimeUtils.h"
-#include "utils/FIXConvertors.h"
-#include "utils/JenkinsHash.cpp"
-#include "order_book/KBook.h"
+#include "utils/time_utils.h"
+#include "utils/fix_convertors.h"
+#include "utils/jenkins_hash.cpp"
 #include <iostream>
 
 #include <boost/lexical_cast.hpp>

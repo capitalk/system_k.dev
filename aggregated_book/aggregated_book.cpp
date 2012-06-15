@@ -12,8 +12,8 @@
 #include <zmq.hpp>
 
 #include "utils/zhelpers.hpp"
-#include "utils/KTimeUtils.h"
-#include "order_book/KBBO.h"
+#include "utils/time_utils.h"
+#include "utils/aggregated_bbo_book.h"
 
 #include "proto/spot_fx_md_1.pb.h"
 
@@ -223,7 +223,7 @@ book_manager::run() {
                             // check the elapsed time since last update
                             clock_gettime(CLOCK_MONOTONIC, &now);
                             last_update_millis = 
-                                timespec_delta_millis(instruments[i].mics[j].last_update, now);
+                                capk::timespec_delta_millis(instruments[i].mics[j].last_update, now);
                             // was the item ever updated? 
                             /*
 							if (isZeroTimespec(instruments[i].mics[j].last_update)) {

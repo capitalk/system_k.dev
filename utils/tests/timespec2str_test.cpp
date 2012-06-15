@@ -6,7 +6,7 @@
 
 #include <assert.h>
 
-#include <KTimeUtils.h>
+#include "time_utils.h"
 
 #include <string>
 #define NANOS_PER_SECOND 1000000000
@@ -39,7 +39,7 @@ main(int argc, char** argv)
     printf("Using Seconds: %ld, Nanos: %ld\n", ts.tv_sec, ts.tv_nsec);
 	char buf[TIME_STR_LEN];
 	//std::cout << "Buffer len: " << sizeof(buf) << std::endl;
-	std::cout << timespec2str(ts, buf, sizeof(buf)) << std::endl;
+	std::cout << capk::timespec2str(ts, buf, sizeof(buf)) << std::endl;
 
 
 }

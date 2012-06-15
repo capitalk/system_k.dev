@@ -1,15 +1,15 @@
 #include <iostream>
+#include <string>
 
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
-
 #include <assert.h>
 
 #include "gtest/gtest.h"
-#include "KTimeUtils.h"
 
-#include <string>
+#include "time_utils.h"
+
 #define NANOS_PER_SECOND 1000000000
 #define TIME_STR_LEN 26+1
 
@@ -23,10 +23,10 @@ TEST(TimeTest, delta)
 	sleep(1);
 	clock_gettime(CLOCK_MONOTONIC, &ts2);
 
-	unsigned long delta_millis = timespec_delta_millis(ts1, ts2);
+	unsigned long delta_millis = capk::timespec_delta_millis(ts1, ts2);
 	std::cout << "Milliseconds delta: " << delta_millis << std::endl;
 
-	timespec delta_timespec = timespec_delta(ts1, ts2);
+	timespec delta_timespec = capk::timespec_delta(ts1, ts2);
 	std::cout << "Timespec delta: " << delta_timespec << std::endl;
 
 	EXPECT_GE(1000, delta_millis);

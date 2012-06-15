@@ -22,8 +22,7 @@
 #ifndef EXECUTOR_APPLICATION_H
 #define EXECUTOR_APPLICATION_H
 
-//#include "MP.h"
-#include "SessionInfo.h"
+#include "session_info.h"
 
 #include <unordered_set>
 

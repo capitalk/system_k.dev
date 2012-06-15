@@ -9,12 +9,10 @@ INCLUDE=-I/usr/local/boost/ \
 		-I/usr/local/include/ \
         -I/usr/local/src/quickfix/include \
 		-I.. \
-		-I../orderBook2 \
 		-I$(UTILS) 
 
 LIBS= -L/usr/local/src/quickfix/lib/ \
 		-L/usr/local/lib \
-		-L../order_book/ \
 		-lquickfix \
 		-lboost_date_time \
 		-lboost_program_options \
