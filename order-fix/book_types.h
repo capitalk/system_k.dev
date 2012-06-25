@@ -1,7 +1,7 @@
 #ifndef __CAPK_BOOK_TYPES__
 #define __CAPK_BOOK_TYPES__
 
-#include "KMsgTypes.h"
+#include "msg_types.h"
 #include "order_book/KBBO.h"
 
 namespace capk {

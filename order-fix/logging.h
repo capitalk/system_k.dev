@@ -30,4 +30,5 @@ extern const PAN_CHAR_T PANTHEIOS_FE_PROCESS_IDENTITY[];
 //Use pantheios::log_xxx() or pantheios::log(xxx, ) with xxx is severity level
 int logging_init(const char*); 
 
+std::string createTimestampedLogFilename(const char* prefix);
 #endif //  LOGGING_H_566e1626_2717_477d_ad08_eb360acace8b_

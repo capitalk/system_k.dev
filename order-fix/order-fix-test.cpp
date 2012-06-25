@@ -12,7 +12,7 @@
  No part of this code may be reproduced in whole or in part without express
  permission from Capital K partners.  
 
- Be Kind - Rewind
+ Think.
  
  *****************************************************************************/
 
@@ -27,7 +27,7 @@
 #include "quickfix/SocketInitiator.h"
 #include "quickfix/ThreadedSocketInitiator.h"
 #include "quickfix/SessionSettings.h"
-#include "Application.h"
+#include "application.h"
 
 #include <string>
 #include <iostream>
@@ -41,7 +41,7 @@
 
 #include <zmq.hpp>
 
-#include "../proto/spot_fx_md_1.pb.h"
+#include "/proto/spot_fx_md_1.pb.h"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem; 

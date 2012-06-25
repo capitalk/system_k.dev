@@ -1,8 +1,10 @@
 #include <uuid/uuid.h>
 
-#include "KMsgCache.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include "utils/JenkinsHash.h"
+
+#include "msg_cache.h"
+
+#include "utils/jenkins_hash.h"
 
 #include "gtest/gtest.h"
 
@@ -191,8 +193,8 @@ TEST(CacheTest, Operators)
 	// both are empty
 	EXPECT_TRUE(oid1 == oid2);
 
-	// set from const char*
-	oid1.set("d024cc8f-c32b-4d54-b766-3fea5635efb1");
+	// parse from const char*
+	oid1.parse("d024cc8f-c32b-4d54-b766-3fea5635efb1");
 	// assignment operator
 	oid2 = oid1;
 	// test equality;

@@ -2,8 +2,8 @@
 #include <google/dense_hash_map>
 #include <gtest/gtest.h>
 #include <string>
-#include "JenkinsHash.h"
-#include "KMsgCache.h"
+#include "utils/jenkins_hash.h"
+#include "msg_cache.h"
 #include "logging.h"
 
 using google::dense_hash_map;      // namespace where class lives by default

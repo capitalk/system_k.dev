@@ -19,7 +19,7 @@
 #include "quickfix/SocketInitiator.h"
 #include "quickfix/ThreadedSocketInitiator.h"
 #include "quickfix/SessionSettings.h"
-#include "Application.h"
+#include "application.h"
 
 #include <string>
 #include <iostream>
@@ -34,7 +34,6 @@
 #include <zmq.hpp>
 
 #include <google/protobuf/stubs/common.h>
-//#include "../proto/spot_fx_md_1.pb.h"
 
 #include "logging.h"
 

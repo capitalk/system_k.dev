@@ -2,9 +2,9 @@
 #include <uuid/uuid.h>
 #include <stdio.h>
 
-#include "KMsgCache.h"
+#include "msg_cache.h"
 
-#include "utils/JenkinsHash.h"
+#include "utils/jenkins_hash.h"
 
 
 int 

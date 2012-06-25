@@ -29,4 +29,25 @@ logging_init(const char* log_file_name) {
     }
 
     return 2;
+};
+
+std::string
+createTimestampedLogFilename(const char* prefix)
+{
+    // initialize logging
+    std::string logFileName;
+    logFileName += prefix;
+    logFileName += ".";
+    time_t rawtime;
+    struct tm* timeinfo;
+    char buffer[80];
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+    strftime(buffer, 80, "%Y%m%d", timeinfo);
+    puts(buffer);
+    logFileName += buffer;
+    logFileName += ".log";
+
+    return logFileName;
 }
+

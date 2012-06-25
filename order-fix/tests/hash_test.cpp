@@ -1,6 +1,6 @@
 #include <uuid/uuid.h>
 
-#include "KMsgCache.h"
+#include "msg_cache.h"
 #include <google/dense_hash_map>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "utils/JenkinsHash.h"

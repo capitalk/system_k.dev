@@ -54,10 +54,10 @@ endif
 
 LDFLAGS=-static
 
-all: order-fix
+all: protos order-fix
 
-order-fix : order-fix.o Application.o logging.o JenkinsHash.o timing.o  KMsgProcessor.o $(PROTOBUF_OBJS)
-	$(CC) $(CFLAGS) order-fix.o Application.o logging.o JenkinsHash.o timing.o  KMsgProcessor.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
+order-fix : order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o $(PROTOBUF_OBJS)
+	$(CC) $(CFLAGS) order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
 
 logging.o: logging.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
@@ -92,38 +92,38 @@ spot_fx_md_1.pb.o: $(PROTO)/spot_fx_md_1.pb.cc $(PROTO)/spot_fx_md_1.pb.h
 order-fix.o: order-fix.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-Application.o: Application.cpp
-	#$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) Application.cpp  
+application.o: application.cpp
+	#$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) application.cpp  
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<  
 
-KMsgProcessor.o: KMsgProcessor.cpp
+msg_processor.o: msg_processor.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-KMsgRouter.o: KMsgRouter.cpp
+msg_router.o: msg_router.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 KTimeUtils.o:  $(UTILS)/KTimeUtils.cpp
 	$(CC) -c -I $(UTILS) $(INCLUDE) $(CFLAGS) $<
 
-JenkinsHash.o: $(UTILS)/JenkinsHash.cpp
+jenkins_hash.o: $(UTILS)/jenkins_hash.cpp
 	$(CC) -c -I $(UTILS) $(INCLUDE) $(CFLAGS) $<
 
-ClientOrderInterface.o: ClientOrderInterface.cpp
+client_order_interface.o: client_order_interface.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-ClientMarketDataInterface.o: ClientMarketDataInterface.cpp
+client_market_data_interface.o: client_market_data_interface.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-MarketDataMux.o: MarketDataMux.cpp
+market_data_mux.o: market_data_mux.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-OrderMux.o: OrderMux.cpp
+order_mux.o: order_mux.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-Specializations.o: Specializations.cpp
+specializations.o: specializations.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-Order.o: Order.cpp
+order.o: order.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
 # TESTS
@@ -132,7 +132,7 @@ Order.o: Order.cpp
 	#$(CC) -c $(INCLUDE) $(CFLAGS) $<
 	#$(CC) -c $(UTILS)/zhelpers.hpp $(INCLUDE) $(CFLAGS) $<
 
-#MsgProcessorTestCli.o: MsgProcessorTestCli.cpp
+#MsgProcessorTestCli.o: strategy_test.cpp
 	#$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 
