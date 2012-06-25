@@ -965,8 +965,9 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                     if (pBook->add(nid, nside, size, price, evtTime, sndTime) !=1) {
                         std::cerr << "Book add failed!!!!!!!!!!\n (" << nid << nside << "(" << side << ")" << size << price << evtTime << sndTime << "\n";
                     }
-
-                    *pLog << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(5) << price << "," << evtTime << "\n"; 
+                    if (_isLogging) {
+                        *pLog << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(5) << price << "," << evtTime << "\n"; 
+                    }
                     if (_config.printDebug) {
                         std::cerr << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(5) << price << "," << evtTime << "\n"; 
                         pBook->dbg();
@@ -994,9 +995,9 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             //std::cerr << "Synthetic modify: " << nrefId << " and re-adding " << "(" << nid << ", " << nside << ", " << size << "@" << price << ")\n";
                             //std::cerr << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
                         }
-
-                        *pLog << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(5) << price << "," << evtTime << "\n"; 
-    
+                        if (_isLogging) {
+                            *pLog << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(5) << price << "," << evtTime << "\n"; 
+                        }
                         pBook->remove(nrefId, evtTime, sndTime);
                         pBook->add(nid, nside, size, price, evtTime, sndTime);
 			        } else { 
@@ -1006,6 +1007,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                         //std::cerr << "M," << pBook->getOrder(nid)->getSide() << "," << size << "," << std::setprecision(5) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
                         capk::pKOrder pOrder = pBook->getOrder(nid);
                         if (pOrder) {
+                            if (_isLogging) {
                             *pLog << 
                             "M," << 
                             pBook->getOrder(nid)->getSide() << 
@@ -1016,6 +1018,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             "," <<  
                             evtTime << 
                             "\n"; 
+                            }
                             if (_config.printDebug) {
                             std::cerr << 
                             "M," << 
@@ -1045,6 +1048,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                     }
                     capk::pKOrder pOrder = pBook->getOrder(nid);
                     if (pOrder) {
+                        if (_isLogging) {
                         *pLog << 
                             "D," << 
                             pBook->getOrder(nid)->getSide() << 
@@ -1056,6 +1060,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             "," << 
                             evtTime << 
                             "\n"; 
+                        }
                         if (_config.printDebug) {
                             std::cerr << 
                             "D," << 
@@ -1106,7 +1111,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
         double basize = pBook->bestPriceVolume(capk::ASK);
 		zmq_msg_t msg;        
 		char msgbuf[256];
-        if (isPublishing()) {
+        if (_isPublishing) {
             capkproto::mic_bbo bbo;
             bbo.set_symbol(symbol.getValue());
             bbo.set_bid_price(bbprice);
@@ -1136,10 +1141,11 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 		if (pLog == NULL) {
 		    std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
         } else {
+            if (_isLogging) {
             // KTK MOVED TO MATCH CONFLUENCE 12/9/2011
-            *pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
+                *pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
 		    *pLog << *pBook;
-            //std::cerr << *pBook << "\n";
+            }
 		}
         
         ptime time_end(microsec_clock::local_time());
@@ -1362,14 +1368,18 @@ Application::run()
         if (isRestart) { 
             timespec evtTime;
             clock_gettime(CLOCK_MONOTONIC, &evtTime);
-            *pLog << "RESTART: " << evtTime << "\n";
-		    std::cout << "Appening to log for: " << symbol  << " as (" << fullPathToLog.string() << ") " << pLog->is_open()   << "\n";
+            if (_isLogging) {
+                *pLog << "RESTART: " << evtTime << "\n";
+            }
+		        std::cout << "Appening to log for: " << symbol  << " as (" << fullPathToLog.string() << ") " << pLog->is_open()   << "\n";
         }
         else {
 		    std::cout << "Created new log for: " << symbol  << " as (" << fullPathToLog.string() << ") " << pLog->is_open()   << "\n";
             timespec evtTime;
             clock_gettime(CLOCK_MONOTONIC, &evtTime);
-            *pLog << pBook->getOutputVersionString() << "," << pBook->getName() << "," << pBook->getDepth() << "," << evtTime << "\n"; 
+            if (_isLogging) {
+                *pLog << pBook->getOutputVersionString() << "," << pBook->getName() << "," << pBook->getDepth() << "," << evtTime << "\n"; 
+            }
         }
         
 		addStream(symbol, pLog);

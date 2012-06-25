@@ -52,7 +52,8 @@ namespace dt = boost::gregorian;
 void sighandler(int sig);
 
 // Global pointers for signal handlers to cleanup properly
-FIX::ThreadedSocketInitiator* pinitiator;
+//FIX::ThreadedSocketInitiator* pinitiator;
+FIX::SocketInitiator* pinitiator;
 Application* papplication;
 
 // ZMQ Globals - can't have these go out of scope
@@ -88,6 +89,7 @@ int main( int argc, char** argv )
 	std::string configFile;
 	std::string password;
 	bool printDebug; 
+    bool isLogging;
     
 
     (void) signal(SIGINT, sighandler);
@@ -105,10 +107,10 @@ int main( int argc, char** argv )
 		po::options_description desc("Allowed options");
 		desc.add_options()
 			("help", "produce help message")
-			//("p", po::value<std::string>(), "password")
 			("c", po::value<std::string>(), "<config file>")
 			("s", po::value<std::string>(), "<symbol file>")
 			("o", po::value<std::string>(), "<output path>")
+			("nolog", po::value<int>()->implicit_value(0), "disable logging (FIX and tick)")
 			("d", "debug info")
 		;
 		
@@ -116,12 +118,17 @@ int main( int argc, char** argv )
 		po::store(po::parse_command_line(argc, argv, desc), vm);
 		po::notify(vm);    
 
-		
+		if (vm.count("nolog")) {
+            std::cout << "Logging disabled" << "\n";
+            isLogging = (vm["nolog"].as<int>() == 1 ? false : true);
+		}
+        else { 
+            std::cout << "Logging enabled" << "\n";
+        }
 		if (vm.count("help")) {
 			std::cout << desc << "\n";
 			return 1;
 		}
-		
 		if (vm.count("o")) {
 			std::cout << "Output path: " << vm["o"].as<std::string>() << "\n";
             argOutputDir = vm["o"].as<std::string>();
@@ -285,11 +292,12 @@ int main( int argc, char** argv )
         
         // orderbook output setup
 		application.setDataPath(orderBooksOutputDir);
+        // fix logging params
 		FIX::FileStoreFactory storeFactory(storeOutputDir);         
 		FIX::FileLogFactory logFactory(logOutputDir);
 
 
-		FIX::ThreadedSocketInitiator initiator(application, storeFactory, settings, logFactory);
+		FIX::SocketInitiator initiator(application, storeFactory, settings, logFactory);
         pinitiator = &initiator;
 		std::cout << "Starting initiator" << std::endl; 
 		initiator.start();

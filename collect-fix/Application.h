@@ -147,7 +147,7 @@ public:
     void setZMQContext(void* c) { this->_pzmq_context = c;}
     void setZMQSocket(void* s) { this->_pzmq_socket = s;}
     void setPublishing(bool isPublishing) { this->_isPublishing = isPublishing;}
-    inline bool isPublishing() { return _isPublishing;}
+    void setLogging(bool isLogging) { this->_isLogging = isLogging;}
     void* getZMQSocket() { return this->_pzmq_socket;}
     void* getZMQContext() { return this->_pzmq_context;}
 
@@ -242,6 +242,7 @@ private:
     void* _pzmq_socket;
     void* _pzmq_context;
     bool _isPublishing;
+    bool _isLogging;
 
 	int _MDUpdateType;
     
