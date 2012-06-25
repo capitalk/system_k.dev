@@ -13,7 +13,7 @@
 
 #include "utils/zhelpers.hpp"
 #include "utils/time_utils.h"
-#include "utils/aggregated_bbo_book.h"
+#include "utils/bbo_book_types.h"
 
 #include "proto/spot_fx_md_1.pb.h"
 
@@ -97,18 +97,18 @@ struct instrument_info
 {
     char symbol[SYMBOL_LEN];
     zmq::socket_t* broadcast_socket;
-    capk::BBO_t mics[MAX_MICS];
+    capk::SingleMarketBBO_t mics[MAX_MICS];
     
 };
 
-void instrument_reset(capk::BBO& bbo)  {
+void instrument_reset(capk::SingleMarketBBO_t& bbo)  {
     bbo.bid_price = INIT_BID;
     bbo.ask_price = INIT_ASK;
     bbo.bid_size = INIT_SIZE;
     bbo.ask_size = INIT_SIZE;
 }
 
-bool instrument_is_unset(capk::BBO_t& bbo) {
+bool instrument_is_unset(capk::SingleMarketBBO_t& bbo) {
     return (bbo.bid_price == INIT_BID &&
         bbo.ask_price == INIT_ASK &&
         bbo.bid_size == INIT_SIZE &&
