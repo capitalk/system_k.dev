@@ -316,7 +316,7 @@ struct strategy_id
 		memset(this->_sid, c, UUID_LEN);
 	}
 
-	int set(const char* id) {
+	int parse(const char* id) {
 		return uuid_parse(id, _sid);
 	}
 

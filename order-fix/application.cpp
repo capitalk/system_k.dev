@@ -643,6 +643,7 @@ Application::onMessage(const FIX42::ExecutionReport& message,
 		er->set_min_qty(minQty);
 //pan::log_DEBUG("W");
 	}
+    er->set_mic(_config.mic_code);
 	
 	// 1) lookup order id to fetch strategy id
 	// 2) send the strategy id back to msg processor so that we can route 
