@@ -561,7 +561,13 @@ handleExecutionReport(capkproto::execution_report& er)
                     " replaced WHILE partial fill occurred");
         }
         order_map_iter_t orderIter = workingOrders.find(origOid);
-        assert(orderIter != workingOrders.end());
+        // The below assertion will fail (right now) if the strategy receives 
+        // an update for an order which is not in its cache. This happens when 
+        // strategy crashes and is restarted WITHOUT reading working orders from 
+        // persistent storage. 
+        if (orderIter == workingOrders.end()) {
+            pan::log_CRITICAL("Received PARTIAL FILL for order not in working order cache");
+        }
         (*orderIter).second = order;
         completedOrders.insert(order_map_value_t(origOid, order));
         clock_gettime(CLOCK_REALTIME, &ts); 
@@ -831,7 +837,7 @@ receiveOrder(zmq::socket_t* sock)
         return true;
     }
     else {
-        pan::log_DEBUG("APP received unknown msg type: ", 
+        pan::log_WARNING("APP received unknown msg type: ", 
                "msgtypeframe: ", 
                pan::blob(msgtypeframe.data(), msgtypeframe.size()), 
                "(", pan::integer(*(static_cast<int*>(msgtypeframe.data()))), ")", "\n",
@@ -847,6 +853,7 @@ printOrderHash(order_map_t& om)
 {
     order_map_iter_t iter = om.begin();
     int i = 0;
+    std::cout << "OID\t symbol\t side\t qty\t orig price\t avg price" << std::endl;
     for (iter = om.begin(); iter != om.end(); iter++, i++) {
         capk::Order o = iter->second;
         order_id_t key = iter->first;
@@ -863,6 +870,7 @@ printOrderHash(order_map_t& om)
             << "\t" << o.getOrdQty() 
             << "(" << o.getLeavesQty() << ")\t" 
             << o.getPrice() 
+            << "\t" << o.getAvgPrice() 
             << std::endl;
 
         std::cout << o.getSymbol() << std::endl;
@@ -887,7 +895,7 @@ main(int argc, char **argv)
 	s_catch_signals();
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-	assert(sid.set(STRATEGY_ID) == 0);
+	assert(sid.parse(STRATEGY_ID) == 0);
 	int zero = 0;
 
 	logging_init("testcli.log");
@@ -1056,6 +1064,7 @@ main(int argc, char **argv)
                 char action;
                 //fgets(action, sizeof(buf), stdin);
                 action = fgetc(stdin);
+                pan::log_DEBUG("ACTION RECEIVED: ", pan::character(action));
                 switch (action) {
                 case 'n':
                 {
