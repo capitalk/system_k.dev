@@ -35,4 +35,6 @@ create table if not exists `trades`
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 create index prefix_strategy_id on trades (strategy_id(13));
+create index prefix_strategy_id on trades (cl_order_id(13));
+create index prefix_strategy_id on trades (orig_cl_order_id(13));
 create index prefix_exec_id on trades (exec_id);
