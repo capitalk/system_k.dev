@@ -6,7 +6,7 @@ create table if not exists `trades`
     `strategy_id` varchar(40) NOT NULL,
     `cl_order_id` varchar(40) NOT NULL,
     `orig_cl_order_id` varchar(40) NOT NULL,
-    `exec_id` varchar(128),
+    `exec_id` varchar(128) NOT NULL,
     `exec_trans_type` varchar(1),
     `order_status` varchar(1),
     `exec_type` varchar(1), 
@@ -30,6 +30,9 @@ create table if not exists `trades`
     `transact_time_timestamp` timestamp DEFAULT CURRENT_TIMESTAMP,
     `transact_time_timespec` bigint,
     `mic` varchar(8),
-    PRIMARY KEY (strategy_id, cl_order_id)
+    PRIMARY KEY (strategy_id, exec_id)
     
-) ENGINE=InnoDB DEFAULT CHARSET=utf8
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+create index prefix_strategy_id on trades (strategy_id(13));
+create index prefix_exec_id on trades (exec_id);

@@ -159,8 +159,51 @@ static void retrieve_rsmetadata_and_print (ResultSet *rs) {
 
 } // retrieve_rsmetadata_and_print()
 
+bool
+executionExists(Connection* sql_cxn, 
+                const strategy_id_t& strategy_id, 
+                const order_id_t& order_id, 
+                const order_id_t& orig_order_id)
+{
+        PreparedStatement* sql_prepared_statement;
+        ResultSet* sql_result_set;
+        const char* kSelectCountTrade = "select count(*) \
+                                         from trades \
+                                         where strategy_id = ? \
+                                         and cl_order_id = ?";
+
+        sql_prepared_statement = sql_cxn->prepareStatement (kSelectCountTrade);
+
+        char strategy_id_buffer[UUID_STRLEN];
+        sql_prepared_statement->setString (1, strategy_id.c_str(strategy_id_buffer));
+
+        char order_id_buffer[UUID_STRLEN];
+        sql_prepared_statement->setString (2, order_id.c_str(order_id_buffer));
+
+        sql_result_set = sql_prepared_statement->executeQuery();
+/*
+        char orig_oid_buffer[UUID_STRLEN];
+        order_id_t orig_oid(false);
+        orig_oid.set(er.orig_cl_order_id().c_str(), er.orig_cl_order_id().size());
+        sql_prepared_statement->setString (3, orig_oid.c_str(orig_oid_buffer));
+*/
+
+        int row_count = sql_result_set->rowsCount();
+        pan::log_DEBUG(kSelectCountTrade, "\nQuery returned ", 
+                pan::integer(row_count), " row(s).");
+                
+        int execution_count = 0;
+        while (sql_result_set->next()) {
+                       execution_count = sql_result_set->getInt(1);
+        }
+        pan::log_DEBUG("Count of executions: ", pan::integer(execution_count));
+        return (execution_count == 1); 
+}
+
 void 
-serializeExecutionReport(Connection* sql_cxn, const strategy_id_t& strategy_id, const capkproto::execution_report& er) 
+updateExecutionReport(Connection* sql_cxn, 
+        const strategy_id_t& strategy_id, 
+        const capkproto::execution_report& er) 
 {
     int update_count = 0;
     PreparedStatement *sql_prepared_statement;
@@ -198,17 +241,19 @@ serializeExecutionReport(Connection* sql_cxn, const strategy_id_t& strategy_id, 
     char strategy_id_buffer[UUID_STRLEN];
     sql_prepared_statement->setString (1, strategy_id.c_str(strategy_id_buffer));
 
-    char oid_buffer[UUID_STRLEN];
-    order_id_t oid(false);
-    oid.set(er.cl_order_id().c_str(), er.cl_order_id().size());
-    sql_prepared_statement->setString (2, oid.c_str(oid_buffer));
+    char order_id_buffer[UUID_STRLEN];
+    order_id_t order_id(false);
+    order_id.set(er.cl_order_id().c_str(), er.cl_order_id().size());
+    sql_prepared_statement->setString (2, order_id.c_str(order_id_buffer));
 
-    char orig_oid_buffer[UUID_STRLEN];
-    order_id_t orig_oid(false);
-    orig_oid.set(er.orig_cl_order_id().c_str(), er.orig_cl_order_id().size());
-    sql_prepared_statement->setString (3, orig_oid.c_str(orig_oid_buffer));
+    char orig_order_id_buffer[UUID_STRLEN];
+    order_id_t orig_order_id(false);
+    orig_order_id.set(er.orig_cl_order_id().c_str(), er.orig_cl_order_id().size());
+    sql_prepared_statement->setString (3, orig_order_id.c_str(orig_order_id_buffer));
 
-    orig_oid.set(er.orig_cl_order_id().c_str(), er.orig_cl_order_id().size());
+    executionExists(sql_cxn, strategy_id, order_id, orig_order_id);
+
+    orig_order_id.set(er.orig_cl_order_id().c_str(), er.orig_cl_order_id().size());
     sql_prepared_statement->setString (4, er.exec_id().c_str());
     sql_prepared_statement->setInt (5, static_cast<const char>(er.exec_trans_type()));
     sql_prepared_statement->setInt (6, static_cast<const char>(er.order_status()));
@@ -240,6 +285,97 @@ serializeExecutionReport(Connection* sql_cxn, const strategy_id_t& strategy_id, 
     update_count = sql_prepared_statement->executeUpdate();
    
     sql_cxn->commit();
+    //delete sql_prepared_statement;
+}
+
+
+void 
+insertExecutionReport(Connection* sql_cxn, 
+        const strategy_id_t& strategy_id, 
+        const capkproto::execution_report& er) 
+{
+    int insert_count = 0;
+    PreparedStatement *sql_prepared_statement;
+
+    const char* kInsertTrade = "INSERT INTO trades \
+                                (strategy_id, \
+                                 cl_order_id, \
+                                 orig_cl_order_id, \
+                                 exec_id, \
+                                 exec_trans_type, \
+                                 order_status, \
+                                 exec_type, \
+                                 symbol, \
+                                 security_type, \
+                                 side, \
+                                 order_qty, \
+                                 ord_type, \
+                                 price, \
+                                 last_shares, \
+                                 last_price, \
+                                 leaves_qty, \
+                                 cum_qty, \
+                                 avg_price, \
+                                 time_in_force, \
+                                 transact_time, \
+                                 exec_inst, \
+                                 handl_inst, \
+                                 order_reject_reason, \
+                                 min_qty, \
+                                 transact_time_timespec, \
+                                 mic) \
+                                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+    sql_prepared_statement = sql_cxn->prepareStatement (kInsertTrade);
+    char strategy_id_buffer[UUID_STRLEN];
+    sql_prepared_statement->setString (1, strategy_id.c_str(strategy_id_buffer));
+
+    char order_id_buffer[UUID_STRLEN];
+    order_id_t order_id(false);
+    order_id.set(er.cl_order_id().c_str(), er.cl_order_id().size());
+    sql_prepared_statement->setString (2, order_id.c_str(order_id_buffer));
+
+    char orig_order_id_buffer[UUID_STRLEN];
+    order_id_t orig_order_id(false);
+    orig_order_id.set(er.orig_cl_order_id().c_str(), er.orig_cl_order_id().size());
+    sql_prepared_statement->setString (3, orig_order_id.c_str(orig_order_id_buffer));
+
+    executionExists(sql_cxn, strategy_id, order_id, orig_order_id);
+
+    orig_order_id.set(er.orig_cl_order_id().c_str(), er.orig_cl_order_id().size());
+    sql_prepared_statement->setString (4, er.exec_id().c_str());
+    sql_prepared_statement->setInt (5, static_cast<const char>(er.exec_trans_type()));
+    sql_prepared_statement->setInt (6, static_cast<const char>(er.order_status()));
+    sql_prepared_statement->setInt (7, static_cast<const char>(er.exec_type()));
+    sql_prepared_statement->setString (8, er.symbol().c_str());
+    sql_prepared_statement->setString (9, er.security_type().c_str());
+    sql_prepared_statement->setInt (10, static_cast<int>(er.side()));
+    sql_prepared_statement->setDouble (11, er.order_qty());
+    sql_prepared_statement->setInt (12, er.ord_type());
+    sql_prepared_statement->setDouble (13, er.price());
+    sql_prepared_statement->setDouble (14, er.last_shares());
+    sql_prepared_statement->setDouble (15, er.last_price());
+    sql_prepared_statement->setDouble (16, er.leaves_qty());
+    sql_prepared_statement->setDouble (17, er.cum_qty());
+    sql_prepared_statement->setDouble (18, er.avg_price());
+    sql_prepared_statement->setInt (19, er.time_in_force());
+    sql_prepared_statement->setString (20, er.transact_time().c_str());
+    sql_prepared_statement->setString (21, er.exec_inst().c_str());
+    sql_prepared_statement->setInt (22, er.handl_inst());
+    sql_prepared_statement->setInt (23, er.order_reject_reason());
+    sql_prepared_statement->setDouble (24, er.min_qty());
+    // current timestamp omitted since it is auto field
+    timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    int64_t bigint_time;
+    capk::timespec2int64_t(&ts, &bigint_time);
+    sql_prepared_statement->setInt64 (25, bigint_time);
+    sql_prepared_statement->setString (26, er.mic());
+    insert_count = sql_prepared_statement->executeUpdate();
+    pan::log_DEBUG("executeUpdate() returned: ", pan::integer(insert_count));
+   
+    sql_cxn->commit();
+    //delete sql_prepared_statement;
 }
 
 void
@@ -276,9 +412,9 @@ listen(zmq::context_t& context, sql::Connection* sql_cxn)
             subscriber.getsockopt(ZMQ_RCVMORE, &more, &more_size);
 
             parse_ok = er.ParseFromArray(msg_body.data(), msg_body.size());
-            pan::log_DEBUG("Listener received: ", er.DebugString());
+            pan::log_DEBUG("Listener received:\n", er.DebugString());
 
-            serializeExecutionReport(sql_cxn, strategy_id, er);
+            insertExecutionReport(sql_cxn, strategy_id, er);
 
         } while (more);
     }
