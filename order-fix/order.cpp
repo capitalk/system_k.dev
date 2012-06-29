@@ -54,7 +54,6 @@ Order::set(capkproto::execution_report& er)
     memcpy(_execId, er.exec_id().c_str(), er.exec_id().size());
     _execTransType = static_cast<capk::ExecTransType_t>(er.exec_trans_type());
     _ordStatus = static_cast<capk::OrdStatus_t>(er.order_status());
-    pan::log_DEBUG("Order::set received order status: ", pan::integer(_ordStatus));
     _execType = static_cast<capk::ExecType_t>(er.exec_type());
     memcpy(_symbol, er.symbol().c_str(), er.symbol().size()); 
     std::string security_type = er.security_type();

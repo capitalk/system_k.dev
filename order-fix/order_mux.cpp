@@ -34,7 +34,7 @@ OrderMux::run()
 
 		_inproc = new zmq::socket_t(*_context, ZMQ_PAIR);
 		assert(_inproc);
-		pan::log_DEBUG("Binding OrderMux inproc addr: ", _inprocAddr.c_str());
+		pan::log_NOTICE("Binding OrderMux inproc addr: ", _inprocAddr.c_str());
 		_inproc->bind(_inprocAddr.c_str());
 /*
 		for (size_t i = 0; i<_oiArraySize; i++) {
@@ -78,14 +78,14 @@ OrderMux::run()
 					// lookup the socket for the venue
 					zmq::socket_t* venue_sock;
 					int venue_id = *(static_cast<int*>(venue_id_msg.data()));
-					pan::log_DEBUG("OMUX received msg for iterface id: ", pan::integer(venue_id));
+					//pan::log_DEBUG("OMUX received msg for iterface id: ", pan::integer(venue_id));
 
 					size_t sockIdx;
 					for (sockIdx = 0; sockIdx < _oiArraySize; sockIdx++) {
 						if (_oiArray[sockIdx]->getInterfaceID() == venue_id) {
 							venue_sock = _oiArray[sockIdx]->getInterfaceSocket();
 							assert(venue_sock);
-							pan::log_DEBUG("OMUX found interface socket for id: ", pan::integer(venue_id));
+							//pan::log_DEBUG("OMUX found interface socket for id: ", pan::integer(venue_id));
 						}
 					}
 					if (sockIdx > _oiArraySize) {
@@ -101,13 +101,13 @@ OrderMux::run()
 					_inproc->getsockopt(ZMQ_RCVMORE, &more, &more_size);
 					rc = venue_sock->send(msg, more ? ZMQ_SNDMORE : 0);	
 				} while (more);
-				pan::log_DEBUG("OMUX finished forwarding");
+				//pan::log_DEBUG("OMUX finished forwarding");
 			}
 			else {	
 			// messages returning from venue
 			// don't need to be routed
 				for (size_t j = 0; j<_oiArraySize; j++) {
-					pan::log_DEBUG("OMUX checking incoming messages on oiArray: ", pan::integer(j));
+					//pan::log_DEBUG("OMUX checking incoming messages on oiArray: ", pan::integer(j));
 					if (_poll_items[j+1].revents && ZMQ_POLLIN) {
 						zmq::socket_t* sock = _oiArray[j]->getInterfaceSocket();
 						assert(sock);
@@ -142,15 +142,16 @@ OrderMux::rcv_RESPONSE(zmq::socket_t* sock)
 {
 	int64_t more = 0;
 	size_t more_size = sizeof(more);
-	pan::log_DEBUG("Entering recv loop");
+	//pan::log_DEBUG("Entering recv loop");
 	do {
 		zmq::message_t msgtypeframe;
 		sock->recv(&msgtypeframe, 0); 
+        /*
 		pan::log_DEBUG("OMUX Received msgtypeframe: size=", 
 						pan::integer(msgtypeframe.size()), 
 						" data=", 
 						pan::blob(static_cast<const void*>(msgtypeframe.data()), msgtypeframe.size()));
-
+        */
 		
 		zmq::message_t msgframe;
 		sock->recv(&msgframe, 0);
@@ -162,13 +163,15 @@ OrderMux::rcv_RESPONSE(zmq::socket_t* sock)
 		
 
 		if (*(static_cast<capk::msg_t*>(msgtypeframe.data())) == capk::STRATEGY_HELO_ACK) {
+            /*
 			pan::log_DEBUG("OMUX Received msg type: ", pan::integer(capk::STRATEGY_HELO_ACK),
 							" - capk::STRATEGY_HELO_ACK from venue ID: ",
 							pan::integer(*(static_cast<capk::venue_id_t*>(msgframe.data()))));
+            */
 		}
 		
         else {
-            pan::log_DEBUG("OMUX sending to _inproc");
+            //pan::log_DEBUG("OMUX sending to _inproc");
 			_inproc->send(msgtypeframe, ZMQ_SNDMORE);
 			_inproc->send(msgframe, 0);
         }
@@ -202,7 +205,7 @@ OrderMux::rcv_RESPONSE(zmq::socket_t* sock)
 		zmq_getsockopt(*sock, ZMQ_RCVMORE, &more, &more_size);
 		assert(more == 0);
 	} while (more);
-	pan::log_DEBUG("OMUX Exiting recv loop");
+	//pan::log_DEBUG("OMUX Exiting recv loop");
 }
 
 

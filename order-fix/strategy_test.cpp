@@ -32,6 +32,7 @@
 #include "utils/time_utils.h"
 #include "utils/bbo_book_types.h"
 #include "utils/types.h"
+#include "utils/venue_globals.h"
 
 // namespace stuff
 using google::dense_hash_map;
@@ -41,17 +42,19 @@ namespace po = boost::program_options;
 const char* STRATEGY_ID =  "7020f42e-b6c6-42d1-9b1e-65d968961a06";
 strategy_id_t sid;
 
-const char* ORDER_MUX = "inproc://order_mux";
-const char* MD_MUX = "inproc://md_mux";
-const int FXCM_ID = 890778;
-const int XCDE_ID = 908239;
-const int AGGREGATED_BOOK = 982132;
+const char* const ORDER_MUX = "inproc://order_mux";
+const char* const MD_MUX = "inproc://md_mux";
 
-const char* FXCM_ORDER_INTERFACE_ADDR = "tcp://127.0.0.1:9999";
-const char* XCDE_ORDER_INTERFACE_ADDR = "tcp://127.0.0.1:9998";
+/*
+const venue_id_t capk::kFXCM_ID = 890778;
+const venue_id_t kXCDE_ID = 908239;
+const int capk::kCAPK_AGGREGATED_BOOK = 982132;
 
-const char* AGGREGATED_BOOK_MD_INTERFACE_ADDR = "tcp://127.0.0.1:9000";
+const char* capk::kFXCM_ORDER_INTERFACE_ADDR = "tcp://127.0.0.1:9999";
+const char* kXCDE_ORDER_INTERFACE_ADDR = "tcp://127.0.0.1:9998";
 
+const char* capk::kCAPK_AGGREGATED_BOOK_MD_INTERFACE_ADDR = "tcp://127.0.0.1:9000";
+*/
 
 #define MAX_MSGSIZE 256
 
@@ -485,7 +488,7 @@ snd_NEW_ORDER(const capk::venue_id_t venueID, capkproto::new_order_single& nos)
 void 
 handleExecutionReport(capkproto::execution_report& er) 
 {
-    pan::log_DEBUG("handleExecutionReport()");
+    //pan::log_DEBUG("handleExecutionReport()");
     // turn the er into an order object
     timespec ts;
     bool isNewItem;
@@ -502,7 +505,6 @@ handleExecutionReport(capkproto::execution_report& er)
     pan::log_DEBUG("APP Execution report received ORIGCLOID: ", oidbuf);
 
     capk::OrdStatus_t ordStatus = order.getOrdStatus();
-    pan::log_DEBUG("APP received execution report with order status: ", pan::integer(ordStatus));
 /*
     char testbuf[UUID_STRLEN];
     order_id_t ooo;
@@ -514,7 +516,7 @@ handleExecutionReport(capkproto::execution_report& er)
     pan::log_DEBUG("ORIGCLOID: ", er.orig_cl_order_id(), pan::integer(er.orig_cl_order_id().size()));
 */
 
-    pan::log_DEBUG(er.DebugString());
+    //pan::log_DEBUG(er.DebugString());
 
     // There are three FIX tags that relay the status of an order
     // 1) ExecTransType (20)
@@ -566,15 +568,24 @@ handleExecutionReport(capkproto::execution_report& er)
         // strategy crashes and is restarted WITHOUT reading working orders from 
         // persistent storage. 
         if (orderIter == workingOrders.end()) {
-            pan::log_CRITICAL("Received PARTIAL FILL for order not in working order cache");
+            pan::log_CRITICAL("Received PARTIAL FILL for order NOT FOUND in working order cache");
         }
         (*orderIter).second = order;
         completedOrders.insert(order_map_value_t(origOid, order));
         clock_gettime(CLOCK_REALTIME, &ts); 
-        pan::log_DEBUG("PARTIAL FILL ",
-                        "OID: ", 
+        pan::log_INFO("PARTIAL FILL->",
+                        pan::blob(oid.get_uuid(), UUID_LEN), 
+                        ",", 
                         pan::blob(origOid.get_uuid(), UUID_LEN), 
-                        " ", 
+                        ",", 
+                        order.getExecId(), 
+                        ",", 
+                        pan::real(order.getLastShares()), 
+                        ",", 
+                        pan::real(order.getLastPrice()), 
+                        ",", 
+                        pan::real(order.getAvgPrice()), 
+                        ",", 
                         pan::integer(ts.tv_sec), 
                         ":", 
                         pan::integer(ts.tv_nsec));
@@ -585,10 +596,19 @@ handleExecutionReport(capkproto::execution_report& er)
            pan::log_NOTICE("OID: ", pan::blob(oid.get_uuid(), UUID_LEN),
                    " replaced AND fully filled");
        }
-       pan::log_DEBUG("FILLED",
-                        "OID: ", 
+       pan::log_INFO("PARTIAL FILL->",
                         pan::blob(oid.get_uuid(), UUID_LEN), 
-                        " ", 
+                        ",", 
+                        pan::blob(origOid.get_uuid(), UUID_LEN), 
+                        ",", 
+                        order.getExecId(), 
+                        ",", 
+                        pan::real(order.getLastShares()), 
+                        ",", 
+                        pan::real(order.getLastPrice()), 
+                        ",", 
+                        pan::real(order.getAvgPrice()), 
+                        ",", 
                         pan::integer(ts.tv_sec), 
                         ":", 
                         pan::integer(ts.tv_nsec));
@@ -732,9 +752,9 @@ handleExecutionReport(capkproto::execution_report& er)
         }
     }
 
-    pan::log_DEBUG("Num pending orders: ", pan::integer(pendingOrders.size()));
-    pan::log_DEBUG("Num working orders: ", pan::integer(workingOrders.size()));
-    pan::log_DEBUG("Num completed orders: ", pan::integer(completedOrders.size()));
+    //pan::log_DEBUG("Num pending orders: ", pan::integer(pendingOrders.size()));
+    //pan::log_DEBUG("Num working orders: ", pan::integer(workingOrders.size()));
+    //pan::log_DEBUG("Num completed orders: ", pan::integer(completedOrders.size()));
 
 }
 
@@ -776,29 +796,29 @@ handleOrderCancelReject(capkproto::order_cancel_reject& ocr)
 bool
 receiveBBOMarketData(zmq::socket_t* sock)
 {
-    capkproto::instrument_bbo bbo;
+    capkproto::instrument_bbo instrument_bbo_protobuf;
     zmq::message_t tickmsg;
     assert(sock);
     bool rc;
     pan::log_DEBUG("receiveBBOMarketData()");
     rc = sock->recv(&tickmsg, ZMQ_NOBLOCK);
     assert(rc);
-    bbo.ParseFromArray(tickmsg.data(), tickmsg.size());
+    instrument_bbo_protobuf.ParseFromArray(tickmsg.data(), tickmsg.size());
     capk::MultiMarketBBO_t bbo_book;
     //pan::log_DEBUG(bbo.DebugString());
 
     // TODO FIX THIS to be int id for mic rather than string	
-    if (bbo.symbol() == "EUR/USD") {
-        pan::log_DEBUG("Received market data - ", bbo.symbol());
-        bbo_book.bid_venue = bbo.bb_mic();
-        bbo_book.bid_price = bbo.bb_price();
-        bbo_book.bid_size = bbo.bb_size();
+    if (instrument_bbo_protobuf.symbol() == "EUR/USD") {
+        pan::log_DEBUG("Received market data - ", instrument_bbo_protobuf.symbol());
+        bbo_book.bid_venue = instrument_bbo_protobuf.bb_mic();
+        bbo_book.bid_price = instrument_bbo_protobuf.bb_price();
+        bbo_book.bid_size = instrument_bbo_protobuf.bb_size();
         clock_gettime(CLOCK_MONOTONIC, &bbo_book.bid_last_update);
 
         // TODO FIX THIS to be int id for mic rather than string	
-        bbo_book.ask_venue = bbo.ba_mic();
-        bbo_book.ask_price = bbo.ba_price();
-        bbo_book.ask_size = bbo.ba_size();
+        bbo_book.ask_venue = instrument_bbo_protobuf.ba_mic();
+        bbo_book.ask_price = instrument_bbo_protobuf.ba_price();
+        bbo_book.ask_size = instrument_bbo_protobuf.ba_size();
         clock_gettime(CLOCK_MONOTONIC, &bbo_book.ask_last_update);
         return true;
     }
@@ -934,14 +954,14 @@ main(int argc, char **argv)
 	OrderMux omux(&ctx, 
 				 ORDER_MUX);
 
-    capk::ClientOrderInterface oif_FXCM(FXCM_ID, 
+    capk::ClientOrderInterface oif_FXCM(capk::kFXCM_ID, 
 								&ctx, 
-								FXCM_ORDER_INTERFACE_ADDR,	
+								capk::kFXCM_ORDER_INTERFACE_ADDR,	
 								ORDER_MUX);
 
-	//capk::ClientOrderInterface if_XCDE(XCDE_ID, 
+	//capk::ClientOrderInterface if_XCDE(kXCDE_ID, 
 								//&ctx, 
-								//XCDE_ORDER_INTERFACE_ADDR,
+								//kXCDE_ORDER_INTERFACE_ADDR,
 								//ORDER_MUX);
 	
 	// add interfaces
@@ -957,8 +977,8 @@ main(int argc, char **argv)
 	pOEInterface->connect(ORDER_MUX);
 	// send helo msg to each exchange we're connecting to
     // KTK TODO - SHOULD WAIT FOR ACK!!!!
-	snd_HELO(FXCM_ID, sid); 
-	//snd_HELO(XCDE_ID, sid); 
+	snd_HELO(capk::kFXCM_ID, sid); 
+	//snd_HELO(kXCDE_ID, sid); 
   
  
     
@@ -972,9 +992,9 @@ main(int argc, char **argv)
         MarketDataMux mdmux(&ctx, 
                             MD_MUX);
         // TODO differentiate between bbo stream and depth
-        ClientMarketDataInterface mdif_AGG_BOOK(AGGREGATED_BOOK, 
+        ClientMarketDataInterface mdif_AGG_BOOK(capk::kCAPK_AGGREGATED_BOOK, 
                                     &ctx,
-                                    AGGREGATED_BOOK_MD_INTERFACE_ADDR,
+                                    capk::kCAPK_AGGREGATED_BOOK_MD_INTERFACE_ADDR,
                                     MD_MUX);
         // add the interface				 
         mdif_AGG_BOOK.init();
@@ -1000,15 +1020,15 @@ main(int argc, char **argv)
 
         // start the polling loop
         while (1 && s_interrupted != 1) {
-            pan::log_DEBUG("Polling pair sockets in app thread");
+            //pan::log_DEBUG("Polling pair sockets in app thread");
             ret = zmq::poll(pollItems, 2, -1);
             // receive market data
             if (pollItems[0].revents && ZMQ_POLLIN) {
-                pan::log_DEBUG("RECEIVING MARKET DATA");
+                //pan::log_DEBUG("RECEIVING MARKET DATA");
                 receiveBBOMarketData(pMDInterface);
             }
             else if (pollItems[1].revents && ZMQ_POLLIN) {
-                pan::log_DEBUG("RECEIVING ORDER DATA");
+                //pan::log_DEBUG("RECEIVING ORDER DATA");
                 receiveOrder(pOEInterface);
             }
         }
@@ -1039,7 +1059,7 @@ main(int argc, char **argv)
         char action;
         int ret;
         //capkproto::new_order_single o = create_order("EUR/USD", capk::BID, 120000, 1.235);
-        //snd_NEW_ORDER(FXCM_ID, o);
+        //snd_NEW_ORDER(capk::kFXCM_ID, o);
         while (1 && s_interrupted != 1) {
             //pan::log_DEBUG("APP Polling pair sockets in app thread");
             ret = zmq::poll(pollItems, 2, 1000000);
@@ -1056,7 +1076,7 @@ main(int argc, char **argv)
             }
 
             if (pollItems[0].revents && ZMQ_POLLIN) {
-                pan::log_DEBUG("RECEIVING ORDER DATA");
+                //pan::log_DEBUG("RECEIVING ORDER DATA");
                 receiveOrder(pOEInterface);
             }
             if (pollItems[1].revents && ZMQ_POLLIN) {
@@ -1069,19 +1089,19 @@ main(int argc, char **argv)
                 case 'n':
                 {
                     capkproto::new_order_single order =  query_order();
-                    snd_NEW_ORDER(FXCM_ID, order);
+                    snd_NEW_ORDER(capk::kFXCM_ID, order);
                     break;
                 }
                 case 'c': 
                 {
                     capkproto::order_cancel cancel = query_cancel();
-                    snd_ORDER_CANCEL(FXCM_ID, cancel);
+                    snd_ORDER_CANCEL(capk::kFXCM_ID, cancel);
                     break;
                 }
                 case 'r': 
                 {
                     capkproto::order_cancel_replace cancel_replace = query_cancel_replace();
-                    snd_ORDER_CANCEL_REPLACE(FXCM_ID, cancel_replace);
+                    snd_ORDER_CANCEL_REPLACE(capk::kFXCM_ID, cancel_replace);
                     break;
                 }	
                 case 'q': 
@@ -1099,81 +1119,12 @@ main(int argc, char **argv)
                     action = 0;
                     break;
             }
+
             action = 0;
             shouldPrompt = true;
 
-
+            }
         }
-#if 0
-        else {
-		    std::cin >> action;
-		    switch (action) {
-			case 'n':
-			{
-				capkproto::new_order_single order =  query_order();
-				snd_NEW_ORDER(FXCM_ID, order);
-                pan::log_DEBUG("Sent new order");
-				break;
-			}
-			case 'c': 
-			{
-				capkproto::order_cancel cancel = query_cancel();
-				snd_ORDER_CANCEL(FXCM_ID, cancel);
-				break;
-			}
-			case 'r': 
-			{
-				capkproto::order_cancel_replace cancel_replace = query_cancel_replace();
-				snd_ORDER_CANCEL_REPLACE(FXCM_ID, cancel_replace);
-				break;
-			}	
-			case 'q': 
-			{
-				s_interrupted = 1;
-				break;
-			}
-			default: 
-				std::cerr << "Invalid action" << std::cerr;
-		}
-		action = 0;
-        }
-#endif
-    }
-/*
-	char action;
-	while (s_interrupted != 1) {
-		std::cout << "Action: " << std::endl;
-		std::cin >> action;
-		switch (action) {
-			case 'n':
-			{
-				capkproto::new_order_single order =  query_order();
-				snd_NEW_ORDER(FXCM_ID, order);
-				break;
-			}
-			case 'c': 
-			{
-				capkproto::order_cancel cancel = query_cancel();
-				snd_ORDER_CANCEL(FXCM_ID, cancel);
-				break;
-			}
-			case 'r': 
-			{
-				capkproto::order_cancel_replace cancel_replace = query_cancel_replace();
-				snd_ORDER_CANCEL_REPLACE(FXCM_ID, cancel_replace);
-				break;
-			}	
-			case 'q': 
-			{
-				s_interrupted = 1;
-				break;
-			}
-			default: 
-				std::cerr << "Invalid action" << std::cerr;
-		}
-		action = 0;
-	}
-*/
     }
 	//omux.stop();
 	//mdmux.stop();
