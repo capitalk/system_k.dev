@@ -2,6 +2,7 @@
 #ifndef _CAPK_TIME_UTILS_
 #define _CAPK_TIME_UTILS_
 
+#include <sys/types.h>
 #include <time.h>
 #include <ostream>
 
@@ -14,8 +15,9 @@ unsigned long int timespec_delta_millis(const timespec& start, const timespec& e
 
 timespec timespec_delta(const timespec& start, const timespec& end);
 
-
 char* timespec2str(timespec ts, char* buf, size_t buflen);
+
+int timespec2int64_t(timespec* ts, int64_t* out);
 
 } // namespace capk
 

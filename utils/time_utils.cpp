@@ -25,7 +25,8 @@ timespec timespec_delta(const timespec& start, const timespec& end)
 }
 
 char*
-timespec2str(timespec ts, char* buf, size_t buflen) {
+timespec2str(timespec ts, char* buf, size_t buflen) 
+{
 	time_t t_secs = ts.tv_sec + (ts.tv_nsec/NANOS_PER_SECOND);
 	assert(buf);
 	if (buf && (buflen >= TIME_STR_LEN)) {
@@ -35,6 +36,16 @@ timespec2str(timespec ts, char* buf, size_t buflen) {
 		buf[0] = NULL;
 		return buf;
 	}
+}
+
+int 
+timespec2int64_t(timespec* ts, int64_t* out) 
+{
+    if (ts && out) {
+        *out = (ts->tv_sec * NANOS_PER_SECOND) + (ts->tv_nsec);
+        return 0;
+    }
+    return -1;
 }
 
 

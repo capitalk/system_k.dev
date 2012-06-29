@@ -13,8 +13,23 @@
 #define NANOS_PER_SECOND 1000000000
 #define TIME_STR_LEN 26+1
 
+TEST(TimeTest, TimespecToDouble) 
+{
+    timespec ts;
+    clock_getres(CLOCK_REALTIME, &ts);
+    std::cout << "Timespec resolution: " << ts << std::endl;
+    assert(ts.tv_nsec == 1 && ts.tv_sec == 0);
+    clock_gettime(CLOCK_REALTIME, &ts);
 
-TEST(TimeTest, delta)
+    std::cout << "Timespec original: " << ts << std::endl;
+    int64_t out;
+    EXPECT_EQ(0, capk::timespec2int64_t(&ts, &out));
+    std::cout << "Timespec as int64_t: " << out << std::endl;
+    
+    EXPECT_EQ(-1, capk::timespec2int64_t(&ts, NULL));
+}
+
+TEST(TimeTest, Delta)
 {
 	timespec ts1;
 	timespec ts2;
