@@ -1,13 +1,15 @@
 #ifndef __KMSG_TYPES_H__
 #define __KMSG_TYPES_H__
 
+#include "utils/types.h"
+
 // Types for messages between client and order proxy
 // These are used as message headers for ZMQ messages - 
 // sent as the first part of the envelope
 namespace capk {
 
-typedef unsigned int msg_t;
-typedef int venue_id_t;
+//typedef unsigned int msg_t;
+//typedef int venue_id_t;
 
 // Incoming messages 
 const msg_t ORDER_NEW		= 0x01;
