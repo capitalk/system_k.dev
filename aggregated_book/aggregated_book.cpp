@@ -445,10 +445,10 @@ initialize_instrument_info(zmq::context_t* context)
 }
 
 const std::string AGGREGATE_OB = "inproc://ob";
-const char* XCDE_addr = "tcp://127.0.0.1:5271";
-const char* GAIN_addr= "tcp://127.0.0.1:5272";
-const char* FXCM_addr= "tcp://127.0.0.1:5273";
-const char* BCAST_OUT = "tcp://*:9000";
+//const char* XCDE_addr = "tcp://127.0.0.1:5271";
+//const char* GAIN_addr= "tcp://127.0.0.1:5272";
+//const char* FXCM_addr= "tcp://127.0.0.1:5273";
+//const char* BCAST_OUT = "tcp://*:9000";
 
 
 int 
@@ -502,16 +502,19 @@ main(int argc, char** argv)
 		initialize_instrument_info(&context);
 		bcast_sock = new zmq::socket_t(context, ZMQ_PUB);
         assert(bcast_sock);
-		bcast_sock->bind(BCAST_OUT);
-
+        int zero = 0;
+        bcast_sock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
+        std::cerr << "Attempting to bind to: " << capk::kAGGREGATED_BOOK_BROADCAST_ADDR << ". If this does not return then the socket is likely in use" << std::endl;
+		bcast_sock->bind(capk::kAGGREGATED_BOOK_BROADCAST_ADDR);
+        std::cerr << "Bind complete." << std::endl;
 
         // connect to inproc socket for orderbook
         book_manager ob(&context, AGGREGATE_OB);
         boost::thread* t0 = new boost::thread(boost::bind(&book_manager::run, &ob));
 
         // subscribers
-        worker w1(&context, XCDE_addr, AGGREGATE_OB);
-        worker w2(&context, FXCM_addr, AGGREGATE_OB);
+        worker w1(&context, capk::kXCDE_BROADCAST_ADDR, AGGREGATE_OB);
+        worker w2(&context, capk::kFXCM_BROADCAST_ADDR, AGGREGATE_OB);
         boost::thread* t1 = new boost::thread(boost::bind(&worker::run, &w1));
         boost::thread* t2 = new boost::thread(boost::bind(&worker::run, &w2));
         t0->join();

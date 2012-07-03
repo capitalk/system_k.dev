@@ -93,7 +93,7 @@ int main( int argc, char** argv )
 	std::string password;
 	bool printDebug; 
     bool isLogging;
-    
+    int zero = 0;  
 
     (void) signal(SIGINT, sighandler);
     (void) signal(SIGTERM, sighandler);
@@ -102,6 +102,8 @@ int main( int argc, char** argv )
 	g_zmq_context = zmq_init(1);
 	assert(g_zmq_context);
 	pub_socket = zmq_socket(g_zmq_context, ZMQ_PUB);
+   
+    zmq_setsockopt(pub_socket, ZMQ_LINGER, &zero, sizeof(zero));
 	assert(pub_socket);
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
