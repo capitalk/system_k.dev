@@ -1118,7 +1118,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
             bbo.set_ask_price(baprice);
             bbo.set_bid_size(bbsize);
             bbo.set_ask_size(basize);
-            bbo.set_mic(_config.mic_code);
+            bbo.set_venue_id(_config.venue_id);
             
             size_t msgsize = bbo.ByteSize();
 			assert(msgsize < sizeof(msgbuf));
@@ -1349,7 +1349,7 @@ Application::run()
 	std::ofstream* pLog;
 	//capitalk::PriceDepthOrderBook* pBook = NULL;
     capk::KBook* pBook = NULL;
-	std::string MIC_prefix = _config.mic_code.length() > 0 ? _config.mic_code + "_" : ""; 
+	std::string MIC_prefix = _config.mic_string.length() > 0 ? _config.mic_string + "_" : ""; 
 	std::string symbol; 
 	fs::path fullPathToLog;
 	while(it != _symbols.end() && *it != "") {

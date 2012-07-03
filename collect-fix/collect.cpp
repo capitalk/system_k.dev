@@ -45,6 +45,9 @@
 
 #include "../proto/spot_fx_md_1.pb.h"
 
+//#include "utils/venue_globals.h"
+#include "utils/venue_utils.h"
+
 namespace po = boost::program_options;
 namespace fs = boost::filesystem; 
 namespace dt = boost::gregorian; 
@@ -185,8 +188,12 @@ int main( int argc, char** argv )
 		FIX::SessionID sessionId = *(sessions.begin()); 
 		const FIX::Dictionary& dict = settings.get(sessionId);
 		ApplicationConfig config;  
+
         // MIC code for adding to output filename 
-		config.mic_code = dict.has("MIC") ? dict.getString("MIC") : ""; 
+		config.mic_string = dict.has("MIC") ? dict.getString("MIC") : ""; 
+        // MIC id as integer for protobuf usage
+		config.venue_id = capk::micStringToVenueId(config.mic_string.c_str()); 
+        assert(config.venue_id != 0);
 
         // Username and password settings
 		config.username = dict.has("Username") ? dict.getString("Username") : ""; 
@@ -256,7 +263,7 @@ int main( int argc, char** argv )
         pid_t ppid = getppid();
         
         printf("pid: %d, ppid: %d\n", pid, ppid);
-        std::string pidFileName = std::string(argv[0]) + "." +  config.mic_code + std::string(".pid");
+        std::string pidFileName = std::string(argv[0]) + "." +  config.mic_string + std::string(".pid");
         std::ofstream pidFile(pidFileName);
         if (pidFile.is_open()) {
             pidFile << pid;

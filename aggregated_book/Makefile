@@ -45,8 +45,12 @@ capk_globals.pb.o: $(PROTO)/capk_globals.pb.cc $(PROTO)/capk_globals.pb.h
 time_utils.o: $(UTILS)/time_utils.cpp $(UTILS)/time_utils.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS)/time_utils.cpp
 
-aggregated_book : aggregated_book.o time_utils.o $(PROTOBUF_OBJS)
-	$(CC) $(CFLAGS) aggregated_book.o time_utils.o $(PROTOBUF_OBJS) $(LIBS) -o $@ 
+venue_utils.o: $(UTILS)/venue_utils.cpp $(UTILS)/venue_utils.h
+	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS)/venue_utils.cpp
+
+
+aggregated_book : aggregated_book.o time_utils.o venue_utils.o $(PROTOBUF_OBJS)
+	$(CC) $(CFLAGS) aggregated_book.o time_utils.o venue_utils.o $(PROTOBUF_OBJS) $(LIBS) -o $@ 
 
 protos : 
 	cd $(PROTO) && make 

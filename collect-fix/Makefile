@@ -41,8 +41,8 @@ LDFLAGS=-static
 
 all: protos collect
 
-collect : collect.o Application.o  jenkins_hash.o liborder_book2.a spot_fx_md_1.pb.o capk_globals.pb.o time_utils.o
-	$(CC) $(CFLAGS) collect.o jenkins_hash.o spot_fx_md_1.pb.o capk_globals.pb.o time_utils.o Application.o  $(ORDERBOOK_DIR)/liborder_book2.a $(LIBS) -o $@ 
+collect : Application.o  venue_utils.o jenkins_hash.o liborder_book2.a spot_fx_md_1.pb.o capk_globals.pb.o time_utils.o collect.o
+	$(CC) $(CFLAGS) venue_utils.o jenkins_hash.o spot_fx_md_1.pb.o capk_globals.pb.o time_utils.o Application.o collect.o $(ORDERBOOK_DIR)/liborder_book2.a $(LIBS) -o $@ 
 
 spot_fx_md_1.pb.o: $(PROTO_DIR)/spot_fx_md_1.pb.cc $(PROTO_DIR)/spot_fx_md_1.pb.h 
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO_DIR)/spot_fx_md_1.pb.cc
@@ -51,6 +51,9 @@ capk_globals.pb.o: $(PROTO_DIR)/capk_globals.pb.cc $(PROTO_DIR)/capk_globals.pb.
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO_DIR)/capk_globals.pb.cc
 
 jenkins_hash.o: $(UTILS_DIR)/jenkins_hash.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+venue_utils.o: $(UTILS_DIR)/venue_utils.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 time_utils.o: $(UTILS_DIR)/time_utils.cpp

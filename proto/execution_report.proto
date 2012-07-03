@@ -26,4 +26,5 @@ message execution_report {
 	optional sfixed32	handl_inst = 21;
 	optional sfixed32	order_reject_reason = 22;
 	optional double		min_qty = 23;
+    optional sfixed32   venue_id = 24;
 }

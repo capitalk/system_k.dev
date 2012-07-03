@@ -100,7 +100,8 @@ enum FIXVersion {
 };
 
 struct ApplicationConfig { 
-	std::string mic_code; 
+	std::string mic_string; 
+    int venue_id;
 	std::string username; 
 	std::string password; 
 	bool sendPasswordInRawDataField;

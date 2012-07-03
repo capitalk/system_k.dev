@@ -1,6 +1,8 @@
 #ifndef CAPK_OB_TYPEDEFS
 #define CAPK_OB_TYPEDEFS
 
+#include <stdint.h>
+
 namespace capk
 {
 typedef enum {
@@ -21,6 +23,10 @@ enum Side {
 typedef Side Side_t;
 
 typedef uint32_t orderId_t;
+
+typedef unsigned int msg_t;
+typedef int venue_id_t;
+
 
 }
 /*
