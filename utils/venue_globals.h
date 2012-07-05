@@ -35,6 +35,12 @@ namespace capk
     // GAIN MIC and venue info
     const char* const kGAIN_BROADCAST_ADDR = "tcp://127.0.0.1:5272";
 
+    // IB MIC and venue info
+    const char* const kIBRK_BROADCAST_ADDR = "tcp://127.0.0.1:5274";
+    const char* const kIBRK_MIC_STRING = "IBRK";
+    const char* const kIBRK_DEV_MIC_STRING = "IBRK.dev";
+    const venue_id_t kIBRK_VENUE_ID = 342234;
+
     // Aggregated book broadcast information
     const char* const kAGGREGATED_BOOK_BROADCAST_ADDR = "tcp://127.0.0.1:9000";
 

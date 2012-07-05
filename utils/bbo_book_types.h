@@ -8,6 +8,23 @@
 
 namespace capk {
 
+struct IBSingleMarketBBO
+{
+    //char MIC_name[MIC_LEN];
+	char symbol[SYMBOL_LEN];
+    char currency[CURRENCY_SYMBOL_LEN];
+    double bid_price;
+    double ask_price;
+    double bid_size;
+    double ask_size;
+    timespec last_update; 
+    double last_price;
+    double last_size; 
+};
+
+typedef struct IBSingleMarketBBO IBSingleMarketBBO_t;
+
+
 struct SingleMarketBBO
 {
     //char MIC_name[MIC_LEN];

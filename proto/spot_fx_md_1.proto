@@ -19,7 +19,7 @@ message order_t {
     required double price = 6;
 
 }
-
+// Change this to single market bbo
 message mic_bbo {
     required sfixed32 venue_id = 1;
     required string symbol = 2;
@@ -29,6 +29,7 @@ message mic_bbo {
     required double ask_price = 6;
 }
 
+// Change this to multi market bbo
 message instrument_bbo {
     required string symbol = 1;
     required sfixed32 bb_venue_id = 2;
