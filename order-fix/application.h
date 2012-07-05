@@ -128,7 +128,7 @@ struct ApplicationConfig {
 	std::string zmq_bind_addr;
 	std::string account;
 	int handlInst;
-	capk::venue_id_t venueID;
+	capk::venue_id_t venue_id;
 }; 
 
 class Application :

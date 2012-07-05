@@ -32,7 +32,7 @@ namespace fs = boost::filesystem;
 namespace dt = boost::gregorian; 
 
 Application::Application(bool bReset, const ApplicationConfig& config) 
-         :  OrderInterface(config.venueID), _loggedIn(false), _loggedOut(false), _loginCount(0), 
+         :  OrderInterface(config.venue_id), _loggedIn(false), _loggedOut(false), _loginCount(0), 
             _appMsgCount(0),  _config(config), _resetSequence(bReset)
 {
 	_handlInst21 = -1;
@@ -141,7 +141,7 @@ Application::toAdmin(FIX::Message& message,
 	if (msgType.getValue() == "0") { 
 #ifdef LOG
 		pan::log_DEBUG("Sending Heartbeat");
-#endif 
+#endif
 	}	
 	if (msgType.getValue() == "4") {
 #ifdef LOG
@@ -643,7 +643,8 @@ Application::onMessage(const FIX42::ExecutionReport& message,
 		er->set_min_qty(minQty);
 //pan::log_DEBUG("W");
 	}
-    er->set_mic(_config.mic_code);
+    //er->set_mic(_config.mic_string);
+    er->set_venue_id(_config.venue_id);
 	
 	// 1) lookup order id to fetch strategy id
 	// 2) send the strategy id back to msg processor so that we can route 
@@ -651,7 +652,7 @@ Application::onMessage(const FIX42::ExecutionReport& message,
 	// 3) send the data in the message
 	// 4) end the transmission
 	//_pout_sock->send();
-	
+
 	bool sndOK;
 	pan::log_DEBUG("Fetching sid for order id: ", pan::blob(cloid.get_uuid(), cloid.size())); 
 	assert(_pMsgProcessor);

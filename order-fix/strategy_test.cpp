@@ -573,7 +573,7 @@ handleExecutionReport(capkproto::execution_report& er)
         (*orderIter).second = order;
         completedOrders.insert(order_map_value_t(origOid, order));
         clock_gettime(CLOCK_REALTIME, &ts); 
-        pan::log_INFO("PARTIAL FILL->",
+        pan::log_INFORMATIONAL("PARTIAL FILL->",
                         pan::blob(oid.get_uuid(), UUID_LEN), 
                         ",", 
                         pan::blob(origOid.get_uuid(), UUID_LEN), 
@@ -596,7 +596,7 @@ handleExecutionReport(capkproto::execution_report& er)
            pan::log_NOTICE("OID: ", pan::blob(oid.get_uuid(), UUID_LEN),
                    " replaced AND fully filled");
        }
-       pan::log_INFO("PARTIAL FILL->",
+       pan::log_INFORMATIONAL("PARTIAL FILL->",
                         pan::blob(oid.get_uuid(), UUID_LEN), 
                         ",", 
                         pan::blob(origOid.get_uuid(), UUID_LEN), 
@@ -614,12 +614,13 @@ handleExecutionReport(capkproto::execution_report& er)
                         pan::integer(ts.tv_nsec));
 
         order_map_insert_t insert = 
-        completedOrders.insert(order_map_value_t(oid, order)); 
+            completedOrders.insert(order_map_value_t(oid, order)); 
         isNewItem = insert.second;
         if (isNewItem) {
             pan::log_DEBUG("Added to completed: ", 
                     pan::blob(oid.get_uuid(), UUID_LEN));
         }
+
         // delete from working orders
         order_map_iter_t orderIter = workingOrders.find(oid);
         if (orderIter == workingOrders.end()) {
@@ -954,12 +955,12 @@ main(int argc, char **argv)
 	OrderMux omux(&ctx, 
 				 ORDER_MUX);
 
-    capk::ClientOrderInterface oif_FXCM(capk::kFXCM_ID, 
+    capk::ClientOrderInterface oif_FXCM(capk::kFXCM_VENUE_ID, 
 								&ctx, 
 								capk::kFXCM_ORDER_INTERFACE_ADDR,	
 								ORDER_MUX);
 
-	//capk::ClientOrderInterface if_XCDE(kXCDE_ID, 
+	//capk::ClientOrderInterface if_XCDE(kXCDE_VENUE_ID, 
 								//&ctx, 
 								//kXCDE_ORDER_INTERFACE_ADDR,
 								//ORDER_MUX);
@@ -977,8 +978,8 @@ main(int argc, char **argv)
 	pOEInterface->connect(ORDER_MUX);
 	// send helo msg to each exchange we're connecting to
     // KTK TODO - SHOULD WAIT FOR ACK!!!!
-	snd_HELO(capk::kFXCM_ID, sid); 
-	//snd_HELO(kXCDE_ID, sid); 
+	snd_HELO(capk::kFXCM_VENUE_ID, sid); 
+	//snd_HELO(kXCDE_VENUE_ID, sid); 
   
  
     
@@ -1089,19 +1090,19 @@ main(int argc, char **argv)
                 case 'n':
                 {
                     capkproto::new_order_single order =  query_order();
-                    snd_NEW_ORDER(capk::kFXCM_ID, order);
+                    snd_NEW_ORDER(capk::kFXCM_VENUE_ID, order);
                     break;
                 }
                 case 'c': 
                 {
                     capkproto::order_cancel cancel = query_cancel();
-                    snd_ORDER_CANCEL(capk::kFXCM_ID, cancel);
+                    snd_ORDER_CANCEL(capk::kFXCM_VENUE_ID, cancel);
                     break;
                 }
                 case 'r': 
                 {
                     capkproto::order_cancel_replace cancel_replace = query_cancel_replace();
-                    snd_ORDER_CANCEL_REPLACE(capk::kFXCM_ID, cancel_replace);
+                    snd_ORDER_CANCEL_REPLACE(capk::kFXCM_VENUE_ID, cancel_replace);
                     break;
                 }	
                 case 'q': 
