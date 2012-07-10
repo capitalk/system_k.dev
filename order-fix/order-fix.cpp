@@ -212,6 +212,16 @@ int main( int argc, char** argv )
 		pan::log_INFORMATIONAL("Using VenueID: ", pan::integer(config.venue_id));
 #endif
 
+		// Order interface listener addr 
+		config.orderListenerAddr = dict.has("OrderListenerAddr") ? dict.getString("OrderListenerAddr").c_str() : "";
+        if (config.orderListenerAddr == "") {
+			pan::log_CRITICAL("OrderListenerAddr may NOT be empty");
+			return (-1);
+        }
+#ifdef LOG
+		pan::log_INFORMATIONAL("LimitOrder40: ", pan::character(limitOrder));
+#endif
+
         // Debug settings
 		config.printDebug = printDebug; 
 

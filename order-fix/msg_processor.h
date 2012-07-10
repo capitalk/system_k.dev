@@ -65,7 +65,7 @@ class MsgProcessor
 		inline zmq::context_t* getZMQContext() const { return _ctx;}
 
 		// recv incoming requests from strategies
-		void req();
+		void handleIncomingClientMessage();
 
 		// recv ipc messages from order interface
 		void rcv_internal();

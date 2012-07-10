@@ -32,8 +32,16 @@ namespace fs = boost::filesystem;
 namespace dt = boost::gregorian; 
 
 Application::Application(bool bReset, const ApplicationConfig& config) 
-         :  OrderInterface(config.venue_id), _loggedIn(false), _loggedOut(false), _loginCount(0), 
-            _appMsgCount(0),  _config(config), _resetSequence(bReset)
+         :  OrderInterface(config.venue_id), 
+            _pMsgProcessor(0), 
+            _loggedIn(false), 
+            _loggedOut(false), 
+            _loginCount(0), 
+            _appMsgCount(0),  
+            _config(config), 
+            _resetSequence(bReset),
+            _pzmq_context(0),
+            _pzmq_outsock(0)
 {
 	_handlInst21 = -1;
 	_account1 = "";
@@ -45,8 +53,10 @@ Application::Application(bool bReset, const ApplicationConfig& config)
 Application::~Application()
 {
 	pan::log_DEBUG("Application::~Application()");
-	assert(_pout_sock);
-	_pout_sock->close();
+	//assert(_pzmq_outsock);
+    if (_pzmq_outsock) {
+	    _pzmq_outsock->close();
+    }
 	
 }
 
@@ -651,40 +661,41 @@ Application::onMessage(const FIX42::ExecutionReport& message,
 	// properly back to strategy
 	// 3) send the data in the message
 	// 4) end the transmission
-	//_pout_sock->send();
+	//_pzmq_outsock->send();
+    if (_pMsgProcessor) {
+        bool sndOK;
+        assert(_pMsgProcessor);
+        pan::log_DEBUG("Fetching sid (ER) for order id: ", pan::blob(cloid.get_uuid(), cloid.size())); 
+        KOrderCache* ocache = _pMsgProcessor->getOrderCache();
+        assert(ocache);
+        OrderInfo_ptr oinfo = ocache->get(cloid);
+        if (!oinfo) {
+            pan::log_CRITICAL("No order info for orderid - can't lookup sid in order cache");	
+        }
+        strategy_id_t strategy_id = oinfo->getStrategyID();
+        pan::log_DEBUG("Found sid: ", pan::blob(strategy_id.get_uuid(), strategy_id.size()));
 
-	bool sndOK;
-	pan::log_DEBUG("Fetching sid for order id: ", pan::blob(cloid.get_uuid(), cloid.size())); 
-	assert(_pMsgProcessor);
-	KOrderCache* ocache = _pMsgProcessor->getOrderCache();
-	assert(ocache);
-	OrderInfo_ptr oinfo = ocache->get(cloid);
-	if (!oinfo) {
-		pan::log_CRITICAL("No order info for orderid - can't lookup sid in order cache");	
-	}
-	strategy_id_t strategy_id = oinfo->getStrategyID();
-	pan::log_DEBUG("Found sid: ", pan::blob(strategy_id.get_uuid(), strategy_id.size()));
+        // create strategy id frame and send it with more flag set
+        zmq::message_t sidframe(strategy_id.size());	
+        memcpy(sidframe.data(), strategy_id.get_uuid(), strategy_id.size());
+        sndOK = _pzmq_outsock->send(sidframe, ZMQ_SNDMORE);
+        assert(sndOK);
 
-	// create strategy id frame and send it with more flag set
-	zmq::message_t sidframe(strategy_id.size());	
-	memcpy(sidframe.data(), strategy_id.get_uuid(), strategy_id.size());
-	sndOK = _pout_sock->send(sidframe, ZMQ_SNDMORE);
-	assert(sndOK);
+        // send the message type
+        zmq::message_t msgtypeframe(sizeof(capk::EXEC_RPT));
+        memcpy(msgtypeframe.data(), &capk::EXEC_RPT, sizeof(capk::EXEC_RPT));
+        sndOK = _pzmq_outsock->send(msgtypeframe, ZMQ_SNDMORE);
+        assert(sndOK);
 
-	// send the message type
-	zmq::message_t msgtypeframe(sizeof(capk::EXEC_RPT));
-	memcpy(msgtypeframe.data(), &capk::EXEC_RPT, sizeof(capk::EXEC_RPT));
-	sndOK = _pout_sock->send(msgtypeframe, ZMQ_SNDMORE);
-	assert(sndOK);
-
-	// send the rest of the message using zero-copy since exection report
-	// was created on heap
-	zmq::message_t dataframe(er->ByteSize());
-	er->SerializeToArray(dataframe.data(), dataframe.size());
-	sndOK = _pout_sock->send(dataframe, 0);
-	assert(sndOK);
-	delete er;	
-	
+        // send the rest of the message using zero-copy since exection report
+        // was created on heap
+        zmq::message_t dataframe(er->ByteSize());
+        er->SerializeToArray(dataframe.data(), dataframe.size());
+        sndOK = _pzmq_outsock->send(dataframe, 0);
+        assert(sndOK);
+    }
+    delete er;	
+        
 }
 
 void 
@@ -745,35 +756,37 @@ Application::onMessage(const FIX42::OrderCancelReject& message,
 	// 3) send the data in the message
 	// 4) end the transmission
 		
-	bool sndOK;
-	pan::log_DEBUG("Fetching sid for order id: ", pan::blob(cloid.get_uuid(), cloid.size())); 
-	assert(_pMsgProcessor);
-	KOrderCache* ocache = _pMsgProcessor->getOrderCache();
-	assert(ocache);
-	OrderInfo_ptr oinfo = ocache->get(cloid);
-	if (!oinfo) {
-		pan::log_CRITICAL("No order info for orderid - can't lookup sid in order cache");	
-	}
-	strategy_id_t strategy_id = oinfo->getStrategyID();
-	pan::log_DEBUG("Found sid: ", pan::blob(strategy_id.get_uuid(), strategy_id.size()));
+    if (_pMsgProcessor) {
+        bool sndOK;
+        assert(_pMsgProcessor);
+        pan::log_DEBUG("Fetching sid (OCR) for order id: ", pan::blob(cloid.get_uuid(), cloid.size())); 
+        KOrderCache* ocache = _pMsgProcessor->getOrderCache();
+        assert(ocache);
+        OrderInfo_ptr oinfo = ocache->get(cloid);
+        if (!oinfo) {
+            pan::log_CRITICAL("No order info for orderid - can't lookup sid in order cache");	
+        }
+        strategy_id_t strategy_id = oinfo->getStrategyID();
+        pan::log_DEBUG("Found sid: ", pan::blob(strategy_id.get_uuid(), strategy_id.size()));
 
-	// create strategy id frame and send it with more flag set
-	zmq::message_t sidframe(strategy_id.size());	
-	memcpy(sidframe.data(), strategy_id.get_uuid(), strategy_id.size());
-	sndOK = _pout_sock->send(sidframe, ZMQ_SNDMORE);
-	assert(sndOK);
+        // create strategy id frame and send it with more flag set
+        zmq::message_t sidframe(strategy_id.size());	
+        memcpy(sidframe.data(), strategy_id.get_uuid(), strategy_id.size());
+        sndOK = _pzmq_outsock->send(sidframe, ZMQ_SNDMORE);
+        assert(sndOK);
 
-	// send the message type
-	zmq::message_t msgtypeframe(sizeof(capk::ORDER_CANCEL_REJ));
-	memcpy(msgtypeframe.data(), &capk::ORDER_CANCEL_REJ, sizeof(capk::ORDER_CANCEL_REJ));
-	sndOK = _pout_sock->send(msgtypeframe, ZMQ_SNDMORE);
-	assert(sndOK);
+        // send the message type
+        zmq::message_t msgtypeframe(sizeof(capk::ORDER_CANCEL_REJ));
+        memcpy(msgtypeframe.data(), &capk::ORDER_CANCEL_REJ, sizeof(capk::ORDER_CANCEL_REJ));
+        sndOK = _pzmq_outsock->send(msgtypeframe, ZMQ_SNDMORE);
+        assert(sndOK);
 
-	// send the rest of the message 
-	zmq::message_t dataframe(ocr->ByteSize());
-	ocr->SerializeToArray(dataframe.data(), dataframe.size());
-	sndOK = _pout_sock->send(dataframe, 0);
-	assert(sndOK);
+        // send the rest of the message 
+        zmq::message_t dataframe(ocr->ByteSize());
+        ocr->SerializeToArray(dataframe.data(), dataframe.size());
+        sndOK = _pzmq_outsock->send(dataframe, 0);
+        assert(sndOK);
+    }
 	delete ocr;	
 	
 }
@@ -1445,12 +1458,12 @@ Application::run()
 	// KTK TODO - create sockets in other thread - should not use sockets 
 	// created in thread A from thread B
 	_pMsgProcessor->init();
-	_pout_sock = new zmq::socket_t(*ctx, ZMQ_DEALER);
+	_pzmq_outsock = new zmq::socket_t(*ctx, ZMQ_DEALER);
 	int zero = 0;
-	_pout_sock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
+	_pzmq_outsock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
 	std::string outaddr = _pMsgProcessor->getOutboundAddr();
-	_pout_sock->connect(outaddr.c_str());
-	
+	_pzmq_outsock->connect(outaddr.c_str());
+
 	_pMsgProcessor->run();
 
 }

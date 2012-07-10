@@ -129,6 +129,7 @@ struct ApplicationConfig {
 	std::string account;
 	int handlInst;
 	capk::venue_id_t venue_id;
+    std::string orderListenerAddr;
 }; 
 
 class Application :
@@ -196,8 +197,8 @@ public:
 	void rcvExecutionReport();
 	void rcvListStatus();
 */
-    capk::MsgProcessor* _pMsgProcessor;
 
+    capk::MsgProcessor* _pMsgProcessor;
 private:
 
 //   template <typename T> 
@@ -310,7 +311,7 @@ private:
 	
 
 	zmq::context_t *_pzmq_context;	
-	zmq::socket_t *_pout_sock;
+	zmq::socket_t *_pzmq_outsock;
 
 
 };

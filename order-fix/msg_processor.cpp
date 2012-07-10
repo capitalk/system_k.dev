@@ -10,9 +10,6 @@ freenode(void* data, void* hint) {
 		node_t* tmp = static_cast<node_t*>(data);
 		std::cerr << "freenode: ", pan::integer(*(int*)tmp->data());
         delete(static_cast<node_t*>(data));
-#ifdef LOG
-		//pan::log_DEBUG("freenode called with non-null data - this is OK");
-#endif
     }
 	else {
 #ifdef LOG
@@ -118,7 +115,7 @@ MsgProcessor::snd_STRATEGY_HELO_ACK(const strategy_id_t& sid)
 };
 
 void
-MsgProcessor::req()
+MsgProcessor::handleIncomingClientMessage()
 {
 	zmq::message_t header1;
 	zmq::message_t msg_type;
@@ -141,7 +138,7 @@ MsgProcessor::req()
 	assert(ret == 0);
 
 #ifdef LOG
-	pan::log_DEBUG("MsgProcessor::req() frontend rcvd route header[", 
+	pan::log_DEBUG("MsgProcessor::handleIncomingClientMessage() frontend rcvd route header[", 
 		pan::integer(header1.size()), "] ", pan::integer(*(int*)header1.data()));
 #endif
 	// rcv msg_type 
@@ -155,8 +152,8 @@ MsgProcessor::req()
 	capk::msg_t msgType = *(static_cast<capk::msg_t*>(msg_type.data()));	
 #ifdef LOG 
 		char sidbuf[UUID_STRLEN];
-		pan::log_DEBUG("MsgProcessor::req() rcvd msg_type: ", pan::integer(msgType));
-		pan::log_DEBUG("MsgProcessor::req() rcvd SID [", pan::integer(sidframe.size()), "]: ", 
+		pan::log_DEBUG("MsgProcessor::handleIncomingClientMessage() rcvd msg_type: ", pan::integer(msgType));
+		pan::log_DEBUG("MsgProcessor::handleIncomingClientMessage() rcvd SID [", pan::integer(sidframe.size()), "]: ", 
 			pan::blob(static_cast<const void*>(sidframe.data()), sidframe.size()));	
 #endif
 	strategy_id_t sid;
@@ -165,7 +162,7 @@ MsgProcessor::req()
 	// TRAP THE ADMIN MESSAGES
 	if (msgType == capk::STRATEGY_HELO) {
 #ifdef LOG 
-		pan::log_DEBUG("MsgProcessor::req() rcvd STRATEGY_HELO from SID: ", sid.c_str(sidbuf), " - adding route to cache");
+		pan::log_DEBUG("MsgProcessor::handleIncomingClientMessage() rcvd STRATEGY_HELO from SID: ", sid.c_str(sidbuf), " - adding route to cache");
 #endif
 		_scache.add(sid, ret_route);
 		T0(a)	
@@ -178,7 +175,7 @@ MsgProcessor::req()
 		snd_STRATEGY_HELO_ACK(sid);
 	}
 	else if (msgType == capk::HEARTBEAT) {
-		pan::log_DEBUG("MsgProcessor::req() rcvd HEARTBEAT from SID: ", sid.c_str(sidbuf));
+		pan::log_DEBUG("MsgProcessor::handleIncomingClientMessage() rcvd HEARTBEAT from SID: ", sid.c_str(sidbuf));
 		snd_HEARTBEAT_ACK(sid);
 	}
 	// PROCESS ALL ORDER RELATED MESSAGES
@@ -372,7 +369,7 @@ MsgProcessor::run()
 		// fan-in from multiple strategies (clients)
 		if (poll_items[0].revents & ZMQ_POLLIN) {
 			msgcount++;
-			req();
+			handleIncomingClientMessage();
 		}
 		if (poll_items[1].revents & ZMQ_POLLIN) {
 			rcv_internal();
