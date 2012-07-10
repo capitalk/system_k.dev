@@ -58,7 +58,8 @@ int main( int argc, char** argv )
 	bool printDebug; 
 	bool runInteractive;
 
-	logging_init((std::string(argv[0]) + ".log").c_str());
+    std::string logFilename = createTimestampedLogFilename(argv[0]);
+	logging_init(logFilename.c_str());
 
 	s_catch_signals();
 	// signal handlers for shutting down cleanly
