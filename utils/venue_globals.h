@@ -22,6 +22,7 @@ namespace capk
     const char* const kFXCM_MIC_STRING = "FXCM";
     const char* const kFXCM_DEV_MIC_STRING = "FXCM.dev";
     const venue_id_t kFXCM_VENUE_ID = 890778;
+    // N.B. Must match values in ini file used to start interface!
     const char* const kFXCM_ORDER_INTERFACE_ADDR = "tcp://127.0.0.1:9999";
     const char* const kFXCM_BROADCAST_ADDR = "tcp://127.0.0.1:5273";
 

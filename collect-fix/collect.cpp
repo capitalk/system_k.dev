@@ -25,6 +25,7 @@
 
 #include "quickfix/FileStore.h"
 #include "quickfix/FileLog.h"
+#include "quickfix/NullStore.h"
 #include "quickfix/SocketInitiator.h"
 #include "quickfix/ThreadedSocketInitiator.h"
 #include "quickfix/SessionSettings.h"
@@ -125,10 +126,12 @@ int main( int argc, char** argv )
 
 		if (vm.count("nolog")) {
             std::cout << "Logging disabled" << "\n";
-            isLogging = (vm["nolog"].as<int>() == 1 ? false : true);
+            //isLogging = (vm["nolog"].as<int>() == 1 ? false : true);
+            isLogging = false;
 		}
         else { 
             std::cout << "Logging enabled" << "\n";
+            isLogging = true;
         }
 		if (vm.count("help")) {
 			std::cout << desc << "\n";
@@ -302,14 +305,21 @@ int main( int argc, char** argv )
         // orderbook output setup
 		application.setDataPath(orderBooksOutputDir);
         // fix logging params
-		FIX::FileStoreFactory storeFactory(storeOutputDir);         
-		FIX::FileLogFactory logFactory(logOutputDir);
 
-
-		FIX::SocketInitiator initiator(application, storeFactory, settings, logFactory);
-        pinitiator = &initiator;
+        if (isLogging) {
+            std::cout << "Logging with FileStoreFactory" << std::endl;
+		    FIX::FileStoreFactory fileStoreFactory(storeOutputDir);         
+		    FIX::FileLogFactory logFactory(logOutputDir);
+		    pinitiator = new FIX::SocketInitiator(application, fileStoreFactory, settings, logFactory);
+        }
+        else {
+            std::cout << "Logging with NullStoreFactory" << std::endl;
+            FIX::NullStoreFactory nullStoreFactory;
+		    pinitiator = new FIX::SocketInitiator(application, nullStoreFactory, settings);
+        }
+        //pinitiator = &initiator;
 		std::cout << "Starting initiator" << std::endl; 
-		initiator.start();
+		pinitiator->start();
 
 		char x;
 		while(std::cin >> x) {
@@ -318,7 +328,7 @@ int main( int argc, char** argv )
 			}
 		}
 		std::cout << "Stopping initiator..." << std::endl;
-		initiator.stop();
+		pinitiator->stop();
 		return 0;
 	}
 	catch ( FIX::Exception & e )
