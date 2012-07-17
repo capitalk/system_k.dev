@@ -244,7 +244,7 @@ struct order_id
 	{
 		if (buf) {
 			uuid_unparse(_oid, buf);
-			buf[UUID_STRLEN] = 0;
+			buf[UUID_STRLEN - 1] = 0;
 			return buf;
 		}
 		else {

@@ -809,15 +809,17 @@ receiveBBOMarketData(zmq::socket_t* sock)
     //pan::log_DEBUG(bbo.DebugString());
 
     // TODO FIX THIS to be int id for mic rather than string	
+        // OK - 20120717
     if (instrument_bbo_protobuf.symbol() == "EUR/USD") {
         pan::log_DEBUG("Received market data - ", instrument_bbo_protobuf.symbol());
-        bbo_book.bid_venue = instrument_bbo_protobuf.bb_mic();
+        bbo_book.bid_venue = instrument_bbo_protobuf.bb_venue_id();
         bbo_book.bid_price = instrument_bbo_protobuf.bb_price();
         bbo_book.bid_size = instrument_bbo_protobuf.bb_size();
         clock_gettime(CLOCK_MONOTONIC, &bbo_book.bid_last_update);
 
         // TODO FIX THIS to be int id for mic rather than string	
-        bbo_book.ask_venue = instrument_bbo_protobuf.ba_mic();
+        // OK - 20120717
+        bbo_book.ask_venue = instrument_bbo_protobuf.ba_venue_id();
         bbo_book.ask_price = instrument_bbo_protobuf.ba_price();
         bbo_book.ask_size = instrument_bbo_protobuf.ba_size();
         clock_gettime(CLOCK_MONOTONIC, &bbo_book.ask_last_update);

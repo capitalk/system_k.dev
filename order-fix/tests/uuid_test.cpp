@@ -6,9 +6,9 @@
 
 #include "utils/jenkins_hash.h"
 
+#include <gtest/gtest.h>
 
-int 
-main()
+TEST(uuid_test, test_all_uuid_funcs)
 {
 	char u1str[36+1];
 	char u2str[36+1];
@@ -41,6 +41,16 @@ main()
 	// should fail
 	assert(uuid_compare(u1, u4) == 0);
 
+}
+
+int
+main(int argc, char** argv)
+{
+
+	testing::InitGoogleTest(&argc, argv);
+	int result = RUN_ALL_TESTS();
+	
+	return result;
 }
 
 // TESTING 123

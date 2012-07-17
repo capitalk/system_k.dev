@@ -59,12 +59,6 @@ all: protos order-fix
 order-fix : order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o $(PROTOBUF_OBJS)
 	$(CC) $(CFLAGS) order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
 
-logging.o: logging.cpp 
-	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
-
-timing.o: timing.cpp 
-	$(CC) -c $(INCLUDE) $(CFLAGS) $<
-	
 new_order_single.pb.o: $(PROTO)/new_order_single.pb.cc $(PROTO)/new_order_single.pb.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/new_order_single.pb.cc
 
@@ -102,9 +96,12 @@ msg_processor.o: msg_processor.cpp
 msg_router.o: msg_router.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-KTimeUtils.o:  $(UTILS)/KTimeUtils.cpp
-	$(CC) -c -I $(UTILS) $(INCLUDE) $(CFLAGS) $<
+logging.o: $(UTILS)/logging.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
+timing.o: $(UTILS)/timing.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+	
 jenkins_hash.o: $(UTILS)/jenkins_hash.cpp
 	$(CC) -c -I $(UTILS) $(INCLUDE) $(CFLAGS) $<
 
@@ -120,21 +117,8 @@ market_data_mux.o: market_data_mux.cpp
 order_mux.o: order_mux.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-specializations.o: specializations.cpp
-	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
-
 order.o: order.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
-
-# TESTS
-
-#MsgProcessorTestSvr.o: MsgProcessorTestSvr.cpp 
-	#$(CC) -c $(INCLUDE) $(CFLAGS) $<
-	#$(CC) -c $(UTILS)/zhelpers.hpp $(INCLUDE) $(CFLAGS) $<
-
-#MsgProcessorTestCli.o: strategy_test.cpp
-	#$(CC) -c $(INCLUDE) $(CFLAGS) $<
-
 
 # PROTOS
 protos: 
