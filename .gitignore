@@ -4,3 +4,5 @@ store/
 *.swp
 *.pid
 *.o
+*.gch
+*.a

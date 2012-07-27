@@ -19,7 +19,7 @@
 #include "quickfix/SocketInitiator.h"
 #include "quickfix/ThreadedSocketInitiator.h"
 #include "quickfix/SessionSettings.h"
-#include "Application.h"
+#include "application.h"
 
 #include <string>
 #include <iostream>
@@ -34,7 +34,6 @@
 #include <zmq.hpp>
 
 #include <google/protobuf/stubs/common.h>
-//#include "../proto/spot_fx_md_1.pb.h"
 
 #include "logging.h"
 
@@ -59,7 +58,8 @@ int main( int argc, char** argv )
 	bool printDebug; 
 	bool runInteractive;
 
-	logging_init((std::string(argv[0]) + ".log").c_str());
+    std::string logFilename = createTimestampedLogFilename(argv[0]);
+	logging_init(logFilename.c_str());
 
 	s_catch_signals();
 	// signal handlers for shutting down cleanly
@@ -77,7 +77,7 @@ int main( int argc, char** argv )
 			("help", "produce help message")
 			("c", po::value<std::string>(), "<config file>")
 			("d", "debug info")
-			("t", "run interactive mode")
+			("i", "run interactive mode")
 		;
 		
 		po::variables_map vm;        
@@ -97,7 +97,7 @@ int main( int argc, char** argv )
 			pan::log_ERROR("Config file not set"); 
 			err++;
 		}
-		if (vm.count("t")) {
+		if (vm.count("i")) {
 			pan::log_NOTICE("Running interactive TEST MODE ");
 			runInteractive = true;
 		}
@@ -203,13 +203,23 @@ int main( int argc, char** argv )
 #endif
 
         // venue ID
-		config.venueID = dict.has("VenueID") ? atoi(dict.getString("VenueID").c_str()) : 0;
-		if (config.venueID == 0) { 
+		config.venue_id = dict.has("VenueID") ? atoi(dict.getString("VenueID").c_str()) : 0;
+		if (config.venue_id == 0) { 
 			pan::log_CRITICAL("VenueID may NOT be empty or 0");
 			return (-1);
 		}
 #ifdef LOG
-		pan::log_INFORMATIONAL("Using VenueID: ", pan::integer(config.venueID));
+		pan::log_INFORMATIONAL("Using VenueID: ", pan::integer(config.venue_id));
+#endif
+
+		// Order interface listener addr 
+		config.orderListenerAddr = dict.has("OrderListenerAddr") ? dict.getString("OrderListenerAddr").c_str() : "";
+        if (config.orderListenerAddr == "") {
+			pan::log_CRITICAL("OrderListenerAddr may NOT be empty");
+			return (-1);
+        }
+#ifdef LOG
+		pan::log_INFORMATIONAL("LimitOrder40: ", pan::character(limitOrder));
 #endif
 
         // Debug settings

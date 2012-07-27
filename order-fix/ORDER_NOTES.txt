@@ -1,0 +1,39 @@
+Received execution report on logon
+WHY ARE WE GETTING THIS MESSAGE? WHAT INDICATES SUCCESS/FAILURE?
+<HEADER>
+20120508-12:02:59.516 : 8=FIX.4.2
+9=318
+35=8
+34=2
+49=BAXTERtest
+52=20120508-12:02:59.497
+56=GFS
+6=0
+</HEADER>
+<BODY>
+OrderID - 11=b179f1e9-8529-4013-b393-70e564b29470
+CumQty - 14=0
+ExecId - 17=201205026077605
+ExecTransType (0 = new; 3 = status) 20=0
+HandlInst (1 = automated; 2 = auto+broker; 3=manual) 21=2
+LastPx - 31=0
+LastShares - 32=0
+OrderID (assigned by venue) 37=884296149
+OrderQty (total intended order qty) 38=1000000
+=====> THIS IS WHERE YOU TELL SUCCESS/FAILURE OrderStatus 39=C
+OrdType (1 = market; 2 = limit; 3 = stop) - 40=2
+OrigClOrdId - 41=b179f1e9-8529-4013-b393-70e564b29470
+Price - 44=1.24
+Side - (1 = buy; 2 = sell) 54=1
+Symbol - 55=EUR/USD
+TimeInForce - (0 = day; 1 = gtc; 3 = ioc; 6 = gtd) 59=6
+TransactTime (executed time on venue) 60=20120502-21:00:02.008
+ExpireTime - 126=20120502-21:00:00.000
+ExecType - (same values as OrdStatus) 150=C
+LeavesQty - (amount of shares open for further execution. if ordstatus = canceld, donefortheday, expried, calculated, or rejected in which case the order is no longer active) then leavesqty could be 0 otherwise LeavesQty = OrderQty - CumQty EXPRESSED IN CCY1) -  151=0
+SecurityType - 167=FOR
+</BODY>
+<FOOTER>
+Checksum - 10=123
+</FOOTER>
+
