@@ -18,11 +18,7 @@ namespace capk
 class NullOrderInterface : public OrderInterface
 {
 	public: 
-<<<<<<< HEAD:order-fix/NullOrderInterface.h
-	NullOrderInterface(zmq::context_t* ctx): OrderInterface(NULL_INTERFACE_ID),  _ctx(ctx) {
-=======
 	NullOrderInterface(capk::venue_id_t ID, zmq::context_t* ctx): OrderInterface(ID), _ctx(ctx) {
->>>>>>> st:order-fix/null_order_interface.h
 #ifdef LOG
 		pan::log_DEBUG("NullOrderInterface()");
 #endif
