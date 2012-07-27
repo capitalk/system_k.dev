@@ -8,12 +8,19 @@ COLLECTORS=../../collectors
 UTILS=../../collectors/utils
 TESTS=./tests
 MYSQL=/usr/local/include/mysql
+STRATEGY_BASE=../../strategy
+ORDER_ENGINE=../../order_engines/order-fix
 
 INCLUDE=-I $(BOOST) -I /usr/local/include/ \
 		-I $(MYSQL) \
-        -I/usr/local/src/quickfix/include -I.. -I $(COLLECTORS) \
-		-I $(PANTHEIOS_ROOT)/include -I $(STLSOFT)/include \
-		-I $(UTILS)
+        -I/usr/local/src/quickfix/include \
+		-I.. \
+	   	-I $(COLLECTORS) \
+		-I $(PANTHEIOS_ROOT)/include \
+		-I $(STLSOFT)/include \
+		-I $(UTILS) \
+		-I $(STRATEGY_BASE) \
+		-I $(ORDER_ENGINE) 
 
 LIBS= -L/usr/local/lib \
 	  -L/usr/local/lib64/mysql \
@@ -42,17 +49,6 @@ CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG
 
 LDFLAGS=-static
 
-PROTOBUF_OBJS = new_order_single.pb.o \
-				order_cancel.pb.o \
-				order_cancel_reject.pb.o \
-				order_cancel_replace.pb.o \
-				capk_globals.pb.o \
-				execution_report.pb.o \
-				order_status.pb.o
-				
-
-dbg=1
-
 ifeq ($(dbg),1)
         CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb -g  -DLOG
 endif
@@ -60,6 +56,8 @@ endif
 #LDFLAGS=-static
 
 all: protos trade_serializer 
+
+include $(PROTO)/Makefile.inc
 
 trade_serializer : trade_serializer.o logging.o jenkins_hash.o timing.o time_utils.o $(PROTOBUF_OBJS)
 	$(CC) $(CFLAGS) trade_serializer.o logging.o jenkins_hash.o timing.o time_utils.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
@@ -70,42 +68,14 @@ jenkins_hash.o: $(UTILS)/jenkins_hash.cpp
 time_utils.o: $(UTILS)/time_utils.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
-logging.o: ../order-fix/logging.cpp 
+logging.o: $(UTILS)/logging.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
-timing.o: ../order-fix/timing.cpp 
+timing.o: $(UTILS)/timing.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 	
-new_order_single.pb.o: $(PROTO)/new_order_single.pb.cc $(PROTO)/new_order_single.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/new_order_single.pb.cc
-
-order_status.pb.o: $(PROTO)/order_status.pb.cc $(PROTO)/order_status.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/order_status.pb.cc
-
-capk_globals.pb.o: $(PROTO)/capk_globals.pb.cc $(PROTO)/capk_globals.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/capk_globals.pb.cc
-
-order_cancel.pb.o: $(PROTO)/order_cancel.pb.cc $(PROTO)/order_cancel.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/order_cancel.pb.cc
-
-order_cancel_reject.pb.o: $(PROTO)/order_cancel_reject.pb.cc $(PROTO)/order_cancel_reject.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/order_cancel_reject.pb.cc
-
-order_cancel_replace.pb.o: $(PROTO)/order_cancel_replace.pb.cc $(PROTO)/order_cancel_replace.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/order_cancel_replace.pb.cc
-
-execution_report.pb.o: $(PROTO)/execution_report.pb.cc $(PROTO)/execution_report.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/execution_report.pb.cc
- 
-spot_fx_md_1.pb.o: $(PROTO)/spot_fx_md_1.pb.cc $(PROTO)/spot_fx_md_1.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/spot_fx_md_1.pb.cc
-
 trade_serializer.o: trade_serializer.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
-
-application.o: application.cpp
-	#$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) application.cpp  
-	$(CC) -c $(INCLUDE) $(CFLAGS) $<  
 
 # PROTOS
 protos: 

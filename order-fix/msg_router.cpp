@@ -89,7 +89,8 @@ MsgRouter::rcvMsg()
 	order_id_t oid;
 	oid.set(nos.order_id().c_str(), nos.order_id().size());
 	OrderInfo_ptr order_ptr = boost::make_shared<OrderInfo>(oid, sid);
-	char buf[UUID_STRLEN + 1];
+	//char buf[UUID_STRLEN + 1];
+    uuidbuf_t buf;
 #ifdef LOG
 	pan::log_DEBUG("Creating hash entry for: ", order_ptr->getOrderID().c_str(buf));
 	pan::log_DEBUG(__FILE__, 
@@ -281,7 +282,8 @@ MsgRouter::repMsg(order_id_t& oid)
 {
 	// Use the order id to lookup the reply route in the hashtable
 	// populate zmq msg and send
-	char oidbuf[UUID_STRLEN+1];
+	//char oidbuf[UUID_STRLEN+1];
+    uuidbuf_t oidbuf;
 	oid.c_str(oidbuf);
 	#ifdef LOG
 	pan::log_DEBUG("Replying to: ", oidbuf);

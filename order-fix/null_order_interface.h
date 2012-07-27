@@ -44,7 +44,8 @@ class NullOrderInterface : public OrderInterface
 			pan::log_DEBUG("NullOrderInterface (outbound) connecting to: ", outaddr.c_str());
 			_inproc->connect(outaddr.c_str());
 			_inproc->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
-			char sidbuf[UUID_LEN];
+			//char sidbuf[UUID_LEN];
+            uuidbuf_t sidbuf;
 			bool rc;
 		while(1) {
 				//sleep(1);

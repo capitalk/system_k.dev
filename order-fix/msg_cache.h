@@ -22,17 +22,17 @@ using std::tr1::hash; // for hash function - specialized to Jenkns hash
 #define MAX_HOPS 4
 #define MSG_ADDR_LEN 17
 #define UUID_LEN 16
-#define UUID_STRLEN 36+1
+#define UUID_STRLEN 36
+typedef char uuidbuf_t[UUID_STRLEN+1];
 
-static const char* STRATEGY_CACHE_FILENAME = "StrategyRouteMap.cache";
-static const char* ORDER_CACHE_FILENAME = "OrderStatusMap.cache";
+static const char* const STRATEGY_CACHE_FILENAME = "StrategyRouteMap.cache";
+static const char* const ORDER_CACHE_FILENAME = "OrderStatusMap.cache";
 
 
 typedef struct order_id order_id_t;
 typedef struct node node_t;
 typedef struct route route_t;
 
-typedef char uuidbuf_t[UUID_LEN + 1];
 
 struct node 
 {
@@ -244,7 +244,7 @@ struct order_id
 	{
 		if (buf) {
 			uuid_unparse(_oid, buf);
-			buf[UUID_STRLEN - 1] = 0;
+			buf[UUID_STRLEN] = '\0';
 			return buf;
 		}
 		else {
@@ -345,7 +345,7 @@ struct strategy_id
 	{
 		if (buf) {
 			uuid_unparse(_sid, buf);
-			buf[UUID_STRLEN] = 0;
+			buf[UUID_STRLEN-1] = '\0';
 			return buf;
 		}
 		else {
@@ -448,7 +448,7 @@ namespace std {
 		{ 
 			public:
 				size_t operator() (const order_id& x) const {
-					size_t hval = hashlittle(x._oid, UUID_LEN, 0);
+					size_t hval = hashlittle(x._oid, x.size(), 0);
 					return hval;
 				}
 		};
@@ -457,7 +457,7 @@ namespace std {
 		{
 			public:
 				size_t operator() (const strategy_id& x) const {
-					size_t hval = hashlittle(x._sid, UUID_LEN, 0);
+					size_t hval = hashlittle(x._sid, x.size(), 0);
 					return hval;
 				}
 		};

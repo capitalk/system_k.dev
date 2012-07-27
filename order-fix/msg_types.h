@@ -30,7 +30,8 @@ const msg_t HEARTBEAT_ACK	= 0xA1;
 
 const msg_t EXEC_RPT		= 0xB0;
 
-
+const msg_t POSITION_REQ    = 0xC0;
+const msg_t OPEN_ORDER_REQ    = 0xC1;
 
 }; // namespace capk
 

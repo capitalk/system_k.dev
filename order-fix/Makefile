@@ -46,7 +46,6 @@ PROTOBUF_OBJS = new_order_single.pb.o \
 				order_status.pb.o
 				
 
-dbg=1
 
 ifeq ($(dbg),1)
         CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb -g  -DLOG

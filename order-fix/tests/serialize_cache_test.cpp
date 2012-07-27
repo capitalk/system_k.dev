@@ -55,7 +55,7 @@ namespace std {
         {
             public:
                 size_t operator() (const int& x) const {
-                    //size_t hval = hashlittle(x._oid, UUID_LEN, 0);
+                    //size_t hval = hashlittle(x._oid, x.size(), 0);
                     return x;
                     //return hval;
                 }

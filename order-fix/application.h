@@ -162,7 +162,6 @@ public:
 
 	// OrderInterface virtual methods
 	virtual void dispatch(capk::msg_t msgType, char* data, size_t len);
-	virtual void snd(capk::msg_t msgType, char* data, size_t len);
 
 	// Receive message from MsgProcessor and convert to appropriate FIX request
 	void newOrderSingle42(capkproto::new_order_single& nos);
@@ -203,6 +202,9 @@ private:
 
 //   template <typename T> 
 //   void incremental_update_template(const T& message, const FIX::SessionID& sessionID); 
+
+    void send_to_serialization_service(const strategy_id_t&, const capkproto::execution_report&);
+    void send_to_serialization_service(const strategy_id_t&, const capkproto::new_order_single&);
 
 	void onCreate(const FIX::SessionID&); 
 	void onLogon(const FIX::SessionID& sessionID);
@@ -311,7 +313,8 @@ private:
 	
 
 	zmq::context_t *_pzmq_context;	
-	zmq::socket_t *_pzmq_outsock;
+	zmq::socket_t *_pzmq_strategy_sock;
+	zmq::socket_t *_pzmq_serialization_sock;
 
 
 };

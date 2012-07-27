@@ -151,7 +151,8 @@ MsgProcessor::handleIncomingClientMessage()
 	// convert msg_type and strategy_id
 	capk::msg_t msgType = *(static_cast<capk::msg_t*>(msg_type.data()));	
 #ifdef LOG 
-		char sidbuf[UUID_STRLEN];
+		//char sidbuf[UUID_STRLEN];
+		uuidbuf_t sidbuf;;
 		pan::log_DEBUG("MsgProcessor::handleIncomingClientMessage() rcvd msg_type: ", pan::integer(msgType));
 		pan::log_DEBUG("MsgProcessor::handleIncomingClientMessage() rcvd SID [", pan::integer(sidframe.size()), "]: ", 
 			pan::blob(static_cast<const void*>(sidframe.data()), sidframe.size()));	
@@ -197,7 +198,8 @@ MsgProcessor::handleIncomingClientMessage()
 	
 		// Add to order cache
 #ifdef LOG
-		char oidbuf[UUID_STRLEN+1];
+		//char oidbuf[UUID_STRLEN+1];
+        uuidbuf_t oidbuf;
 		oid.c_str(oidbuf);
 		pan::log_DEBUG("Adding to order cache: ", oidbuf);	
 #endif 
@@ -221,7 +223,8 @@ MsgProcessor::handleIncomingClientMessage()
 void
 MsgProcessor::rcv_internal()
 {
-    char sidbuf[UUID_STRLEN+1];
+    //char sidbuf[UUID_STRLEN+1];
+    uuidbuf_t sidbuf;
 	zmq::message_t sidframe;
 
     int64_t more;
