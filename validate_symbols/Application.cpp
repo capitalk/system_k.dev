@@ -29,10 +29,9 @@
 #include "KFixFields.h"
 #include "quickfix/Session.h"
 #include "quickfix/FieldConvertors.h"
-#include "utils/KTimeUtils.h"
-#include "utils/FIXConvertors.h"
-#include "utils/hash.cpp"
-#include "order_book/KBook.h"
+#include "utils/time_utils.h"
+#include "utils/fix_convertors.h"
+#include "utils/jenkins_hash.cpp"
 #include <iostream>
 
 #include <boost/lexical_cast.hpp>
@@ -147,7 +146,7 @@ void Application::onMessage(const FIX42::SecurityDefinition& message, const FIX:
             std::cout << "List complete: " << _nValidSymbols << std::endl;
             std::vector<std::string>::const_iterator vit = _validSymbols.begin();
             std::cout << "Valid symbols on: " << _config.mic_code << "\n";
-            std::string symFilename = _config.mic_code + ".symbols";
+            std::string symFilename = _config.mic_code + ".validated-symbols";
             std::ofstream symFile(symFilename);
 
             while(vit != _validSymbols.end() && *vit != "") {
@@ -171,6 +170,7 @@ void Application::onMessage(const FIX42::SecurityDefinition& message, const FIX:
                 }
                 //it++;
             }
+			std::cerr << "COMPLETE" << std::endl;
             _querySecurityDefinitionComplete = true;
         }
 	}	

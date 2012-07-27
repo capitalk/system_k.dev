@@ -76,5 +76,5 @@ timespec2str_test: timespec2str_test.o KTimeUtils.o
 utils: uuidgen zmq_version timespec2str_test
 
 clean :
-	rm -f *.o uuidgen zmq_version timespec2str_test
+	rm -f *.o *.gch uuidgen zmq_version timespec2str_test
 

@@ -72,7 +72,6 @@
 #include <boost/make_shared.hpp>
 
 #include <zmq.hpp>
-#include "order_book/KBook.h"
 
 
 enum FIXVersion {
@@ -114,11 +113,7 @@ public:
 
 	//void addBook(const std::string& symbol, capitalk::PriceDepthOrderBook* book);
 	//capitalk::PriceDepthOrderBook*  getBook(const std::string& symbol);
-	void addBook(const std::string& symbol, KBook* book);
-	KBook*  getBook(const std::string& symbol);
 
-	void addStream(const std::string& symbol, std::ostream* log);
-	std::ostream*  getStream(const std::string& symbol);
 
 	void addSymbols(const std::vector<std::string>& symbols);
 	const std::vector<std::string>& getSymbols();

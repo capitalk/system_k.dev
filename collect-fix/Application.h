@@ -87,8 +87,10 @@
 #include <boost/make_shared.hpp>
 
 #include <zmq.hpp>
-//#include "orderBook/KPriceDepthOrderBook.h"
-#include "order_book/KBook.h"
+#include "order_book.v2/order_book.h"
+#include "order_book.v2/book_types.h"
+#include "utils/types.h"
+#include "utils/time_utils.h"
 
 enum FIXVersion {
 	FIX_42 = 42,
@@ -98,7 +100,8 @@ enum FIXVersion {
 };
 
 struct ApplicationConfig { 
-	std::string mic_code; 
+	std::string mic_string; 
+    int venue_id;
 	std::string username; 
 	std::string password; 
 	bool sendPasswordInRawDataField;
@@ -116,10 +119,9 @@ class Application :
 public:
 	Application(bool bReset, const ApplicationConfig& config) 
          :  _loggedIn(false), _loggedOut(false), _loginCount(0), 
-            _appMsgCount(0), _resetSequence(bReset), _config(config)
-            /*, _bookLog(0), _msgLog(0)*/  {
+            _appMsgCount(0), _resetSequence(bReset), _config(config) {
 
-  	   std::cout << "Application::Application()" << std::endl;
+		std::cout << "Application::Application()" << std::endl;
 	      /* _msgLog.rdbuf(&_msgBuf); _msgBuf.open("msgBuf.log");
 	       *_bookLog.rdbuf(&_bookBuf);
 	       *_bookLog.rdbuf(&_bookBuf); _bookBuf.open("baxterOrderBook.log");*/
@@ -129,8 +131,8 @@ public:
 
 	//void addBook(const std::string& symbol, capitalk::PriceDepthOrderBook* book);
 	//capitalk::PriceDepthOrderBook*  getBook(const std::string& symbol);
-	void addBook(const std::string& symbol, KBook* book);
-	KBook*  getBook(const std::string& symbol);
+	void addBook(const std::string& symbol, capk::KBook* book);
+    capk::KBook*  getBook(const std::string& symbol);
 
 	void addStream(const std::string& symbol, std::ostream* log);
 	std::ostream*  getStream(const std::string& symbol);
@@ -146,7 +148,7 @@ public:
     void setZMQContext(void* c) { this->_pzmq_context = c;}
     void setZMQSocket(void* s) { this->_pzmq_socket = s;}
     void setPublishing(bool isPublishing) { this->_isPublishing = isPublishing;}
-    inline bool isPublishing() { return _isPublishing;}
+    void setLogging(bool isLogging) { this->_isLogging = isLogging;}
     void* getZMQSocket() { return this->_pzmq_socket;}
     void* getZMQContext() { return this->_pzmq_context;}
 
@@ -234,13 +236,14 @@ private:
 	bool _loggedIn;
 	bool _loggedOut;
 	unsigned int _loginCount;
-	bool _resetSequence;
     unsigned int _appMsgCount;
+	bool _resetSequence;
 	const ApplicationConfig& _config; 
 
     void* _pzmq_socket;
     void* _pzmq_context;
     bool _isPublishing;
+    bool _isLogging;
 
 	int _MDUpdateType;
     
@@ -255,8 +258,8 @@ private:
 
 	//std::map<std::string, capitalk::PriceDepthOrderBook* > _symbolToBook;
 	//typedef std::map<std::string, capitalk::PriceDepthOrderBook* >::iterator symbolToBookIterator;
-	std::map<std::string, KBook* > _symbolToBook;
-	typedef std::map<std::string, KBook* >::iterator symbolToBookIterator;
+	std::map<std::string, capk::KBook* > _symbolToBook;
+	typedef std::map<std::string, capk::KBook* >::iterator symbolToBookIterator;
 };
 
 #endif

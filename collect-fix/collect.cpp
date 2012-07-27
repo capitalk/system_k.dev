@@ -25,6 +25,7 @@
 
 #include "quickfix/FileStore.h"
 #include "quickfix/FileLog.h"
+#include "quickfix/NullStore.h"
 #include "quickfix/SocketInitiator.h"
 #include "quickfix/ThreadedSocketInitiator.h"
 #include "quickfix/SessionSettings.h"
@@ -45,6 +46,9 @@
 
 #include "../proto/spot_fx_md_1.pb.h"
 
+//#include "utils/venue_globals.h"
+#include "utils/venue_utils.h"
+
 namespace po = boost::program_options;
 namespace fs = boost::filesystem; 
 namespace dt = boost::gregorian; 
@@ -52,7 +56,8 @@ namespace dt = boost::gregorian;
 void sighandler(int sig);
 
 // Global pointers for signal handlers to cleanup properly
-FIX::ThreadedSocketInitiator* pinitiator;
+//FIX::ThreadedSocketInitiator* pinitiator;
+FIX::SocketInitiator* pinitiator;
 Application* papplication;
 
 // ZMQ Globals - can't have these go out of scope
@@ -88,7 +93,8 @@ int main( int argc, char** argv )
 	std::string configFile;
 	std::string password;
 	bool printDebug; 
-    
+    bool isLogging;
+    int zero = 0;  
 
     (void) signal(SIGINT, sighandler);
     (void) signal(SIGTERM, sighandler);
@@ -97,6 +103,8 @@ int main( int argc, char** argv )
 	g_zmq_context = zmq_init(1);
 	assert(g_zmq_context);
 	pub_socket = zmq_socket(g_zmq_context, ZMQ_PUB);
+   
+    zmq_setsockopt(pub_socket, ZMQ_LINGER, &zero, sizeof(zero));
 	assert(pub_socket);
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -105,10 +113,10 @@ int main( int argc, char** argv )
 		po::options_description desc("Allowed options");
 		desc.add_options()
 			("help", "produce help message")
-			//("p", po::value<std::string>(), "password")
 			("c", po::value<std::string>(), "<config file>")
 			("s", po::value<std::string>(), "<symbol file>")
 			("o", po::value<std::string>(), "<output path>")
+			("nolog", po::value<int>()->implicit_value(0), "disable logging (FIX and tick)")
 			("d", "debug info")
 		;
 		
@@ -116,12 +124,19 @@ int main( int argc, char** argv )
 		po::store(po::parse_command_line(argc, argv, desc), vm);
 		po::notify(vm);    
 
-		
+		if (vm.count("nolog")) {
+            std::cout << "Logging disabled" << std::endl;
+            //isLogging = (vm["nolog"].as<int>() == 1 ? false : true);
+            isLogging = false;
+		}
+        else { 
+            std::cout << "Logging enabled" << std::endl;
+            isLogging = true;
+        }
 		if (vm.count("help")) {
 			std::cout << desc << "\n";
 			return 1;
 		}
-		
 		if (vm.count("o")) {
 			std::cout << "Output path: " << vm["o"].as<std::string>() << "\n";
             argOutputDir = vm["o"].as<std::string>();
@@ -178,8 +193,12 @@ int main( int argc, char** argv )
 		FIX::SessionID sessionId = *(sessions.begin()); 
 		const FIX::Dictionary& dict = settings.get(sessionId);
 		ApplicationConfig config;  
+
         // MIC code for adding to output filename 
-		config.mic_code = dict.has("MIC") ? dict.getString("MIC") : ""; 
+		config.mic_string = dict.has("MIC") ? dict.getString("MIC") : ""; 
+        // MIC id as integer for protobuf usage
+		config.venue_id = capk::micStringToVenueId(config.mic_string.c_str()); 
+        assert(config.venue_id != 0);
 
         // Username and password settings
 		config.username = dict.has("Username") ? dict.getString("Username") : ""; 
@@ -249,7 +268,7 @@ int main( int argc, char** argv )
         pid_t ppid = getppid();
         
         printf("pid: %d, ppid: %d\n", pid, ppid);
-        std::string pidFileName = std::string(argv[0]) + "." +  config.mic_code + std::string(".pid");
+        std::string pidFileName = std::string(argv[0]) + "." +  config.mic_string + std::string(".pid");
         std::ofstream pidFile(pidFileName);
         if (pidFile.is_open()) {
             pidFile << pid;
@@ -279,20 +298,29 @@ int main( int argc, char** argv )
             application.setZMQSocket(pub_socket);
         }
         application.setPublishing(isPublishing);
+        application.setLogging(isLogging);
 
 		// Set MDUpdateType
 		application.setUpdateType(updateType);
         
         // orderbook output setup
 		application.setDataPath(orderBooksOutputDir);
-		FIX::FileStoreFactory storeFactory(storeOutputDir);         
-		FIX::FileLogFactory logFactory(logOutputDir);
+        // fix logging params
 
-
-		FIX::ThreadedSocketInitiator initiator(application, storeFactory, settings, logFactory);
-        pinitiator = &initiator;
+        if (isLogging) {
+            std::cout << "Logging with FileStoreFactory" << std::endl;
+		    FIX::FileStoreFactory fileStoreFactory(storeOutputDir);         
+		    FIX::FileLogFactory logFactory(logOutputDir);
+		    pinitiator = new FIX::SocketInitiator(application, fileStoreFactory, settings, logFactory);
+        }
+        else {
+            std::cout << "Logging with NullStoreFactory" << std::endl;
+            FIX::NullStoreFactory nullStoreFactory;
+		    pinitiator = new FIX::SocketInitiator(application, nullStoreFactory, settings);
+        }
+        //pinitiator = &initiator;
 		std::cout << "Starting initiator" << std::endl; 
-		initiator.start();
+		pinitiator->start();
 
 		char x;
 		while(std::cin >> x) {
@@ -301,7 +329,7 @@ int main( int argc, char** argv )
 			}
 		}
 		std::cout << "Stopping initiator..." << std::endl;
-		initiator.stop();
+		pinitiator->stop();
 		return 0;
 	}
 	catch ( FIX::Exception & e )

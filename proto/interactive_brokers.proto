@@ -1,0 +1,32 @@
+package capkproto;
+
+import "capk_globals.proto";
+
+message interactive_brokers_bbo {
+    required sfixed32 venue_id = 1;
+    required string symbol = 2;
+    required double bid_size = 3;
+    required double bid_price = 4;
+    required double ask_size = 5;
+    required double ask_price = 6;
+}
+
+message interactive_brokers_contract {
+    required sfixed32 conId = 1;
+    optional string symbol = 2;
+    optional string secType = 3;
+    optional string expiry = 4;
+    optional double strike = 5;
+    optional string right = 6;
+    optional string multiplier = 7;
+    optional string exchange = 8;
+    optional string primaryExchagne = 9;
+    optional string currency = 10;
+    optional string localSymbol = 11;
+    optional bool includeExpired = 12;
+    optional string secIdType = 13; // could be CUSIP; SEDOL; ISIN; RIC
+    optional string secId = 14;
+  
+}
+
+

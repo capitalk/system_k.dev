@@ -46,6 +46,7 @@ ssh $remoteuser@$remoteserver "cd $bindir && $bindir/collect.$MIC.prod.sh"
 # Zip up tick files and copy them over to local
 echo "MOVING tick files" 
 ssh $remoteuser@$remoteserver "nice -n 1 gzip $remotetickdir/$MIC/$yesterday/*.csv"
+ssh $remoteuser@$remoteserver "sh s3_move_dir.sh $remotetickdir/$MIC/$yesterday/ capk-TESTCRON"
 scp -rp $remoteuser@$remoteserver:$remotetickdir/$MIC/$yesterday $localtickdir/$MIC/
 
 # Zip up log files and copy them over to local

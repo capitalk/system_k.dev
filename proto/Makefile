@@ -1,17 +1,22 @@
 
 PROTOC=protoc
-PROTO=./
+PROTO_OUT?=./
+PROTO_DIR=.
 
-all: cpp py
+all: cpp py ctags
+
 
 # PROTOS
 py: 
-	protoc -I $(PROTO) --python_out=$(PROTO) $(PROTO)/*.proto
+	protoc -I $(PROTO_DIR) --python_out=$(PROTO_OUT) $(PROTO_DIR)/*.proto
 
 cpp: 
-	protoc -I $(PROTO) --cpp_out=$(PROTO) $(PROTO)/*.proto
+	protoc -I $(PROTO_DIR) --cpp_out=$(PROTO_OUT) $(PROTO_DIR)/*.proto
+
+ctags:
+	ctags *.h *.cc
 
 clean :
-	rm -f *.o $(PROTO)/*.cc $(PROTO)/*.h $(PROTO)/*.py
+	rm -f *.o $(PROTO_DIR)/*.cc $(PROTO_DIR)/*.h $(PROTO_DIR)/*.py
 
 

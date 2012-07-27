@@ -1,0 +1,18 @@
+package capkproto;
+
+import "capk_globals.proto";
+
+message execution_ack {
+	optional bytes		order_id = 1;
+	optional bytes		cl_order_id = 2;	
+	optional sfixed32	exec_ack_status = 3; // 1 = accepted
+	optional bytes		exec_id = 4;
+	optional string		symbol = 5;
+	optional string		fut_sett_date = 6;
+	optional side_t		side = 7;
+	optional double		order_qty = 8;
+	optional double		last_qty = 9;
+	optional double		last_price = 10;
+	optional double		cum_qty = 11;
+	optional double		last_spot_rate = 12;
+}

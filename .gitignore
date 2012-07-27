@@ -5,3 +5,5 @@ store/
 *.pid
 *.o
 *.gch
+*.a
+

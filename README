@@ -2,3 +2,5 @@ Data collectors for collecting tick data to file
 Building collector-fix will also build the order book 
 
 Generic FIX and specific itch implementations are in different directories
+
+Use validate_symbols to find out which pairs are supported by any exchange
