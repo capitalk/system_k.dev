@@ -1347,17 +1347,21 @@ Application::run()
 	// 2) Log file	
 	std::string logFileName;
 	std::ofstream* pLog;
-	//capitalk::PriceDepthOrderBook* pBook = NULL;
     capk::KBook* pBook = NULL;
 	std::string MIC_prefix = _config.mic_string.length() > 0 ? _config.mic_string + "_" : ""; 
 	std::string symbol; 
 	fs::path fullPathToLog;
+
 	while(it != _symbols.end() && *it != "") {
         bool isRestart = false;
 		symbol = *it; 
 		//pBook = new capitalk::PriceDepthOrderBook(symbol, 5);	
 		pBook = new capk::KBook(symbol.c_str(), _config.marketDepth);	
-		std::cerr << "Created new order book: " << symbol << "(" << pBook->getDepth() << ")" << "\n";
+		std::cerr << 
+            "Created new order book: " 
+            << symbol 
+            << "(" << pBook->getDepth() << ")" 
+            << "\n";
 		logFileName = MIC_prefix + remove_bad_filename_chars(symbol) + "_" + dateToday;
 		logFileName.append(".csv");
         fullPathToLog = datePath / fs::path(logFileName);

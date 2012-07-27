@@ -213,8 +213,8 @@ book_manager::run() {
             // check the time since last update and reset if too long
             double bb = INT_MIN;
             double ba = INT_MAX;
-            char* bbmic = 0;
-            char* bamic = 0;
+            //char* bbmic = 0;
+            //char* bamic = 0;
             double bbvol = 0;
             double bavol = 0;
             capk::venue_id_t bb_venue_id = capk::kNULL_VENUE_ID;

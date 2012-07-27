@@ -45,6 +45,11 @@ namespace capk
     // Aggregated book broadcast information
     const char* const kAGGREGATED_BOOK_BROADCAST_ADDR = "tcp://127.0.0.1:9000";
 
+    // Trade serialization service address
+    //const char* const kTRADE_SERIALIZATION_ADDR = "tcp://127.0.0.1:9898";
+    const char* const kTRADE_SERIALIZATION_ADDR = "ipc:///tmp/trade_serializer";
+    const char* const kRECOVERY_LISTENER_ADDR = "ipc:///tmp/recovery";
+
 }
 
 #endif // CAPK_VENUE_GLOBALS

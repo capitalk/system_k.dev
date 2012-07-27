@@ -45,13 +45,13 @@ struct MultiMarketBBO
 {
     char symbol[SYMBOL_LEN];
 
-    venue_id_t bid_venue;
+    venue_id_t bid_venue_id;
     //std::string bid_venue;
     double bid_price;
     double bid_size;
     timespec bid_last_update;
 
-    capk::venue_id_t ask_venue;
+    capk::venue_id_t ask_venue_id;
     //std::string ask_venue;
     double ask_price;
     double ask_size;

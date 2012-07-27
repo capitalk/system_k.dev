@@ -3,8 +3,8 @@ package capkproto;
 import "capk_globals.proto";
 
 message order_status {
-    optional bytes		cl_order_id		= 1;
-    optional bytes		order_id		= 2;
+    optional bytes		order_id		= 1;
+    optional bytes		cl_order_id	    = 2;
     optional bytes		strategy_id		= 3;
     optional string		symbol			= 4;
 	optional side_t		side			= 5;

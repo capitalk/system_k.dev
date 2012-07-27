@@ -125,12 +125,12 @@ int main( int argc, char** argv )
 		po::notify(vm);    
 
 		if (vm.count("nolog")) {
-            std::cout << "Logging disabled" << "\n";
+            std::cout << "Logging disabled" << std::endl;
             //isLogging = (vm["nolog"].as<int>() == 1 ? false : true);
             isLogging = false;
 		}
         else { 
-            std::cout << "Logging enabled" << "\n";
+            std::cout << "Logging enabled" << std::endl;
             isLogging = true;
         }
 		if (vm.count("help")) {
@@ -298,6 +298,7 @@ int main( int argc, char** argv )
             application.setZMQSocket(pub_socket);
         }
         application.setPublishing(isPublishing);
+        application.setLogging(isLogging);
 
 		// Set MDUpdateType
 		application.setUpdateType(updateType);

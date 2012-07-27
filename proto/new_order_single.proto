@@ -3,7 +3,7 @@ package capkproto;
 import "capk_globals.proto";
 
 message new_order_single {
-    optional bytes		order_id = 1;
+    optional bytes		order_id = 1; 
     optional bytes		strategy_id = 2;
     optional string		symbol = 3;
 	optional side_t		side = 4;
@@ -12,5 +12,6 @@ message new_order_single {
 	optional double		price = 7;
 	optional sfixed32	time_in_force = 8;
 	optional string		account = 9;
-}
+    optional sfixed32   venue_id = 10;
+};
 
