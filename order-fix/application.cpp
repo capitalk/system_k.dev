@@ -665,6 +665,7 @@ Application::onMessage(const FIX42::ExecutionReport& message,
 	// properly back to strategy
 	// 3) send the data in the message
 	// 4) end the transmission
+    strategy_id_t strategy_id;
     if (_pMsgProcessor) {
         bool sndOK;
         assert(_pMsgProcessor);
@@ -675,7 +676,7 @@ Application::onMessage(const FIX42::ExecutionReport& message,
             pan::log_CRITICAL("OnMessage(ExecutionReport42) no order info for orderid - can't lookup sid in order cache");	
         }
         else {
-            strategy_id_t strategy_id = oinfo->getStrategyID();
+            strategy_id = oinfo->getStrategyID();
         }
         // create strategy id frame and send it with more flag set
         zmq::message_t sidframe(strategy_id.size());	
@@ -763,7 +764,7 @@ Application::onMessage(const FIX42::OrderCancelReject& message,
 	// properly back to strategy
 	// 3) send the data in the message
 	// 4) end the transmission
-		
+	strategy_id_t strategy_id;
     if (_pMsgProcessor) {
         bool sndOK;
         assert(_pMsgProcessor);
@@ -774,7 +775,7 @@ Application::onMessage(const FIX42::OrderCancelReject& message,
             pan::log_CRITICAL("OrderCancelReject42() - No order info for orderid - can't lookup sid in order cache");	
         }
         else {
-            strategy_id_t strategy_id = oinfo->getStrategyID();
+            strategy_id = oinfo->getStrategyID();
         }
 
         // create strategy id frame and send it with more flag set
@@ -892,12 +893,17 @@ Application::run()
 	int zero = 0;
 	_pzmq_strategy_sock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
 	std::string outaddr = _pMsgProcessor->getOutboundAddr();
+    pan::log_NOTICE("Connecting to msgp processor service at: ", 
+            outaddr.c_str()); 
 	_pzmq_strategy_sock->connect(outaddr.c_str());
 
     _pzmq_serialization_sock = new zmq::socket_t(*ctx, ZMQ_DEALER);
     _pzmq_serialization_sock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
+    pan::log_NOTICE("Connecting to trade serialization service at: ", 
+            capk::kTRADE_SERIALIZATION_ADDR);
     _pzmq_serialization_sock->connect(capk::kTRADE_SERIALIZATION_ADDR);
-
+    pan::log_NOTICE("Connect OK");
+    pan::log_NOTICE("Starting message processor loop");
 	_pMsgProcessor->run();
 
 }

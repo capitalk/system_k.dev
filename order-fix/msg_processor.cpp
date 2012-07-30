@@ -8,7 +8,9 @@ void
 freenode(void* data, void* hint) {
     if (data) {
 		node_t* tmp = static_cast<node_t*>(data);
-		std::cerr << "freenode: ", pan::integer(*(int*)tmp->data());
+#ifdef LOG
+        pan::log_DEBUG("freenode: ", pan::integer(*(int*)tmp->data()));
+#endif
         delete(static_cast<node_t*>(data));
     }
 	else {
@@ -27,7 +29,8 @@ _ctx(ctx),
 _listen_addr(listen_addr),
 _out_addr(out_addr), 
 _out_threads(out_threads),
-_interface(oi)
+_interface(oi),
+_stop(false)
 {
 	assert(_ctx);
 	assert(_listen_addr.length()>0);
@@ -176,7 +179,9 @@ MsgProcessor::handleIncomingClientMessage()
 		snd_STRATEGY_HELO_ACK(sid);
 	}
 	else if (msgType == capk::HEARTBEAT) {
+#ifdef LOG
 		pan::log_DEBUG("MsgProcessor::handleIncomingClientMessage() rcvd HEARTBEAT from SID: ", sid.c_str(sidbuf));
+#endif 
 		snd_HEARTBEAT_ACK(sid);
 	}
 	// PROCESS ALL ORDER RELATED MESSAGES
@@ -197,8 +202,11 @@ MsgProcessor::handleIncomingClientMessage()
 		OrderInfo_ptr op = boost::make_shared<OrderInfo>(oid, sid);	
 	
 		// Add to order cache
+#if 0
+        // KTK - don't write orders to disk anymore 
+        // since we store the order state and trades in database
+        // USE SERIALIZATION SERVICE INSTEAD
 #ifdef LOG
-		//char oidbuf[UUID_STRLEN+1];
         uuidbuf_t oidbuf;
 		oid.c_str(oidbuf);
 		pan::log_DEBUG("Adding to order cache: ", oidbuf);	
@@ -211,7 +219,7 @@ MsgProcessor::handleIncomingClientMessage()
 		TDIFF(tdiff, a, b)	
 		pan::log_DEBUG("Order cache write time: ", ptime_string(tdiff));
 #endif
-
+#endif
 		// Dispatch all other messages to interface
 		char* d = new char[data.size()];		
 		memcpy(d, data.data(), data.size());

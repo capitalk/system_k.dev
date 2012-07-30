@@ -24,9 +24,11 @@ class OrderInterface
 		virtual void dispatch(msg_t msgType,
 							char* data, // DELETE [] WHEN DONE
 							size_t len) = 0;
+/*
 		virtual void snd(msg_t msgType, 
 						char* data, 
 						size_t len) = 0;
+*/
 /*
 		virtual void sndNewOrder(order_id_t& ClOrdID, 
 							const char* Symbol,

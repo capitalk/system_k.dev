@@ -100,7 +100,10 @@ int main( int argc, char** argv )
 		if (vm.count("i")) {
 			pan::log_NOTICE("Running interactive TEST MODE ");
 			runInteractive = true;
-		}
+		} else {
+			pan::log_NOTICE("Running in PRODUCTION MODE (NON-INTERACTIVE)");
+			runInteractive = false;
+        }
         // debug? 
 		printDebug = vm.count("d") > 0; 
 			
@@ -234,9 +237,7 @@ int main( int argc, char** argv )
         pid_t pid = getpid();
         pid_t ppid = getppid();
         
-#ifdef LOG
 		pan::log_NOTICE("pid: ", pan::integer(pid), " ppid: ", pan::integer(ppid));
-#endif
 
         std::string pidFileName = std::string(argv[0]) + "." +  config.mic_code + std::string(".pid");
         std::ofstream pidFile(pidFileName);
