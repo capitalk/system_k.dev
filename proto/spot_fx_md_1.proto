@@ -20,7 +20,7 @@ message order_t {
 
 }
 // Change this to single market bbo
-message mic_bbo {
+message single_market_bbo {
     required sfixed32 venue_id = 1;
     required string symbol = 2;
     required double bid_size = 3;
@@ -32,11 +32,11 @@ message mic_bbo {
 // Change this to multi market bbo
 message instrument_bbo {
     required string symbol = 1;
-    required sfixed32 bb_venue_id = 2;
-    required double bb_price = 3;
-    required double bb_size = 4;
-    required sfixed32 ba_venue_id = 5;
-    required double ba_price = 6;
-    required double ba_size = 7;
+    required sfixed32 bid_venue_id = 2;
+    required double bid_price = 3;
+    required double bid_size = 4;
+    required sfixed32 ask_venue_id = 5;
+    required double ask_price = 6;
+    required double ask_size = 7;
 }
 
