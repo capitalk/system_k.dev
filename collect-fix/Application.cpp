@@ -1111,14 +1111,15 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
         double basize = pBook->bestPriceVolume(capk::ASK);
 		zmq_msg_t msg;        
 		char msgbuf[256];
+        capkproto::instrument_bbo bbo;
         if (_isPublishing) {
-            capkproto::mic_bbo bbo;
             bbo.set_symbol(symbol.getValue());
             bbo.set_bid_price(bbprice);
             bbo.set_ask_price(baprice);
             bbo.set_bid_size(bbsize);
             bbo.set_ask_size(basize);
-            bbo.set_venue_id(_config.venue_id);
+            bbo.set_bid_venue_id(_config.venue_id);
+            bbo.set_ask_venue_id(_config.venue_id);
             
             size_t msgsize = bbo.ByteSize();
 			assert(msgsize < sizeof(msgbuf));
