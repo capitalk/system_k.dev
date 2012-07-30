@@ -56,6 +56,8 @@ const char symbols[][SYMBOL_LEN] = {
     "USD/JPY", 
     "USD/CHF", 
     "USD/CAD", 
+    "USD/ZAR", 
+    "USD/NOK", 
     "AUD/USD", 
     "AUD/JPY", 
     "AUD/NZD", 
@@ -78,7 +80,25 @@ const char symbols[][SYMBOL_LEN] = {
     "NZD/CAD", 
     "NZD/CHF", 
     "NZD/USD", 
-    "NZD/JPY" 
+    "NZD/JPY",
+    "USD/HKD",
+    "USD/SEK",
+    "EUR/SEK",
+    "EUR/CZK",
+    "SGD/JPY", 
+    "EUR/NOK",
+    "USD/MXN",
+    "EUR/ZAR", 
+    "USD/HUF",
+    "USD/PLN",
+    "EUR/PLN",
+    "GBP/DKK",
+    "USD/DKK",
+    "DKK/NOK",
+    "NOK/SEK",
+    "GBP/SEK",
+    "GBP/ZAR",
+    "USD/CZK"
 };
 
 #define SYMBOL_COUNT (sizeof(symbols) / SYMBOL_LEN)
@@ -159,7 +179,7 @@ book_manager::run() {
         fprintf(stdout, "book_manager: connect address: %s\n", _connectAddr.c_str());
         fprintf(stdout, "book_manager: stop requested: %d\n", _stopRequested);
 
-        capkproto::mic_bbo bbo;
+        capkproto::instrument_bbo bbo;
         while (1 && _stopRequested == false) {
             // Extract the message from protobufs
             zmq::message_t msg;
@@ -167,7 +187,8 @@ book_manager::run() {
             bbo.ParseFromArray(msg.data(), msg.size());
             //char mic[MIC_LEN];
             //STRCPY5(mic, bbo.mic());
-            capk::venue_id_t venue_id = bbo.venue_id();
+            capk::venue_id_t bid_venue_id = bbo.bid_venue_id();
+            capk::venue_id_t ask_venue_id = bbo.ask_venue_id();
             char sym[SYMBOL_LEN];
             STRCPY8(sym, bbo.symbol());
             double bid_size = bbo.bid_size();
@@ -189,7 +210,7 @@ book_manager::run() {
                     for (unsigned int j = 0; j < VENUE_COUNT; j++) {
                         // update the specific book that the price came from
                         if (instruments[i].venues[j].venue_id != capk::kNULL_VENUE_ID && 
-                            instruments[i].venues[j].venue_id == venue_id) {
+                            instruments[i].venues[j].venue_id == bid_venue_id &&                                instruments[i].venues[j].venue_id == ask_venue_id) {
                                 found_venue = true;
                                 instruments[i].venues[j].bid_price = bid_price; 
                                 instruments[i].venues[j].ask_price = ask_price; 
@@ -206,7 +227,11 @@ book_manager::run() {
                 std::cerr << "No matching symbol(book_manager): " << sym << "\n";
             }
             if (!found_venue) {
-                std::cerr << "No matching venue(book_manager): " << venue_id << "\n";
+                std::cerr << "No matching venue(book_manager): BID(" 
+                                                               << bid_venue_id 
+                                                               << ") ASK(" 
+                                                               << ask_venue_id 
+                                                               << ")" << "\n";
             }
 			
 			// Now go through all the books and pick the bbo
@@ -299,13 +324,13 @@ book_manager::run() {
 
             ins_bbo.set_symbol(sym);
 
-            ins_bbo.set_bb_venue_id(bb_venue_id);
-            ins_bbo.set_bb_price(bb);
-            ins_bbo.set_bb_size(bbvol);
+            ins_bbo.set_bid_venue_id(bb_venue_id);
+            ins_bbo.set_bid_price(bb);
+            ins_bbo.set_bid_size(bbvol);
 
-            ins_bbo.set_ba_venue_id(ba_venue_id);
-            ins_bbo.set_ba_price(ba);
-            ins_bbo.set_ba_size(bavol); 
+            ins_bbo.set_ask_venue_id(ba_venue_id);
+            ins_bbo.set_ask_price(ba);
+            ins_bbo.set_ask_size(bavol); 
 
             int msgsize = bbo.ByteSize();
             if (msgsize > MSGBUF_SIZ) {
@@ -370,7 +395,7 @@ worker::run () {
         subscriber.connect(_connectAddr.c_str());
         const char* filter = "";
         subscriber.setsockopt(ZMQ_SUBSCRIBE, filter, strlen(filter));
-        capkproto::mic_bbo bbo;
+        //capkproto::instrument_bbo bbo;
         
         _inproc = new zmq::socket_t(*_context, ZMQ_PUB);
         assert(_inproc);
