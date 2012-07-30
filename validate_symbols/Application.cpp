@@ -146,15 +146,16 @@ void Application::onMessage(const FIX42::SecurityDefinition& message, const FIX:
             std::cout << "List complete: " << _nValidSymbols << std::endl;
             std::vector<std::string>::const_iterator vit = _validSymbols.begin();
             std::cout << "Valid symbols on: " << _config.mic_code << "\n";
-            std::string symFilename = _config.mic_code + ".validated-symbols";
-            std::ofstream symFile(symFilename);
+            std::string allSymFilename = _config.mic_code + ".all_supported.symbols";
+            std::string validSymFilename = _config.mic_code + ".valid_subset.symbols";
+            std::ofstream allSymFile(allSymFilename);
+            std::ofstream validSubsetFile(validSymFilename);
 
             while(vit != _validSymbols.end() && *vit != "") {
                     std::cerr << ++i << ") " << *vit << "\n";
-                    symFile << *vit << "\n";
+                    allSymFile << *vit << "\n";
                     vit++;
             }
-            std::cout << "Symbols written to: " << symFilename << "\n";
             
             std::vector<std::string>::const_iterator it;// = _symbols.begin();
             //while(it != _symbols.end()) { //  && *it != "") {
@@ -163,6 +164,7 @@ void Application::onMessage(const FIX42::SecurityDefinition& message, const FIX:
                 std::cout << "Checking: " << *it << "...";
                 if (std::find(_validSymbols.begin(), _validSymbols.end(), *it) != _validSymbols.end()) {
                     std::cout << "OK\n"; 
+                    validSubsetFile << *it << "\n";
                 }
                 else {
                     std::cout << "ERROR\n";
@@ -172,6 +174,8 @@ void Application::onMessage(const FIX42::SecurityDefinition& message, const FIX:
             }
 			std::cerr << "COMPLETE" << std::endl;
             _querySecurityDefinitionComplete = true;
+            std::cout << "All symbols written to: " << allSymFilename << "\n";
+            std::cout << "Valid symbols subset written to: " << validSymFilename << "\n";
         }
 	}	
 
