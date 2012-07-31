@@ -193,11 +193,13 @@ positionsByStrategyId(sql::Connection* sql_cxn,
 {
 /* select order_status, CONVERT(order_status, UNSIGNED INTEGER) as num, CHAR(order_status) as ch from order_state;
  */
+    assert(sql_cxn);
+    assert(position);
 #ifdef DEBUG
     pan::log_DEBUG("Fetching positionByStrategyId with parameters:", 
             "\nstrategy_id: ", 
             pan::blob(strategy_id.get_uuid(), strategy_id.size()), 
-            "\nposition: ", position.DebugString());
+            "\nposition: ", position->DebugString());
 #endif
 
     PreparedStatement* sql_prepared_statement;
@@ -251,8 +253,8 @@ positionsByStrategyId(sql::Connection* sql_cxn,
             //trade 
         }
 #ifdef DEBUG
-        pan::log_DEBUG(kSelectCountTrade, "\nQuery returned ", 
-                pan::integer(row_count), " row(s).");
+        pan::log_DEBUG(kPositionsByStrategyId, "\nQuery returned ", 
+                pan::integer(result_count), " row(s).");
 #endif 
     }
     catch (SQLException &e) {
@@ -381,7 +383,7 @@ orderExists(Connection* sql_cxn,
         */
 #ifdef DEBUG
         pan::log_DEBUG(kSelectCountTrade, "\nQuery returned ", 
-                pan::integer(row_count), " row(s).");
+                pan::integer(result_count), " row(s).");
 #endif 
     }
     catch (SQLException &e) {
@@ -745,7 +747,7 @@ updateOrder(Connection* sql_cxn,
 
 #ifdef DEBUG
     pan::log_DEBUG("updateOrder() called with parameters:", 
-            "\nstrategy_id", pan::blob(strategy_id.get_uuid(), strategy_id.size()), 
+            "\nstrategy_id: ", pan::blob(strategy_id.get_uuid(), strategy_id.size()), 
             "\nexecution_report: ", er.DebugString().c_str());
 #endif
 
@@ -754,7 +756,9 @@ updateOrder(Connection* sql_cxn,
     cl_order_id.set(er.cl_order_id().c_str(), er.cl_order_id().size());
 
     order_id_t orig_cl_order_id(false);
-    orig_cl_order_id.set(er.orig_cl_order_id().c_str(), er.orig_cl_order_id().size());
+    if (er.has_orig_cl_order_id()) {
+        orig_cl_order_id.set(er.orig_cl_order_id().c_str(), er.orig_cl_order_id().size());
+    }
 
     // insepect the execution report to determine what 
     // the current status of the order is
@@ -873,7 +877,7 @@ handleOrders(zmq::context_t* context, sql::Connection* sql_cxn)
     while (1) {
         do {
             // PART 1 - Strategy ID
-            zmq::message_t msg_strategy_id;
+            zmq::message_t msg_strategy_id(false);
             rc = trade_receiver_socket.recv(&msg_strategy_id);
 #ifdef DEBUG
             pan::log_DEBUG("handleOrder received SID: [", 
