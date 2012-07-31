@@ -1,11 +1,9 @@
 #include "msg_processor.h"
-#include "msg_handler.h"
 
 #include <google/dense_hash_map>
 #include "proto/new_order_single.pb.h"
 #include "proto/capk_globals.pb.h"
 
-#include "stub_handler.h"
 
 #include "null_order_interface.h"
 
@@ -25,7 +23,6 @@ main(int argc, char **argv)
 
 	logging_init("testsvr.log");
 
-	StubHandler* stubHandler = new StubHandler();
 
 	capk::NullOrderInterface noi(123456, &ctx);
 

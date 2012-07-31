@@ -658,7 +658,7 @@ Application::onMessage(const FIX42::ExecutionReport& message,
     er->set_venue_id(_config.venue_id);
 	
 #ifdef LOG
-    pan::log_DEBUG("OnMessage(ExecutionReport42) forwarded protobuf:\n", ocr->DebugString());
+    pan::log_DEBUG("OnMessage(ExecutionReport42) forwarded protobuf:\n", er->DebugString());
 #endif
 	// 1) lookup order id to fetch strategy id
 	// 2) send the strategy id back to msg processor so that we can route 
@@ -879,7 +879,7 @@ Application::run()
 #endif
 	zmq::context_t* ctx = getZMQContext();
 	_pMsgProcessor = new capk::MsgProcessor(ctx,
-                "tcp://127.0.0.1:9999",
+                _config.orderListenerAddr.c_str(),
                 "inproc://msgout",
                 1,
                 this);
@@ -893,9 +893,10 @@ Application::run()
 	int zero = 0;
 	_pzmq_strategy_sock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
 	std::string outaddr = _pMsgProcessor->getOutboundAddr();
-    pan::log_NOTICE("Connecting to msgp processor service at: ", 
+    pan::log_NOTICE("Connecting (internal) to msg processor service at: ", 
             outaddr.c_str()); 
 	_pzmq_strategy_sock->connect(outaddr.c_str());
+    pan::log_NOTICE("Listening (external) for orders at: ", outaddr.c_str());
 
     _pzmq_serialization_sock = new zmq::socket_t(*ctx, ZMQ_DEALER);
     _pzmq_serialization_sock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));

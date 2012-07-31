@@ -222,7 +222,7 @@ int main( int argc, char** argv )
 			return (-1);
         }
 #ifdef LOG
-		pan::log_INFORMATIONAL("LimitOrder40: ", pan::character(limitOrder));
+		pan::log_INFORMATIONAL("Listening for incoming orders on: ", config.orderListenerAddr);
 #endif
 
         // Debug settings
@@ -253,7 +253,7 @@ int main( int argc, char** argv )
 #endif
             exit(-1);
         }
-
+#if 0
         // Get the bind address for zmq sockets
         bool isPublishing = false;
         std::string bindAddress = dict.has("ZMQBindAddressIn") ? dict.getString("ZMQBindAddressIn") : "";
@@ -269,6 +269,7 @@ int main( int argc, char** argv )
             pan::log_INFORMATIONAL("ZMQ: NOT publishing : ", bindAddress);
 #endif
         }
+#endif
 
 		// Set application params
 		application.setHandlInst21(handlInst);

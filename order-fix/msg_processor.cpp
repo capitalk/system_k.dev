@@ -320,7 +320,7 @@ MsgProcessor::init()
 	#ifdef LOG
 	pan::log_DEBUG("MsgProcessor binding frontend: ", _listen_addr.c_str());	
 	pan::log_DEBUG("MsgProcessor binding outbound: ", _out_addr.c_str());	
-	pan::log_DEBUG("MsgProcessor connecting admin: ", _out_addr.c_str());	
+	//pan::log_DEBUG("MsgProcessor connecting admin: ", _out_addr.c_str());	
 	#endif
 	_frontend->bind(_listen_addr.c_str());
 	_out->bind(_out_addr.c_str());
