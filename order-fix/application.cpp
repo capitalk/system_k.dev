@@ -42,7 +42,7 @@ Application::Application(bool bReset, const ApplicationConfig& config)
             _config(config), 
             _resetSequence(bReset),
             _pzmq_context(0),
-            _pzmq_strategy_sock(0)
+            _pzmq_strategy_reply_sock(0)
 {
 	_handlInst21 = -1;
 	_account1 = "";
@@ -56,9 +56,9 @@ Application::~Application()
 #ifdef LOG
 	pan::log_DEBUG("Application()");
 #endif
-	//assert(_pzmq_strategy_sock);
-    if (_pzmq_strategy_sock) {
-	    _pzmq_strategy_sock->close();
+	//assert(_pzmq_strategy_reply_sock);
+    if (_pzmq_strategy_reply_sock) {
+	    _pzmq_strategy_reply_sock->close();
     }
 }
 
@@ -681,20 +681,20 @@ Application::onMessage(const FIX42::ExecutionReport& message,
         // create strategy id frame and send it with more flag set
         zmq::message_t sidframe(strategy_id.size());	
         memcpy(sidframe.data(), strategy_id.get_uuid(), strategy_id.size());
-        sndOK = _pzmq_strategy_sock->send(sidframe, ZMQ_SNDMORE);
+        sndOK = _pzmq_strategy_reply_sock->send(sidframe, ZMQ_SNDMORE);
         assert(sndOK);
 
         // send the message type
         zmq::message_t msgtypeframe(sizeof(capk::EXEC_RPT));
         memcpy(msgtypeframe.data(), &capk::EXEC_RPT, sizeof(capk::EXEC_RPT));
-        sndOK = _pzmq_strategy_sock->send(msgtypeframe, ZMQ_SNDMORE);
+        sndOK = _pzmq_strategy_reply_sock->send(msgtypeframe, ZMQ_SNDMORE);
         assert(sndOK);
 
         // send the rest of the message using zero-copy since 
         // exection report was created on heap
         zmq::message_t dataframe(er->ByteSize());
         er->SerializeToArray(dataframe.data(), dataframe.size());
-        sndOK = _pzmq_strategy_sock->send(dataframe, 0);
+        sndOK = _pzmq_strategy_reply_sock->send(dataframe, 0);
         assert(sndOK);
 
         // persist the order/trade info
@@ -781,19 +781,19 @@ Application::onMessage(const FIX42::OrderCancelReject& message,
         // create strategy id frame and send it with more flag set
         zmq::message_t sidframe(strategy_id.size());	
         memcpy(sidframe.data(), strategy_id.get_uuid(), strategy_id.size());
-        sndOK = _pzmq_strategy_sock->send(sidframe, ZMQ_SNDMORE);
+        sndOK = _pzmq_strategy_reply_sock->send(sidframe, ZMQ_SNDMORE);
         assert(sndOK);
 
         // send the message type
         zmq::message_t msgtypeframe(sizeof(capk::ORDER_CANCEL_REJ));
         memcpy(msgtypeframe.data(), &capk::ORDER_CANCEL_REJ, sizeof(capk::ORDER_CANCEL_REJ));
-        sndOK = _pzmq_strategy_sock->send(msgtypeframe, ZMQ_SNDMORE);
+        sndOK = _pzmq_strategy_reply_sock->send(msgtypeframe, ZMQ_SNDMORE);
         assert(sndOK);
 
         // send the rest of the message 
         zmq::message_t dataframe(ocr->ByteSize());
         ocr->SerializeToArray(dataframe.data(), dataframe.size());
-        sndOK = _pzmq_strategy_sock->send(dataframe, 0);
+        sndOK = _pzmq_strategy_reply_sock->send(dataframe, 0);
         assert(sndOK);
     }
     else {
@@ -877,29 +877,30 @@ Application::run()
 #ifdef LOG
 	pan::log_DEBUG("run()");
 #endif
+
+	int zero = 0;
 	zmq::context_t* ctx = getZMQContext();
 	_pMsgProcessor = new capk::MsgProcessor(ctx,
                 _config.orderListenerAddr.c_str(),
                 "inproc://msgout",
+                _config.pingListenerAddr.c_str(),
                 1,
                 this);
 
-	_pMsgProcessor->setOrderInterface(this);
 	// create sockets and bind 
 	// KTK TODO - create sockets in other thread - should not use sockets 
 	// created in thread A from thread B
 	_pMsgProcessor->init();
-	_pzmq_strategy_sock = new zmq::socket_t(*ctx, ZMQ_DEALER);
-	int zero = 0;
-	_pzmq_strategy_sock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
+	_pzmq_strategy_reply_sock = new zmq::socket_t(*ctx, ZMQ_DEALER);
+	_pzmq_strategy_reply_sock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
 	std::string outaddr = _pMsgProcessor->getOutboundAddr();
-    pan::log_NOTICE("Connecting (internal) to msg processor service at: ", 
+    pan::log_NOTICE("Connecting (internal) strategy socket to msg processor addressing socket at: ", 
             outaddr.c_str()); 
-	_pzmq_strategy_sock->connect(outaddr.c_str());
-    pan::log_NOTICE("Listening (external) for orders at: ", outaddr.c_str());
+	_pzmq_strategy_reply_sock->connect(outaddr.c_str());
 
     _pzmq_serialization_sock = new zmq::socket_t(*ctx, ZMQ_DEALER);
     _pzmq_serialization_sock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
+    pan::log_NOTICE("Listening (external) for orders at: ", _pMsgProcessor->getListenerAddr());
     pan::log_NOTICE("Connecting to trade serialization service at: ", 
             capk::kTRADE_SERIALIZATION_ADDR);
     _pzmq_serialization_sock->connect(capk::kTRADE_SERIALIZATION_ADDR);

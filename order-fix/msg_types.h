@@ -25,13 +25,17 @@ const msg_t LIST_STATUS		= 0x07;
 const msg_t STRATEGY_HELO	= 0xF0;
 const msg_t STRATEGY_HELO_ACK = 0xF1;
 
+
 const msg_t HEARTBEAT		= 0xA0;
 const msg_t HEARTBEAT_ACK	= 0xA1;
 
 const msg_t EXEC_RPT		= 0xB0;
 
 const msg_t POSITION_REQ    = 0xC0;
-const msg_t OPEN_ORDER_REQ    = 0xC1;
+const msg_t OPEN_ORDER_REQ  = 0xC1;
+
+const msg_t PING	        = 0xF2;
+const msg_t PING_ACK        = 0xF3;
 
 }; // namespace capk
 

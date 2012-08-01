@@ -225,6 +225,17 @@ int main( int argc, char** argv )
 		pan::log_INFORMATIONAL("Listening for incoming orders on: ", config.orderListenerAddr);
 #endif
 
+        // Ping service listener addr 
+		config.pingListenerAddr = dict.has("PingListenerAddr") ? dict.getString("PingListenerAddr").c_str() : "";
+        if (config.pingListenerAddr == "") {
+			pan::log_CRITICAL("PingListenerAddr may NOT be empty");
+			return (-1);
+        }
+#ifdef LOG
+		pan::log_INFORMATIONAL("Listening for pings on: ", config.pingListenerAddr);
+#endif
+
+
         // Debug settings
 		config.printDebug = printDebug; 
 

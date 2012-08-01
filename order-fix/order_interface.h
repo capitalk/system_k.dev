@@ -29,27 +29,6 @@ class OrderInterface
 						char* data, 
 						size_t len) = 0;
 */
-/*
-		virtual void sndNewOrder(order_id_t& ClOrdID, 
-							const char* Symbol,
-							const side_t Side, 
-							const double OrderQty,
-							const short int OrdType,
-							const double Price,
-							const short int TimeInForce = 0,
-							const char* Account = NULL) {};
-
-		virtual void sndCancelOrder(order_id_t& ClOrdID, 
-									order_id_t& OrigOrderID) {};
-
-		virtual void sndOrderCancelReplace() {};
-
-		virtual void sndOrderStatus() {};
-
-		virtual void rcvExecutionReport() {};
-
-		virtual void rcvListstatus() {};
-*/
 		const std::string& getInAddr() { return _in; };
 		void setInAddr(const char* inaddr) { assert(inaddr != NULL); _in = inaddr;};
 

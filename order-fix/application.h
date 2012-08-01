@@ -130,6 +130,7 @@ struct ApplicationConfig {
 	int handlInst;
 	capk::venue_id_t venue_id;
     std::string orderListenerAddr;
+    std::string pingListenerAddr;
 }; 
 
 class Application :
@@ -313,7 +314,7 @@ private:
 	
 
 	zmq::context_t *_pzmq_context;	
-	zmq::socket_t *_pzmq_strategy_sock;
+	zmq::socket_t *_pzmq_strategy_reply_sock;
 	zmq::socket_t *_pzmq_serialization_sock;
 
 
