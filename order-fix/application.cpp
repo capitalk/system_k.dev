@@ -904,7 +904,6 @@ Application::run()
     pan::log_NOTICE("Connecting to trade serialization service at: ", 
             capk::kTRADE_SERIALIZATION_ADDR);
     _pzmq_serialization_sock->connect(capk::kTRADE_SERIALIZATION_ADDR);
-    pan::log_NOTICE("Connect OK");
     pan::log_NOTICE("Starting message processor loop");
 	_pMsgProcessor->run();
 

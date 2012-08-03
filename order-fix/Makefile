@@ -14,7 +14,8 @@ INCLUDE=-I $(BOOST) -I /usr/local/include/ \
 		-I $(UTILS)
 
 LIBS= -L/usr/local/lib \
-      	-lquickfix -lboost_date_time \
+      	-lquickfix \
+		-lboost_date_time \
 		-lboost_program_options \
 		-lboost_filesystem \
 		-lzmq \
@@ -34,7 +35,7 @@ PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
         -l pantheios.1.util.gcc44.file64bit \
         -l pantheios.1.core.gcc44.file64bit 
 
-CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG
+CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
 LDFLAGS=-static
 
 PROTOBUF_OBJS = new_order_single.pb.o \
@@ -48,15 +49,14 @@ PROTOBUF_OBJS = new_order_single.pb.o \
 
 
 ifeq ($(dbg),1)
-        CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb -g  -DLOG
+        CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb  -DLOG -pg -g
+		LDFLAGS =  -pg
 endif
-
-LDFLAGS=-static
 
 all: protos order-fix
 
 order-fix : order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o $(PROTOBUF_OBJS)
-	$(CC) $(CFLAGS) order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
+	$(CC) $(LDFLAGS) order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
 
 new_order_single.pb.o: $(PROTO)/new_order_single.pb.cc $(PROTO)/new_order_single.pb.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/new_order_single.pb.cc

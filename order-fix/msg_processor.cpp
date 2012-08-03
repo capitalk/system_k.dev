@@ -7,8 +7,8 @@ namespace capk {
 void
 freenode(void* data, void* hint) {
     if (data) {
-		node_t* tmp = static_cast<node_t*>(data);
 #ifdef LOG
+		node_t* tmp = static_cast<node_t*>(data);
         pan::log_DEBUG("freenode: ", pan::integer(*(int*)tmp->data()));
 #endif
         delete(static_cast<node_t*>(data));
@@ -361,19 +361,19 @@ MsgProcessor::runPingService()
 {
     bool rc = false;
     zmq::message_t ping_frame;
+    pan::log_INFORMATIONAL("PING service listening on: ", _ping_addr.c_str()); 
+    
 
-    capk::msg_t* ping_ack = new capk::msg_t;
-    *ping_ack = capk::PING_ACK;
-    zmq::message_t ping_ack_frame(ping_ack, sizeof(capk::PING_ACK), NULL,  NULL);
-
+    int ping_ack = capk::PING_ACK;
     while(_stop != true) {
+        zmq::message_t ping_ack_frame(&ping_ack, sizeof(capk::PING_ACK), NULL,  NULL);
         rc = _ping_socket->recv(&ping_frame, 0);
         assert(rc);
-#ifdef LOG 
         T0(a);
         pan::log_DEBUG("Received PING msg (", to_simple_string(a).c_str(), ")");
+#ifdef LOG 
 #endif
-        rc = _ping_socket->send(ping_ack_frame, 0);
+        rc = _ping_socket->send(ping_ack_frame);
         assert(rc);
 #ifdef LOG 
         TN(b);
@@ -414,9 +414,6 @@ MsgProcessor::run()
 	//size_t more_size = sizeof(more);	
 	//bool rc;
    
-#ifdef LOG
-    pan::log_DEBUG("Starting PING service"); 
-#endif 
     boost::thread* ping_thread = new boost::thread(boost::bind(&MsgProcessor::runPingService, this));
 
 	int ret; 

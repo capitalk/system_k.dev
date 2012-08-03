@@ -109,15 +109,11 @@ int main( int argc, char** argv )
 			
 	}
 	catch(std::exception& e) {
-#ifdef LOG
 		pan::log_CRITICAL("Exception parsing parameters");
-#endif
 		return 1;
 	}
 	if (err > 0) {
-#ifdef LOG
 		pan::log_CRITICAL("Aborting due to missing parameters");
-#endif
 		return 1;
 	}
 	
@@ -150,60 +146,44 @@ int main( int argc, char** argv )
 
         // Should we reset sequence numbers? 
 		bool bReset = dict.has("ResetSeqNo") && dict.getBool("ResetSeqNo");  
-#ifdef LOG
-		pan::log_NOTICE("Resetting sequence numbers: ", pan::boolean(bReset));
-#endif
+		pan::log_INFORMATIONAL("Resetting sequence numbers: ", pan::boolean(bReset));
 
 		// Account name
 		std::string account = dict.has("Account1") ? dict.getString("Account1").c_str() : "";
-#ifdef LOG
 		pan::log_INFORMATIONAL("Account1: ", account);
-#endif
 
 		// HandlInst as a CHAR not an int
 		std::string handlInstStr = (dict.has("HandlInst21") ? dict.getString("HandlInst21"): "");
 		char handlInst = handlInstStr[0];
-#ifdef LOG
 		pan::log_INFORMATIONAL("HandlInst21: ", pan::character(handlInst));
-#endif
 		
 		// LimitOrder as a CHAR not an int
 		std::string limitOrderStr = (dict.has("LimitOrder40") ? dict.getString("LimitOrder40"): "2");
 		char limitOrder = limitOrderStr[0];
-#ifdef LOG
 		pan::log_INFORMATIONAL("LimitOrder40: ", pan::character(limitOrder));
-#endif
 
 		// Should we send currency in tag 15 or not?  
 		bool useCurrency = dict.has("UseCurrency15") && dict.getBool("UseCurrency15");
-#ifdef LOG
 		pan::log_INFORMATIONAL("UseCurrency15: ", pan::boolean(useCurrency));
-#endif
 
 
         // FIX::begin string
 		config.begin_string = dict.has("BeginString") ? dict.getString("BeginString").c_str() : "UNKNOWN FIX VERSION";
-#ifdef LOG
 		pan::log_INFORMATIONAL("Using FIX BeginString: ", config.begin_string);
-#endif
         // FIX::sender comp id 
 		config.senderCompID = dict.has("SenderCompID") ? dict.getString("SenderCompID").c_str() : "";
 		if (config.senderCompID == "") { 
 			pan::log_CRITICAL("SenderCompID may NOT be empty");
 			return (-1);
 		}
-#ifdef LOG
 		pan::log_INFORMATIONAL("Using SenderCompID: ", config.senderCompID);
-#endif
         // FIX:: target comp id 
 		config.targetCompID = dict.has("TargetCompID") ? dict.getString("TargetCompID").c_str() : "";
 		if (config.targetCompID == "") { 
 			pan::log_CRITICAL("TargetCompID may NOT be empty");
 			return (-1);
 		}
-#ifdef LOG
 		pan::log_INFORMATIONAL("Using TargetCompID: ", config.targetCompID);
-#endif
 
         // venue ID
 		config.venue_id = dict.has("VenueID") ? atoi(dict.getString("VenueID").c_str()) : 0;
@@ -211,9 +191,7 @@ int main( int argc, char** argv )
 			pan::log_CRITICAL("VenueID may NOT be empty or 0");
 			return (-1);
 		}
-#ifdef LOG
 		pan::log_INFORMATIONAL("Using VenueID: ", pan::integer(config.venue_id));
-#endif
 
 		// Order interface listener addr 
 		config.orderListenerAddr = dict.has("OrderListenerAddr") ? dict.getString("OrderListenerAddr").c_str() : "";
@@ -221,9 +199,7 @@ int main( int argc, char** argv )
 			pan::log_CRITICAL("OrderListenerAddr may NOT be empty");
 			return (-1);
         }
-#ifdef LOG
 		pan::log_INFORMATIONAL("Listening for incoming orders on: ", config.orderListenerAddr);
-#endif
 
         // Ping service listener addr 
 		config.pingListenerAddr = dict.has("PingListenerAddr") ? dict.getString("PingListenerAddr").c_str() : "";
@@ -231,9 +207,7 @@ int main( int argc, char** argv )
 			pan::log_CRITICAL("PingListenerAddr may NOT be empty");
 			return (-1);
         }
-#ifdef LOG
 		pan::log_INFORMATIONAL("Listening for pings on: ", config.pingListenerAddr);
-#endif
 
 
         // Debug settings
@@ -258,10 +232,7 @@ int main( int argc, char** argv )
 			pidFile.close();
         }
         else {
-            std::cerr << "Can't write pid file - exiting";
-#ifdef LOG
-			pan::log_ALERT("Can't write pid file - exiting");
-#endif
+			pan::log_CRITICAL("Can't write pid file - exiting");
             exit(-1);
         }
 #if 0
@@ -296,9 +267,7 @@ int main( int argc, char** argv )
 
 		FIX::SocketInitiator initiator(application, storeFactory, settings, logFactory);
         pinitiator = &initiator;
-#ifdef LOG
 		pan::log_INFORMATIONAL("Starting initiator"); 
-#endif
 		initiator.start();
 
 		if (runInteractive) {
@@ -315,9 +284,7 @@ int main( int argc, char** argv )
 			}
 		}
 */
-#ifdef LOG
 		pan::log_INFORMATIONAL("Stopping initiator"); 
-#endif
 		initiator.stop();
 		return 0;
 	}
@@ -344,9 +311,7 @@ s_catch_signals()
 void 
 signal_handler(int signal_value) 
 {  
-#ifdef LOG
 	pan::log_CRITICAL("Stopping - received signal:", pan::integer(signal_value)); 
-#endif
     assert(pinitiator);
 	pinitiator->stop();
 	assert(papplication);
