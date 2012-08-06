@@ -1060,6 +1060,9 @@ void Application::newOrderSingle42(capkproto::new_order_single& nos)
 	else if (nos.time_in_force() == capkproto::IOC) {
 		timeInForce = FIX::TimeInForce_IMMEDIATE_OR_CANCEL;
 	}
+    else if (nos.time_in_force() == capkproto::FOK) {
+		timeInForce = FIX::TimeInForce_IMMEDIATE_OR_CANCEL;
+	}
 	nos42.set(timeInForce);
 
 	// price
@@ -1951,6 +1954,7 @@ FIX::TimeInForce Application::queryTimeInForce()
   std::cout << std::endl
   << "1) Day" << std::endl
   << "2) IOC" << std::endl
+  << "3) FOK" << std::endl
 /*
   << "3) OPG" << std::endl
   << "4) GTC" << std::endl
@@ -1963,6 +1967,7 @@ FIX::TimeInForce Application::queryTimeInForce()
   {
     case '1': return FIX::TimeInForce( FIX::TimeInForce_DAY );
     case '2': return FIX::TimeInForce( FIX::TimeInForce_IMMEDIATE_OR_CANCEL );
+    case '3': return FIX::TimeInForce( FIX::TimeInForce_FILL_OR_KILL );
 /*
     case '3': return FIX::TimeInForce( FIX::TimeInForce_AT_THE_OPENING );
     case '4': return FIX::TimeInForce( FIX::TimeInForce_GOOD_TILL_CANCEL );
