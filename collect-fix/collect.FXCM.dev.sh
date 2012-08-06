@@ -1,1 +1,1 @@
-./collect --c ./cfg/FXCM.dev.cfg --s ./cfg/EURUSD.cfg --o /home/timir/FXCM 
+./collect --c ./cfg/FXCM.dev.cfg --s ./cfg/EURUSD.cfg  --nolog

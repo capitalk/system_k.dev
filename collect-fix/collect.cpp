@@ -199,6 +199,7 @@ int main( int argc, char** argv )
         // MIC id as integer for protobuf usage
 		config.venue_id = capk::micStringToVenueId(config.mic_string.c_str()); 
         assert(config.venue_id != 0);
+        std::cout << "MIC: " << config.mic_string << " converts to venue_id: " << config.venue_id << "\n";
 
         // Username and password settings
 		config.username = dict.has("Username") ? dict.getString("Username") : ""; 

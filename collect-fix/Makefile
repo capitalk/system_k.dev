@@ -27,13 +27,13 @@ LIBS= -L/usr/local/src/quickfix/lib/ \
 		-lprotobuf \
 		-lgtest
 
-CFLAGS=-Wall -std=c++0x -pthread -O3
+CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
 LDFLAGS=-static
 
 PROTOC=protoc
 
 ifeq ($(dbg),1)
-        CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb -g # -DDEBUG_BOOK
+        CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb -g -DLOG# -DDEBUG_BOOK
 endif
 
 LDFLAGS=-static
