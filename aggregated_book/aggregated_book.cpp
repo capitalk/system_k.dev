@@ -189,6 +189,7 @@ book_manager::run() {
             //STRCPY5(mic, bbo.mic());
             capk::venue_id_t bid_venue_id = bbo.bid_venue_id();
             capk::venue_id_t ask_venue_id = bbo.ask_venue_id();
+fprintf(stderr, "BID VENUE_ID: %d ASK VENUE_ID: %d", bid_venue_id, ask_venue_id);
             char sym[SYMBOL_LEN];
             STRCPY8(sym, bbo.symbol());
             double bid_size = bbo.bid_size();
