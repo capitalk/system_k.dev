@@ -17,6 +17,7 @@ namespace capk
     // CAPK test venue info
     const venue_id_t kCAPK_VENUE_ID = 12345;
     const char* const kCAPK_ORDER_INTERFACE_ADDR = "tcp://127.0.0.1:2001";
+    const char* const kCAPK_ORDER_PING_ADDR = "tcp://127.0.0.1:2078";
 
     // FXCM MIC and venue info
     const char* const kFXCM_MIC_STRING = "FXCM";
@@ -24,6 +25,7 @@ namespace capk
     const venue_id_t kFXCM_VENUE_ID = 890778;
     // N.B. Must match values in ini file used to start interface!
     const char* const kFXCM_ORDER_INTERFACE_ADDR = "tcp://127.0.0.1:9999";
+    const char* const kFXCM_ORDER_PING_ADDR = "tcp://127.0.0.1:7999";
     const char* const kFXCM_BROADCAST_ADDR = "tcp://127.0.0.1:5273";
 
     // XCDE (Baxter)  MIC and venue info
@@ -31,7 +33,18 @@ namespace capk
     const char* const kXCDE_DEV_MIC_STRING = "XCDE.dev";
     const venue_id_t kXCDE_VENUE_ID = 908239;
     const char* const kXCDE_ORDER_INTERFACE_ADDR = "tcp://127.0.0.1:9998";
+    const char* const kXCDE_ORDER_PING_ADDR = "tcp://127.0.0.1:7998";
     const char* const kXCDE_BROADCAST_ADDR = "tcp://127.0.0.1:5271";
+
+    // FastMatch  MIC and venue info
+    const char* const kFAST_MIC_STRING = "FAST";
+    const char* const kFAST_DEV_MIC_STRING = "FAST.dev";
+    const venue_id_t kFAST_VENUE_ID = 327878;
+    const char* const kFAST_ORDER_INTERFACE_ADDR = "tcp://127.0.0.1:9997";
+    const char* const kFAST_ORDER_PING_ADDR = "tcp://127.0.0.1:7997";
+    const char* const kFAST_BROADCAST_ADDR = "tcp://127.0.0.1:5275";
+
+
 
     // GAIN MIC and venue info
     const char* const kGAIN_BROADCAST_ADDR = "tcp://127.0.0.1:5272";
