@@ -189,15 +189,18 @@ book_manager::run() {
             //STRCPY5(mic, bbo.mic());
             capk::venue_id_t bid_venue_id = bbo.bid_venue_id();
             capk::venue_id_t ask_venue_id = bbo.ask_venue_id();
-fprintf(stderr, "BID VENUE_ID: %d ASK VENUE_ID: %d", bid_venue_id, ask_venue_id);
+#ifdef DEBUG
+            fprintf(stderr, "BID VENUE_ID: %d ASK VENUE_ID: %d", bid_venue_id, ask_venue_id);
+#endif
             char sym[SYMBOL_LEN];
             STRCPY8(sym, bbo.symbol());
             double bid_size = bbo.bid_size();
             double ask_size = bbo.ask_size();
             double bid_price = bbo.bid_price();
             double ask_price = bbo.ask_price();
-
+#ifdef DEBUG
             boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
+#endif
 
             bool found_symbol = false;
             bool found_venue = false;
@@ -335,8 +338,9 @@ fprintf(stderr, "BID VENUE_ID: %d ASK VENUE_ID: %d", bid_venue_id, ask_venue_id)
 
             int msgsize = bbo.ByteSize();
             if (msgsize > MSGBUF_SIZ) {
-                fprintf(stderr, "*** ins_bbo msg too large for buffer!\n");
-                s_sendmore(*bcast_sock, "ERR");
+                fprintf(stderr, "**\nins_bbo msg too large for buffer - DROPPING MSG!\n***");
+                //s_send(*bcast_sock, "ERR");
+                continue;
             }
             else {
                 ins_bbo.SerializeToString(&msg_str);
@@ -348,10 +352,11 @@ fprintf(stderr, "BID VENUE_ID: %d ASK VENUE_ID: %d", bid_venue_id, ask_venue_id)
 
 			s_sendmore(*bcast_sock, sym);
 			s_send(*bcast_sock, msg_str);
-            
+#ifdef DEBUG 
             boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
             boost::posix_time::time_duration duration(time_end - time_start);
             fprintf(stderr, "BookUpdate Time(us) to recv and parse: %s\n", to_simple_string(duration).c_str());
+#endif
         }
     }
     catch (std::exception& e) {
@@ -402,11 +407,13 @@ worker::run () {
         assert(_inproc);
         _inproc->connect(_inprocAddr.c_str());
         
+        zmq::message_t msg;
         while (1 && _stopRequested == false) {
-            zmq::message_t msg;
             subscriber.recv(&msg);
+#ifdef DEBUG
             boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
-            //bbo.ParseFromArray(msg.data(), msg.size());
+#endif
+
 			int64_t more;
 			size_t more_size;
 			more_size = sizeof(more);
@@ -414,10 +421,11 @@ worker::run () {
             // send to orderbook on inproc socket - no locks needed according to zmq
             _inproc->send(msg, more ? ZMQ_SNDMORE : 0);
 
+#ifdef DEBUG
             boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
             boost::posix_time::time_duration duration(time_end - time_start);
-            
-            //std::cout << "Time(us) to recv and parse: " << duration << "\n";
+            fprintf(stderr, "Inbound from md interface time to receive and parse: %s\n", to_simple_string(duration).c_str()); 
+#endif
         }
     } 
     catch (std::exception& e) {
