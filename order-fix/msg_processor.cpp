@@ -430,7 +430,7 @@ MsgProcessor::run()
          * an exception when the spurious EINTR is returned. Simply
          * check for it here, trap it, and move on.
          */
-        ret = zmq_poll(pollItems, 2, -1);
+        ret = zmq_poll(poll_items, 2, -1);
         if (ret == -1 and zmq_errno() == EINTR) {
         pan::log_ALERT("EINTR received - FILE: ", __FILE__, " LINE: ", pan::integer(__LINE__));
             continue;
