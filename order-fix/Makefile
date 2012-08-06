@@ -8,9 +8,12 @@ COLLECTORS=../../collectors
 UTILS=../../collectors/utils
 TESTS=./tests
 
-INCLUDE=-I $(BOOST) -I /usr/local/include/ \
-        -I/usr/local/src/quickfix/include -I.. -I $(COLLECTORS) \
-		-I $(PANTHEIOS_ROOT)/include -I $(STLSOFT)/include \
+INCLUDE= -I $(BOOST) -I /usr/local/include/ \
+        -I/usr/local/src/quickfix/include \
+		-I.. \
+		-I $(COLLECTORS) \
+		-I $(PANTHEIOS_ROOT)/include \
+		-I $(STLSOFT)/include \
 		-I $(UTILS)
 
 LIBS= -L/usr/local/lib \
@@ -36,7 +39,7 @@ PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
         -l pantheios.1.core.gcc44.file64bit 
 
 CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
-LDFLAGS=-static
+#LDFLAGS=-static
 
 PROTOBUF_OBJS = new_order_single.pb.o \
 				order_cancel.pb.o \
