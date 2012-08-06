@@ -103,7 +103,7 @@ MsgProcessor::snd_STRATEGY_HELO_ACK(const strategy_id_t& sid)
 	zmq::message_t msg_type(sizeof(capk::STRATEGY_HELO_ACK));
 	memcpy(msg_type.data(), &capk::STRATEGY_HELO_ACK, sizeof(capk::STRATEGY_HELO_ACK));
 #ifdef LOG
-	pan::log_DEBUG("Sending helo ack: ", pan::blob(msg_type.data(), msg_type.size()));
+	pan::log_DEBUG("Sending STRATEGY_HELO_ACK: ", pan::blob(msg_type.data(), msg_type.size()));
 #endif
 	rc = _inproc_admin_socket->send(msg_type, ZMQ_SNDMORE);	
 	assert(rc);
@@ -112,7 +112,7 @@ MsgProcessor::snd_STRATEGY_HELO_ACK(const strategy_id_t& sid)
 	capk::venue_id_t vid = _interface->getVenueID();
 	memcpy(msg.data(), &vid, sizeof(vid));
 #ifdef LOG
-	pan::log_DEBUG("Sending helo data: ", pan::blob(msg.data(), msg.size()));
+	pan::log_DEBUG("Sending venue_id to HELO: ", pan::blob(msg.data(), msg.size()));
 #endif
 	rc = _inproc_admin_socket->send(msg, 0);	
 	assert(rc);
