@@ -1,6 +1,7 @@
 #include "venue_utils.h"
 
 #include <string.h>
+#include <stdio.h>
 
 namespace capk 
 {
@@ -8,10 +9,10 @@ namespace capk
     venue_id_t 
     micStringToVenueId(const char* mic) 
     {
-       if (strncmp(mic, kFXCM_MIC_STRING, MIC_LEN)) {
+       if (strncmp(mic, kFXCM_MIC_STRING, MIC_LEN) == 0) {
            return kFXCM_VENUE_ID;
        } 
-       if (strncmp(mic, kXCDE_MIC_STRING, MIC_LEN)) {
+       if (strncmp(mic, kXCDE_MIC_STRING, MIC_LEN) == 0) {
            return kXCDE_VENUE_ID;
        } 
        return kNULL_VENUE_ID;
