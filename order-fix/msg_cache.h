@@ -732,7 +732,7 @@ class KOrderCache
 			bool bOK;
 			FILE* fp = fopen(filename, "r");
 			if (!fp) {
-				pan::log_CRITICAL("Can't open strategy cache file: ", filename);
+				pan::log_CRITICAL("Can't open order cache file: ", filename);
 				return false;
 			}	
 			bOK = _cache.unserialize(OrderCacheSerializer(), fp);	
@@ -747,7 +747,7 @@ class KOrderCache
 			bool bOK;
 			FILE* fp = fopen(filename, "w");
 			if (!fp) {
-				pan::log_CRITICAL("Can't open strategy cache file: ", filename, " - ABORTING");
+				pan::log_CRITICAL("Can't open order cache file: ", filename, " - ABORTING");
 				return false;
 			}
 			bOK = _cache.serialize(OrderCacheSerializer(), fp);
