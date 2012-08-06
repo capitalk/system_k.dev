@@ -505,6 +505,7 @@ Application::onMessage(const FIX42::ExecutionReport& message,
 	FIX::OrdRejReason ordRejReason;
 	FIX::MinQty minQty;
     FIX::Account account;
+    FIX::ExecRefID execRefID;
 
 	order_id_t cloid;
 	order_id_t origcloid;
@@ -654,7 +655,12 @@ Application::onMessage(const FIX42::ExecutionReport& message,
 		er->set_account(account);
 //pan::log_DEBUG("Q");
 	}
-    //er->set_mic(_config.mic_string);
+   	if (message.isSetField(execRefID)) {
+		message.getField(execRefID);
+		er->set_exec_ref_id(execRefID.getValue());
+//pan::log_DEBUG("Q");
+	}
+//er->set_mic(_config.mic_string);
     er->set_venue_id(_config.venue_id);
 	
 #ifdef LOG
