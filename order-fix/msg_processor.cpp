@@ -424,7 +424,18 @@ MsgProcessor::run()
 		{ *_inproc_addressing_socket, NULL, ZMQ_POLLIN, 0}
 	};
 	while(_stop != true) {
-		ret = zmq::poll(poll_items, 2, -1);
+		//ret = zmq::poll(poll_items, 2, -1);
+        /* N.B
+         * DO NOT USE THE C++ version of poll since this will throw
+         * an exception when the spurious EINTR is returned. Simply
+         * check for it here, trap it, and move on.
+         */
+        ret = zmq_poll(pollItems, 2, -1);
+        if (ret == -1 and zmq_errno() == EINTR) {
+        pan::log_ALERT("EINTR received - FILE: ", __FILE__, " LINE: ", pan::integer(__LINE__));
+            continue;
+        }
+
 		if (ret == -1) {
 			int err = zmq_errno();
 			return err;
