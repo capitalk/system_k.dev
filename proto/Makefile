@@ -5,12 +5,25 @@ PROTO_DIR=.
 
 all: cpp py ctags
 
+PROTOFILES=capk_globals.proto \
+execution_ack.proto \
+execution_report.proto \
+interactive_brokers.proto \
+new_order_single.proto \
+order_cancel.proto \
+order_cancel_reject.proto \
+order_cancel_replace.proto \
+order_replace.proto \
+order_status.proto \
+position.proto \
+recovered_orders.proto \
+spot_fx_md_1.proto
 
 # PROTOS
-py: 
+py: $(PROTOFILES)
 	protoc -I $(PROTO_DIR) --python_out=$(PROTO_OUT) $(PROTO_DIR)/*.proto
 
-cpp: 
+cpp: $(PROTOFILES)
 	protoc -I $(PROTO_DIR) --cpp_out=$(PROTO_OUT) $(PROTO_DIR)/*.proto
 
 ctags:
