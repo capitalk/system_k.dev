@@ -21,7 +21,7 @@ LIBS= -L/usr/local/src/quickfix/lib/ \
 		-lzmq \
 		-lprotobuf \
 
-CFLAGS=-Wall -std=c++0x -pthread -O3 
+CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
 
 
 ifeq ($(dbg),1)
