@@ -28,4 +28,5 @@ message execution_report {
 	optional double		min_qty = 23;
     optional sfixed32   venue_id = 24;
     optional string     account = 25;
+    optional string     exec_ref_id = 26;
 }
