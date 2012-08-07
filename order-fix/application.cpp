@@ -1018,11 +1018,13 @@ void Application::newOrderSingle42(capkproto::new_order_single& nos)
 	// pull the data out of protobuf into FIX elements
 
     strategy_id_t strategy_id(false);
-    strategy_id.set(nos.strategy_id().c_str(), nos.strategy_id().size());
+    bool sid_ok = strategy_id.set(nos.strategy_id().c_str(), nos.strategy_id().size());
+    assert (sid_ok); 
     uuidbuf_t cloidbuf;
 	order_id_t cloid;
-	cloid.set(nos.order_id().c_str(), nos.order_id().size());
-	cloid.c_str(cloidbuf);
+	bool order_id_ok = cloid.set(nos.order_id().c_str(), nos.order_id().size());
+	assert(order_id_ok); 
+    cloid.c_str(cloidbuf);
 	FIX::ClOrdID clOrdID(cloidbuf);
 
 	// symbol
@@ -1127,16 +1129,22 @@ void Application::orderCancelReplace42(capkproto::order_cancel_replace& ocr)
 	//char origoidbuf[UUID_LEN+1];
     uuidbuf_t origoidbuf;
 	order_id_t origoid;
-	origoid.set(ocr.orig_order_id().c_str(), ocr.orig_order_id().size());
-	origoid.c_str(origoidbuf);
+	bool orig_cl_order_id_ok = origoid.set(ocr.orig_order_id().c_str(), ocr.orig_order_id().size());
+	assert (orig_cl_order_id_ok);
+    origoid.c_str(origoidbuf);
 	FIX::OrigClOrdID origClOrdID(origoidbuf);
 	// ClOrdID
 	//char clordidbuf[UUID_LEN+1];
     uuidbuf_t clordidbuf;
 	order_id_t clordid;
-	origoid.set(ocr.cl_order_id().c_str(), ocr.cl_order_id().size());
-	origoid.c_str(clordidbuf);
-	FIX::ClOrdID clOrdID(clordidbuf);
+	
+    //origoid.set(ocr.cl_order_id().c_str(), ocr.cl_order_id().size());
+	//origoid.c_str(clordidbuf);
+	bool cl_order_id_ok = clordid.set(ocr.cl_order_id().c_str(), ocr.cl_order_id().size());
+    assert (cl_order_id_ok); 
+    clordid.c_str(clordidbuf);
+
+    FIX::ClOrdID clOrdID(clordidbuf);
 	
 	// symbol
 	FIX::Symbol symbol(ocr.symbol().c_str());
