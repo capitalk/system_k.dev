@@ -7,7 +7,7 @@ namespace capk
 {
 
     venue_id_t 
-    micStringToVenueId(const char* mic) 
+    mic_string_to_venue_id(const char* mic) 
     {
        if (strncmp(mic, kFXCM_MIC_STRING, MIC_LEN) == 0) {
            return kFXCM_VENUE_ID;
@@ -18,7 +18,7 @@ namespace capk
        return kNULL_VENUE_ID;
     }
 
-    const char* const venueIdToMICCString(const venue_id_t venue_id)
+    const char* const venue_id_to_mic_string(const venue_id_t venue_id)
     {
         if (venue_id == kNULL_VENUE_ID) {
             return kNULL_MIC_STRING;

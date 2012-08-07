@@ -197,7 +197,7 @@ int main( int argc, char** argv )
         // MIC code for adding to output filename 
 		config.mic_string = dict.has("MIC") ? dict.getString("MIC") : ""; 
         // MIC id as integer for protobuf usage
-		config.venue_id = capk::micStringToVenueId(config.mic_string.c_str()); 
+		config.venue_id = capk::mic_string_to_venue_id(config.mic_string.c_str()); 
         assert(config.venue_id != 0);
         std::cout << "MIC: " << config.mic_string << " converts to venue_id: " << config.venue_id << "\n";
 

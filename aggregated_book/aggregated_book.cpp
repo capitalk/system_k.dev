@@ -272,7 +272,7 @@ book_manager::run() {
 							}
 							*/
 							fprintf(stderr, "<%s:%s>: %f@%f (last update: %lu ms)", 
-									capk::venueIdToMICCString(instruments[i].venues[j].venue_id),
+									capk::venue_id_to_mic_string(instruments[i].venues[j].venue_id),
 									instruments[i].symbol,
 									instruments[i].venues[j].bid_price, 
 									instruments[i].venues[j].ask_price, 
@@ -290,10 +290,10 @@ book_manager::run() {
 							std::cerr << "Tdelta     : " << tdelta << std::endl;
                             fprintf(stderr, "<%s:%s>: ms since last update: %lu\n", 
                                     instruments[i].symbol, 
-                                    capk::venueIdToMICCString(instruments[i].venues[j].venue_id), 
+                                    capk::venue_id_to_mic_string(instruments[i].venues[j].venue_id), 
 									last_update_millis);
 							fprintf(stderr, "<%s:%s>: %f@%f\n", 
-									capk::venueIdToMICCString(instruments[i].venues[j].venue_id),
+									capk::venue_id_to_mic_string(instruments[i].venues[j].venue_id),
 									instruments[i].symbol,
 									instruments[i].venues[j].bid_price, 
 									instruments[i].venues[j].ask_price);
@@ -317,10 +317,10 @@ book_manager::run() {
             // Setup BBO and re-broadcast
             fprintf(stderr, "\n***\n<%s> BB: %s:%f-%f BA: %s:%f-%f\n***\n", 
                     sym, 
-                    capk::venueIdToMICCString(bb_venue_id), 
+                    capk::venue_id_to_mic_string(bb_venue_id), 
                     bb, 
                     bbvol, 
-                    capk::venueIdToMICCString(ba_venue_id), 
+                    capk::venue_id_to_mic_string(ba_venue_id), 
                     ba, 
                     bavol);
 
@@ -469,7 +469,7 @@ initialize_instrument_info(zmq::context_t* context)
         for (unsigned int j = 0; j < VENUE_COUNT; j++) {
                     fprintf(stderr, "%s %s <%d>:%f@%f\n", 
                             instruments[i].symbol, 
-                            capk::venueIdToMICCString(instruments[i].venues[j].venue_id),
+                            capk::venue_id_to_mic_string(instruments[i].venues[j].venue_id),
                             instruments[i].venues[j].venue_id,
                             instruments[i].venues[j].bid_price, 
                             instruments[i].venues[j].ask_price);
