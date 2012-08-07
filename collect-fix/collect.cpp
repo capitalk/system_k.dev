@@ -282,7 +282,7 @@ int main( int argc, char** argv )
 
         // Get the bind address for zmq sockets
         bool isPublishing = false;
-        std::string bindAddress = dict.has("ZMQBindAddress") ? dict.getString("ZMQBindAddress") : "";
+        std::string bindAddress = dict.has("MarketDataBroadcastAddr") ? dict.getString("MarketDataBroadcastAddr") : "";
         if (bindAddress != "") {
             std::cout << "ZMQ: Binding to zmq address: " << bindAddress << std::endl;
             isPublishing = true;
