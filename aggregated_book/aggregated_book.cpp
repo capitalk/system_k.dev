@@ -538,8 +538,8 @@ main(int argc, char** argv)
         assert(bcast_sock);
         int zero = 0;
         bcast_sock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
-        std::cerr << "Attempting to bind to: " << capk::kAGGREGATED_BOOK_BROADCAST_ADDR << ". If this does not return then the socket is likely in use" << std::endl;
-		bcast_sock->bind(capk::kAGGREGATED_BOOK_BROADCAST_ADDR);
+        std::cerr << "Attempting to bind to: " << capk::kCAPK_AGGREGATED_BOOK_MD_INTERFACE_ADDR << ". If this does not return then the socket is likely in use" << std::endl;
+		bcast_sock->bind(capk::kCAPK_AGGREGATED_BOOK_MD_INTERFACE_ADDR);
         std::cerr << "Bind complete." << std::endl;
 
         // connect to inproc socket for orderbook
