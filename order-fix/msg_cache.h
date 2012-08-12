@@ -205,10 +205,18 @@ struct order_id
 		memset(this->_oid, c, UUID_LEN);
 	}
 
-	void set(const char* id, size_t len) {
-		assert(len == sizeof(uuid_t));
-		memcpy(this->_oid, id, len);
-	};
+	bool set(const char* id, size_t len) {
+	   	size_t expected = sizeof(uuid_t);
+        if (len != expected) { 
+          #ifdef DEBUG 
+            printf("Expected buffer of length %zu bytes, got %zu\n", expected, len); 
+          #endif 
+          return false;
+        } else { 
+		  memcpy(this->_oid, id, len);
+          return true; 
+        }
+	}
 
 	int set(const char* id) {
 		return uuid_parse(id, _oid);
@@ -302,10 +310,18 @@ struct strategy_id
 		memcpy(this->_sid, id._sid, sizeof(uuid_t));	
 	}
 
-	void set(const char* id, size_t len) {
-		assert(len == sizeof(uuid_t));
-		memcpy(this->_sid, id, len);
-	};
+	bool set(const char* id, size_t len) {
+		size_t expected = sizeof(uuid_t);
+        if (len != expected) { 
+          #ifdef DEBUG
+           printf("Expected strategy id of %zu bytes, got %zu\n", expected, len);
+          #endif 
+          return false; 
+        } else { 
+		  memcpy(this->_sid, id, len);
+	      return true; 
+        }
+    }
 
 
 	bool operator==(strategy_id const & rhs) const {
