@@ -4,14 +4,24 @@ import ConfigParser
 import proto_objs.venue_configuration_pb2
 from optparse import OptionParser
 
+full_config = proto_objs.venue_configuration_pb2.configuration()
+
 def parse(filename):
     config = ConfigParser.ConfigParser()
     config.read(filename)
     sections =  config.sections()
-    for i in sections:
-         #print config.get(i, 'foo')
-         print config.items(i)
+    for s in sections:
+         single_venue_config = full_config.configs.add()
+         make_protobuf(s, config, single_venue_config)
+         
+    print full_config.__str__() 
 
+def make_protobuf(section, config, single_venue_config):
+    single_venue_config.venue_id = config.get(section, 'venue_id')
+    single_venue_config.mic_name = config.get(section, 'mic_name')
+    single_venue_config.order_interface_addr = config.get(section, 'order_interface_addr')
+    single_venue_config.order_ping_addr = config.get(section, 'order_ping_addr')
+    single_venue_config.market_data_broadcast_addr = config.get(section, 'market_data_broadcast_addr')
 
 def main():
     parser = OptionParser(usage="usage: %prog [options] <config_filename>")
