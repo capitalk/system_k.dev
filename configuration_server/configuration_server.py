@@ -12,9 +12,14 @@ def parse(filename):
     config = ConfigParser.ConfigParser()
     config.read(filename)
     sections =  config.sections()
+    full_config.Clear()
     for s in sections:
-         single_venue_config = full_config.configs.add()
-         make_protobuf(s, config, single_venue_config)
+         if s == 'global':
+             full_config.trade_serialization_addr  = config.get(s, 'trade_serialization_addr')
+             full_config.recovery_listener_addr  = config.get(s, 'recovery_listener_addr')
+         else:
+            single_venue_config = full_config.configs.add()
+            make_protobuf(s, config, single_venue_config)
          
     #print full_config.__str__() 
     return True
