@@ -1,10 +1,12 @@
 import zmq
 import sys
 import ConfigParser
+import os.path
 import proto_objs.venue_configuration_pb2
 from optparse import OptionParser
 
 full_config = proto_objs.venue_configuration_pb2.configuration()
+
 
 def parse(filename):
     config = ConfigParser.ConfigParser()
@@ -14,7 +16,8 @@ def parse(filename):
          single_venue_config = full_config.configs.add()
          make_protobuf(s, config, single_venue_config)
          
-    print full_config.__str__() 
+    #print full_config.__str__() 
+    return True
 
 def make_protobuf(section, config, single_venue_config):
     single_venue_config.venue_id = config.get(section, 'venue_id')
@@ -32,6 +35,10 @@ def main():
 
     config_filename = args[0]
     print "Using config file: ", config_filename
+    if os.path.exists(config_filename) == False:
+        print "Config file: ", config_filename, " does not exist"
+        raise Exception("Config file: ", config_filename, " does not exist")
+
     parse(config_filename)
 
     # Create context and connect
@@ -44,11 +51,16 @@ def main():
         contents = socket.recv()
         print "Received msg:<", contents, ">"
         if contents == 'R':
-            socket.send("REFRESH")
+            refresh_ret = parse(config_filename)
+            if (refresh_ret == True): 
+                refresh_status = "OK"
+            else:
+                refresh_status = "ERROR"
+            socket.send_multipart(["REFRESH", refresh_status])
         elif contents == 'C':
-            socket.send("CONFIG")
+            socket.send_multipart(["CONFIG", full_config.SerializeToString()])
         else:
-            socket.send("ERROR")
+            socket.send_multipart(["ERROR", "unknown message"])
     
 
 if __name__ == "__main__":

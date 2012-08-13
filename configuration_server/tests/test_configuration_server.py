@@ -9,11 +9,11 @@ config_request_msg = 'C'
 refresh_request_msg = 'R'
 
 socket.send(config_request_msg)
-config_reply = socket.recv()
+config_reply = socket.recv_multipart()
 print "Received reply:<", config_reply, ">"
 
 socket.send(refresh_request_msg)
-refresh_reply = socket.recv()
+refresh_reply = socket.recv_multipart()
 print "Received reply:<", refresh_reply, ">"
 
 
