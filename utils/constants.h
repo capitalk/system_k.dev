@@ -1,7 +1,7 @@
 #ifndef CAPK_CONSTANTS
 #define CAPK_CONSTANTS
 
-#define MIC_LEN 8
+#define MIC_LEN 9
 #define SYMBOL_LEN 8
 #define CURRENCY_SYMBOL_LEN 4
 #define MAX_MICS 126

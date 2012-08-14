@@ -17,6 +17,7 @@ order_replace.proto \
 order_status.proto \
 position.proto \
 recovered_orders.proto \
+venue_configuration.proto \
 spot_fx_md_1.proto
 
 # PROTOS
