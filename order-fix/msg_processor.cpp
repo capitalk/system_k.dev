@@ -363,6 +363,8 @@ MsgProcessor::runPingService()
     zmq::message_t ping_frame;
     pan::log_INFORMATIONAL("PING service listening on: ", _ping_addr.c_str()); 
     
+    int zero = 0;
+    _ping_socket->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
 
     int ping_ack = capk::PING_ACK;
     while(_stop != true) {
