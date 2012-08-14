@@ -8,6 +8,7 @@ PROTOBUF_OBJS = new_order_single.pb.o \
 				spot_fx_md_1.pb.o \
 				order_status.pb.o \
                 position.pb.o \
+                venue_configuration.pb.o \
                 recovered_orders.pb.o 
 
 capk_globals.pb.o: $(PROTO)/capk_globals.pb.cc $(PROTO)/capk_globals.pb.h
@@ -36,6 +37,9 @@ order_status.pb.o: $(PROTO)/order_status.pb.cc $(PROTO)/order_status.pb.h
 
 position.pb.o: $(PROTO)/position.pb.cc $(PROTO)/position.pb.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/position.pb.cc
+
+venue_configuration.pb.o: $(PROTO)/venue_configuration.pb.cc $(PROTO)/venue_configuration.pb.h
+	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/venue_configuration.pb.cc
 
 recovered_orders.pb.o: $(PROTO)/recovered_orders.pb.cc $(PROTO)/recovered_orders.pb.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/recovered_orders.pb.cc
