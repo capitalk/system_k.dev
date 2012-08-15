@@ -89,13 +89,13 @@ MsgProcessor::snd_STRATEGY_HELO_ACK(const strategy_id_t& sid)
 	bool rc;
 
 #ifdef LOG
-	pan::log_DEBUG("MsgProcessor::snd_STRATEGY_HELO_ACK() to SID: ", 
+	pan::log_DEBUG("snd_STRATEGY_HELO_ACK() to SID: ", 
 			pan::blob(static_cast<const unsigned char*>(sid.get_uuid()), sid.size()));	
 #endif 
 	zmq::message_t header(sid.size());
 	memcpy(header.data(), sid.get_uuid(), sid.size());
 #ifdef LOG
-	pan::log_DEBUG("Sending routing header");
+	pan::log_DEBUG("snd_STRATEGY_HELO_ACK() Sending routing header");
 #endif
 	rc = _inproc_admin_socket->send(header, ZMQ_SNDMORE);
 	assert(rc);
@@ -103,7 +103,7 @@ MsgProcessor::snd_STRATEGY_HELO_ACK(const strategy_id_t& sid)
 	zmq::message_t msg_type(sizeof(capk::STRATEGY_HELO_ACK));
 	memcpy(msg_type.data(), &capk::STRATEGY_HELO_ACK, sizeof(capk::STRATEGY_HELO_ACK));
 #ifdef LOG
-	pan::log_DEBUG("Sending STRATEGY_HELO_ACK: ", pan::blob(msg_type.data(), msg_type.size()));
+	pan::log_DEBUG("snd_STRATEGY_HELO_ACK() Sending STRATEGY_HELO_ACK: ", pan::integer(*static_cast<int*>(msg_type.data())));
 #endif
 	rc = _inproc_admin_socket->send(msg_type, ZMQ_SNDMORE);	
 	assert(rc);
@@ -112,7 +112,8 @@ MsgProcessor::snd_STRATEGY_HELO_ACK(const strategy_id_t& sid)
 	capk::venue_id_t vid = _interface->getVenueID();
 	memcpy(msg.data(), &vid, sizeof(vid));
 #ifdef LOG
-	pan::log_DEBUG("Sending venue_id to HELO: ", pan::blob(msg.data(), msg.size()));
+    pan::log_DEBUG("snd_STRATEGY_HELO_ACK() venue_id is: ", pan::integer(vid));
+	pan::log_DEBUG("snd_STRATEGY_HELO_ACK() Sending venue_id to HELO: ", pan::blob(msg.data(), msg.size()));
 #endif
 	rc = _inproc_admin_socket->send(msg, 0);	
 	assert(rc);
@@ -135,10 +136,14 @@ MsgProcessor::handleIncomingClientMessage()
     bool rc;
     int ret;
 	route_t ret_route;
+#ifdef LOG
+    uuidbuf_t sidbuf;
+#endif
 
 	// get the routing information from ZMQ_ROUTER socket
 	// NB TODO this only works for a one hop route!
     rc = _strategy_msgs_socket->recv(&header1, 0);
+pan::log_DEBUG("Receiving header: ", pan::blob(header1.data(), header1.size()));
     assert(rc);
 	ret = ret_route.addNode(static_cast<const char*>(header1.data()), header1.size());
 	assert(ret == 0);
@@ -149,19 +154,33 @@ MsgProcessor::handleIncomingClientMessage()
 #endif
 	// rcv msg_type 
     rc = _strategy_msgs_socket->recv(&msg_type, 0);
+#ifdef LOG
+    pan::log_DEBUG("Receiving msg_type: ", pan::blob(msg_type.data(), msg_type.size()));
+#endif
     assert(rc);
 	// rcv strategy id
 	rc = _strategy_msgs_socket->recv(&sidframe, 0);
+#ifdef LOG
+    pan::log_DEBUG("Receiving strategy_id: ", pan::blob(sidframe.data(), sidframe.size()));
+#endif
 	assert(rc);
 
 	// convert msg_type and strategy_id
-	capk::msg_t msgType = *(static_cast<capk::msg_t*>(msg_type.data()));	
-#ifdef LOG 
-		//char sidbuf[UUID_STRLEN];
-		uuidbuf_t sidbuf;;
-		pan::log_DEBUG("MsgProcessor::handleIncomingClientMessage() rcvd msg_type: ", pan::integer(msgType));
-		pan::log_DEBUG("MsgProcessor::handleIncomingClientMessage() rcvd SID [", pan::integer(sidframe.size()), "]: ", 
-			pan::blob(static_cast<const void*>(sidframe.data()), sidframe.size()));	
+    if (msg_type.size() < sizeof(uint32_t)) {
+        pan::log_ALERT("Received msgtype_t that is less than size of int - can't interpret - DRAINING SOCKET");
+        zmq::message_t dead_frame;
+		_strategy_msgs_socket->getsockopt(ZMQ_RCVMORE, &more, &more_size);
+        while (more)  { 
+            pan::log_DEBUG("Dropping dead frame");
+            _strategy_msgs_socket->recv(&dead_frame, 0);
+		    _strategy_msgs_socket->getsockopt(ZMQ_RCVMORE, &more, &more_size);
+        }
+        return;
+    }
+    capk::msg_t msgType = *(static_cast<capk::msg_t*>(msg_type.data()));	
+#ifdef LOG
+    pan::log_DEBUG("Received msg_type: ", pan::integer(msgType));
+    pan::log_DEBUG("Received msg_type: ", pan::blob(&msgType, sizeof(msgType)));
 #endif
 	strategy_id_t sid;
 	sid.set(static_cast<const char*>(sidframe.data()), sidframe.size());
@@ -170,12 +189,12 @@ MsgProcessor::handleIncomingClientMessage()
 	if (msgType == capk::STRATEGY_HELO) {
 #ifdef LOG 
 		pan::log_DEBUG("MsgProcessor::handleIncomingClientMessage() rcvd STRATEGY_HELO from SID: ", sid.c_str(sidbuf), " - adding route to cache");
+		T0(a)	
 #endif
 		_scache.add(sid, ret_route);
-		T0(a)	
 		_scache.write(STRATEGY_CACHE_FILENAME);	
-		TN(b)
 #ifdef LOG
+		TN(b)
 		TDIFF(tdiff, a, b)	
 		pan::log_DEBUG("Strategy cache write time: ", ptime_string(tdiff));
 #endif
@@ -371,9 +390,9 @@ MsgProcessor::runPingService()
         zmq::message_t ping_ack_frame(&ping_ack, sizeof(capk::PING_ACK), NULL,  NULL);
         rc = _ping_socket->recv(&ping_frame, 0);
         assert(rc);
+#ifdef LOG 
         T0(a);
         pan::log_DEBUG("Received PING msg (", to_simple_string(a).c_str(), ")");
-#ifdef LOG 
 #endif
         rc = _ping_socket->send(ping_ack_frame);
         assert(rc);
@@ -434,7 +453,7 @@ MsgProcessor::run()
          */
         ret = zmq_poll(poll_items, 2, -1);
         if (ret == -1 and zmq_errno() == EINTR) {
-        pan::log_ALERT("EINTR received - FILE: ", __FILE__, " LINE: ", pan::integer(__LINE__));
+            pan::log_ALERT("EINTR received - FILE: ", __FILE__, " LINE: ", pan::integer(__LINE__));
             continue;
         }
 

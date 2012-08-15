@@ -923,7 +923,9 @@ Application::dispatch(capk::msg_t msgType,
 					char* data, 
 					size_t len)
 {
+#ifdef LOG
 	pan::log_DEBUG("dispatch() - msgType: ", pan::integer(msgType), " data: ", pan::blob(data, len));
+#endif
 	bool parseOK;
 	switch(msgType) {
 		case capk::ORDER_NEW:
