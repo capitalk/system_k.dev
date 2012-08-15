@@ -59,6 +59,8 @@ def run(config_filename):
     
 def terminate():
     print "Terminate"
+    socket.close()
+    context.close()
 
 def main():
     parser = OptionParser(usage="usage: %prog [options] <config_filename>")
@@ -84,12 +86,12 @@ def main():
                 umask=0o002,
                 pidfile=lockfile.FileLock('./configuration_server.pid'),
                 )
-        parse(config_filename)
         context.signal_map = {
-            signal.SIGTERM: terminate,
-            signal.SIGHUP: terminate,
-            signal.SIGUSR1: terminate,
+            signal.SIGTERM: 'terminate',
+            signal.SIGHUP: 'terminate',
+            signal.SIGUSR1: 'terminate',
                 }
+        parse(config_filename)
         #with daemon.DaemonContext():
         with context:
             run(config_filename)
