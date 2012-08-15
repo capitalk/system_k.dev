@@ -4,6 +4,8 @@ import ConfigParser
 import os.path
 import proto_objs.venue_configuration_pb2
 import daemon
+import signal
+import lockfile
 from optparse import OptionParser
 
 full_config = proto_objs.venue_configuration_pb2.configuration()
@@ -55,7 +57,8 @@ def run(config_filename):
         else:
             socket.send_multipart(["ERROR", "unknown message"])
     
-
+def terminate():
+    print "Terminate"
 
 def main():
     parser = OptionParser(usage="usage: %prog [options] <config_filename>")
@@ -76,8 +79,19 @@ def main():
         raise Exception("Config file: ", config_filename, " does not exist")
 
     if options.runAsDaemon == True:
+        context = daemon.DaemonContext(
+                working_directory='.',
+                umask=0o002,
+                pidfile=lockfile.FileLock('./configuration_server.pid'),
+                )
         parse(config_filename)
-        with daemon.DaemonContext():
+        context.signal_map = {
+            signal.SIGTERM: terminate,
+            signal.SIGHUP: terminate,
+            signal.SIGUSR1: terminate,
+                }
+        #with daemon.DaemonContext():
+        with context:
             run(config_filename)
     else:
         run(config_filename)
