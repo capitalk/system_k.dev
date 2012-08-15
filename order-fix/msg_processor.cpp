@@ -208,6 +208,10 @@ pan::log_DEBUG("Receiving header: ", pan::blob(header1.data(), header1.size()));
 	}
 	// PROCESS ALL ORDER RELATED MESSAGES
 	else {
+        assert(msgType == ORDER_NEW || 
+                msgType == ORDER_CANCEL || 
+                msgType == ORDER_REPLACE);
+
 		rc = _strategy_msgs_socket->recv(&oidframe, 0);
 		assert(rc);
 
