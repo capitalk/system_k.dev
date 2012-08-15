@@ -3,6 +3,7 @@ import sys
 import ConfigParser
 import os.path
 import proto_objs.venue_configuration_pb2
+import daemon
 from optparse import OptionParser
 
 full_config = proto_objs.venue_configuration_pb2.configuration()
@@ -31,20 +32,7 @@ def make_protobuf(section, config, single_venue_config):
     single_venue_config.order_ping_addr = config.get(section, 'order_ping_addr')
     single_venue_config.market_data_broadcast_addr = config.get(section, 'market_data_broadcast_addr')
 
-def main():
-    parser = OptionParser(usage="usage: %prog [options] <config_filename>")
-    (options, args) = parser.parse_args();
-
-    if len(args) < 1:
-        parser.error("Missing arguments")
-
-    config_filename = args[0]
-    print "Using config file: ", config_filename
-    if os.path.exists(config_filename) == False:
-        print "Config file: ", config_filename, " does not exist"
-        raise Exception("Config file: ", config_filename, " does not exist")
-
-    parse(config_filename)
+def run(config_filename):
 
     # Create context and connect
     context = zmq.Context()
@@ -68,5 +56,31 @@ def main():
             socket.send_multipart(["ERROR", "unknown message"])
     
 
+
+def main():
+    parser = OptionParser(usage="usage: %prog [options] <config_filename>")
+    parser.add_option("-D", "--daemon", 
+            dest="runAsDaemon", 
+            help="Run configuration server as daemon", 
+            action="store_true", 
+            default=False)
+    (options, args) = parser.parse_args();
+
+    if len(args) < 1:
+        parser.error("Missing arguments")
+
+    config_filename = args[0]
+    print "Using config file: ", config_filename
+    if os.path.exists(config_filename) == False:
+        print "Config file: ", config_filename, " does not exist"
+        raise Exception("Config file: ", config_filename, " does not exist")
+
+    if options.runAsDaemon == True:
+        parse(config_filename)
+        with daemon.DaemonContext():
+            run(config_filename)
+    else:
+        run(config_filename)
+    
 if __name__ == "__main__":
-    main()
+        main()
