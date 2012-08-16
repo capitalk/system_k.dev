@@ -4,14 +4,24 @@
 #include "types.h" 
 #include "constants.h" 
 #include "venue_globals.h"
+#include "config_server.h"
+#include <zmq.h>
+#include <zmq.hpp>
+
+#include "proto/venue_configuration.pb.h"
 
 namespace capk
 {
 
 
-    // Retrieve venue_id for a given MIC string
-    venue_id_t mic_string_to_venue_id(const char* mic); 
-    const char* const venue_id_to_mic_string(const venue_id_t venue_id);
+
+    int get_config_params(void* zmq_context, 
+            const char* config_server_addr, 
+            capkproto::configuration* cfg);
+
+    capkproto::venue_configuration get_venue_config(capkproto::configuration* config, 
+            const char* mic_name);
+    
 }
 
 #endif // CAPK_VENUE_GLOBALS
