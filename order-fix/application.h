@@ -161,6 +161,8 @@ public:
 
 	inline void setLimitOrderChar40(const char limitOrderChar) { this->_limitOrderChar40 = limitOrderChar; };
 
+    inline void setLogging(const bool isLogging) { this->_isLogging = isLogging; };
+
 	// OrderInterface virtual methods
 	virtual void dispatch(capk::msg_t msgType, char* data, size_t len);
 
@@ -310,7 +312,8 @@ private:
 	bool _useCurrency15;
 	// FIX field 40 which character to use for limit orders
 	char _limitOrderChar40;
-
+    // Set logging status
+    bool _isLogging;
 	
 
 	zmq::context_t *_pzmq_context;	
