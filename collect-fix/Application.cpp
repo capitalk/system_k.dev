@@ -1123,6 +1123,9 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
             
             size_t msgsize = bbo.ByteSize();
 			assert(msgsize < sizeof(msgbuf));
+            if (msgsize > sizeof(msgbuf)) {
+                std::cerr << "WARNING: buf too small for protobuf serialization!" << std::endl;
+            }
             bbo.SerializeToArray(msgbuf, msgsize);
 
             zmq_msg_init_size(&msg, msgsize);
