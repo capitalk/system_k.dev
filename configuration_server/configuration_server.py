@@ -16,11 +16,14 @@ def parse(filename):
     config.read(filename)
     sections =  config.sections()
     full_config.Clear()
+    i = 0
     for s in sections:
          if s == 'global':
              full_config.trade_serialization_addr  = config.get(s, 'trade_serialization_addr')
              full_config.recovery_listener_addr  = config.get(s, 'recovery_listener_addr')
          else:
+            i+=1
+            print ("Adding venue: %d " % i)
             single_venue_config = full_config.configs.add()
             make_protobuf(s, config, single_venue_config)
          
@@ -46,6 +49,7 @@ def run(config_filename):
         contents = socket.recv()
         print "Received msg:<", contents, ">"
         if contents == 'R':
+            print "Refresh request"
             refresh_ret = parse(config_filename)
             if (refresh_ret == True): 
                 refresh_status = "OK"
@@ -53,8 +57,10 @@ def run(config_filename):
                 refresh_status = "ERROR"
             socket.send_multipart(["REFRESH", refresh_status])
         elif contents == 'C':
+            print "Config request"
             socket.send_multipart(["CONFIG", full_config.SerializeToString()])
         else:
+            print "Unknown request - ERROR"
             socket.send_multipart(["ERROR", "unknown message"])
     
 def terminate():
@@ -96,6 +102,7 @@ def main():
         with context:
             run(config_filename)
     else:
+        parse(config_filename)
         run(config_filename)
     
 if __name__ == "__main__":
