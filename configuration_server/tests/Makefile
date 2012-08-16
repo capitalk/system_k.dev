@@ -60,14 +60,16 @@ test_configuration_server.o: $(SRC)/test_configuration_server.cpp
 strategy_test.o: $(SRC)/strategy_test.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-test_configuration_server: test_configuration_server.o logging.o timing.o $(PROTOBUF_OBJS)
-	$(CC) $(CFLAGS) test_configuration_server.o logging.o timing.o $(PROTOBUF_OBJS) $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
-
+test_configuration_server: test_configuration_server.o logging.o timing.o venue_utils.o $(PROTOBUF_OBJS)
+	$(CC) $(CFLAGS) test_configuration_server.o logging.o timing.o venue_utils.o $(PROTOBUF_OBJS) $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
 
 logging.o: $(UTILS)/logging.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 timing.o: $(UTILS)/timing.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+venue_utils.o: $(UTILS)/venue_utils.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 # PROTOS
