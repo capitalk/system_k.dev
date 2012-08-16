@@ -40,18 +40,23 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-#include "boost/date_time/gregorian/gregorian.hpp" 
+#include <boost/date_time/gregorian/gregorian.hpp> 
+#include <boost/spirit/include/qi.hpp>
+
 
 #include <zmq.hpp>
 
-#include "../proto/spot_fx_md_1.pb.h"
+#include "proto/spot_fx_md_1.pb.h"
+#include "proto/venue_configuration.pb.h"
 
 //#include "utils/venue_globals.h"
 #include "utils/venue_utils.h"
+#include "utils/config_server.h"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem; 
 namespace dt = boost::gregorian; 
+namespace qi = boost::spirit::qi;
 
 void sighandler(int sig);
 
@@ -65,6 +70,8 @@ Application* papplication;
 //zmq::socket_t publisher(context, ZMQ_PUB);
 void *g_zmq_context;
 void *pub_socket;
+
+capkproto::configuration all_venue_config;
 
 std::vector<std::string> 
 readSymbols(std::string symbolFileName)
@@ -103,11 +110,12 @@ int main( int argc, char** argv )
 	g_zmq_context = zmq_init(1);
 	assert(g_zmq_context);
 	pub_socket = zmq_socket(g_zmq_context, ZMQ_PUB);
-   
     zmq_setsockopt(pub_socket, ZMQ_LINGER, &zero, sizeof(zero));
 	assert(pub_socket);
 
+
     GOOGLE_PROTOBUF_VERIFY_VERSION;
+
 
 	try {
 		po::options_description desc("Allowed options");
@@ -196,10 +204,30 @@ int main( int argc, char** argv )
 
         // MIC code for adding to output filename 
 		config.mic_string = dict.has("MIC") ? dict.getString("MIC") : ""; 
-        // MIC id as integer for protobuf usage
-		config.venue_id = capk::mic_string_to_venue_id(config.mic_string.c_str()); 
-        assert(config.venue_id != 0);
-        std::cout << "MIC: " << config.mic_string << " converts to venue_id: " << config.venue_id << "\n";
+        std::cout << "My MIC is: " << config.mic_string << std::endl;
+
+
+        capk::get_config_params(g_zmq_context, "tcp://127.0.0.1:11111", &all_venue_config);
+        capkproto::venue_configuration my_config = capk::get_venue_config(&all_venue_config, config.mic_string.c_str());
+        std::cout << "My config:\n" << my_config.DebugString() << std::endl;
+
+        // venue id as for protobuf usage to identify venue
+        if (my_config.venue_id() == "") {
+            std::cerr << "venue_id not set!" << std::endl;
+            exit(-1);
+        }
+        else {
+            // boost version of atoi
+            if (qi::parse(my_config.venue_id().begin(), my_config.venue_id().end(),  qi::int_, config.venue_id) == false) {
+                std::cout << "Can't parse venue_id"  << std::endl;
+                exit(-1); 
+            }
+            if (config.venue_id == 0) {
+                std::cerr << "venue_id can not be 0" << std::endl;
+                exit(-1);
+            }
+            std::cout << "Set venue_id to: " << config.venue_id << std::endl;
+        }
 
         // Username and password settings
 		config.username = dict.has("Username") ? dict.getString("Username") : ""; 
@@ -281,20 +309,17 @@ int main( int argc, char** argv )
         }
 
         // Get the bind address for zmq sockets
-        bool isPublishing = false;
-        std::string bindAddress = dict.has("MarketDataBroadcastAddr") ? dict.getString("MarketDataBroadcastAddr") : "";
-        if (bindAddress != "") {
-            std::cout << "ZMQ: Binding to zmq address: " << bindAddress << std::endl;
-            isPublishing = true;
+        bool isPublishing = dict.has("should_publish_prices") && dict.getBool("should_publish_prices");
+        if (isPublishing) {
+            std::cout << "Collector is publishing prices to: " << my_config.market_data_broadcast_addr() << std::endl;
         }
         else {
-            std::cout << "ZMQ: NOT publishing prices: " << std::endl; 
+            std::cout << "Collector is NOT publishing prices" << std::endl;
         }
 
         // ZMQ initialization
         if (isPublishing) {
-            std::cout << "ZMQ: Seting publishing params" << std::endl;
-            zmq_bind(pub_socket, bindAddress.c_str());
+            zmq_bind(pub_socket, my_config.market_data_broadcast_addr().c_str());
             application.setZMQContext(g_zmq_context);
             application.setZMQSocket(pub_socket);
         }
