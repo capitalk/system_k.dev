@@ -19,6 +19,8 @@
 #include "quickfix/SocketInitiator.h"
 #include "quickfix/ThreadedSocketInitiator.h"
 #include "quickfix/SessionSettings.h"
+#include "quickfix/NullStore.h"
+
 #include "application.h"
 
 #include <string>
@@ -29,17 +31,22 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
-#include "boost/date_time/gregorian/gregorian.hpp" 
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/spirit/include/qi.hpp>
 
 #include <zmq.hpp>
 
 #include <google/protobuf/stubs/common.h>
 
+#include "proto/venue_configuration.pb.h"
+
+#include "venue_utils.h"
 #include "logging.h"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem; 
 namespace dt = boost::gregorian; 
+namespace qi = boost::spirit::qi;
 
 void signal_handler(int signal_value);
 void s_catch_signals();
@@ -51,12 +58,16 @@ Application* papplication;
 // ZMQ context - can't have these go out of scope
 zmq::context_t ctx(1);
 
+// All venue configurations
+capkproto::configuration all_venue_config;
+
 int main( int argc, char** argv )
 {
 	int err = 0;
 	std::string configFile;
 	bool printDebug; 
 	bool runInteractive;
+    bool isLogging;
 
     std::string logFilename = createTimestampedLogFilename(argv[0]);
 	logging_init(logFilename.c_str());
@@ -77,6 +88,7 @@ int main( int argc, char** argv )
 			("help", "produce help message")
 			("c", po::value<std::string>(), "<config file>")
 			("d", "debug info")
+			("nolog", "turn off logging")
 			("i", "run interactive mode")
 		;
 		
@@ -104,6 +116,14 @@ int main( int argc, char** argv )
 			pan::log_NOTICE("Running in PRODUCTION MODE (NON-INTERACTIVE)");
 			runInteractive = false;
         }
+		if (vm.count("nolog")) {
+			pan::log_NOTICE("Logging disabled");
+            isLogging = false;
+		} else {
+			pan::log_NOTICE("Logging enabled");
+            isLogging = true;
+		}
+
         // debug? 
 		printDebug = vm.count("d") > 0; 
 			
@@ -184,7 +204,7 @@ int main( int argc, char** argv )
 			return (-1);
 		}
 		pan::log_INFORMATIONAL("Using TargetCompID: ", config.targetCompID);
-
+/*
         // venue ID
 		config.venue_id = dict.has("VenueID") ? atoi(dict.getString("VenueID").c_str()) : 0;
 		if (config.venue_id == 0) { 
@@ -192,7 +212,44 @@ int main( int argc, char** argv )
 			return (-1);
 		}
 		pan::log_INFORMATIONAL("Using VenueID: ", pan::integer(config.venue_id));
+*/
+        capk::get_config_params((ctx), "tcp://127.0.0.1:11111", &all_venue_config);
+        capkproto::venue_configuration my_config = capk::get_venue_config(&all_venue_config, config.mic_code.c_str());
+        std::cout << "My config:\n" << my_config.DebugString() << std::endl;
 
+        if (my_config.venue_id() == "") {
+            std::cerr << "venue_id not set!" << std::endl;
+            exit(-1);
+        }
+        else {
+            // boost version of atoi
+            if (qi::parse(my_config.venue_id().begin(),  my_config.venue_id().end(), config.venue_id) == false) {
+                pan::log_CRITICAL("Can't parse venue_id");
+                exit(-1);
+            }
+            if (config.venue_id == 0) {
+                std::cerr << "venue_id can not be 0" << std::endl;
+                exit(-1);
+            }
+            pan::log_INFORMATIONAL("Set venue_id to: ", pan::integer(config.venue_id)); 
+        }
+
+        if (my_config.order_ping_addr() == "") {
+            std::cout << "Order interface ping address is not set!" << std::endl;
+            exit(-1);
+        }
+        else {
+            config.pingListenerAddr = my_config.order_ping_addr();
+        }
+
+        if (my_config.order_interface_addr() == "") {
+            std::cout << "Order interface listener address is not set!" << std::endl;
+            exit(-1);
+        }
+        else {
+            config.orderListenerAddr = my_config.order_interface_addr();
+        }
+/*
 		// Order interface listener addr 
 		config.orderListenerAddr = dict.has("OrderListenerAddr") ? dict.getString("OrderListenerAddr").c_str() : "";
         if (config.orderListenerAddr == "") {
@@ -208,7 +265,7 @@ int main( int argc, char** argv )
 			return (-1);
         }
 		pan::log_INFORMATIONAL("Listening for pings on: ", config.pingListenerAddr);
-
+*/
 
         // Debug settings
 		config.printDebug = printDebug; 
@@ -235,40 +292,31 @@ int main( int argc, char** argv )
 			pan::log_CRITICAL("Can't write pid file - exiting");
             exit(-1);
         }
-#if 0
-        // Get the bind address for zmq sockets
-        bool isPublishing = false;
-        std::string bindAddress = dict.has("ZMQBindAddressIn") ? dict.getString("ZMQBindAddressIn") : "";
-        if (bindAddress != "") {
-#ifdef LOG
-            pan::log_INFORMATIONAL("ZMQ: Binding to zmq address: ", bindAddress);
-#endif
-			config.zmq_bind_addr = bindAddress;
-            isPublishing = true;
-        }
-        else {
-#ifdef LOG
-            pan::log_INFORMATIONAL("ZMQ: NOT publishing : ", bindAddress);
-#endif
-        }
-#endif
 
 		// Set application params
 		application.setHandlInst21(handlInst);
 		application.setAccount1(account);
 		application.setLimitOrderChar40(limitOrder);
 		application.setUseCurrency15(useCurrency);
+        application.setLogging(isLogging);
 
         // ZMQ initialization
 		application.setZMQContext(&ctx);
         
-		FIX::FileStoreFactory storeFactory(storeOutputDir);         
-		FIX::FileLogFactory logFactory(logOutputDir);
+        if (isLogging) {
+            pan::log_INFORMATIONAL("Logging with FileStoreFactory");
+		    FIX::FileStoreFactory fileStoreFactory(storeOutputDir);         
+		    FIX::FileLogFactory logFactory(logOutputDir);
+            pinitiator = new FIX::SocketInitiator(application, fileStoreFactory, settings, logFactory);
+        }
+        else {
+            pan::log_INFORMATIONAL("Logging with NullStoreFactory");
+            FIX::NullStoreFactory nullStoreFactory;
+            pinitiator = new FIX::SocketInitiator(application, nullStoreFactory, settings);
+        }
 
-		FIX::SocketInitiator initiator(application, storeFactory, settings, logFactory);
-        pinitiator = &initiator;
 		pan::log_INFORMATIONAL("Starting initiator"); 
-		initiator.start();
+		pinitiator->start();
 
 		if (runInteractive) {
 			application.test();
@@ -285,7 +333,7 @@ int main( int argc, char** argv )
 		}
 */
 		pan::log_INFORMATIONAL("Stopping initiator"); 
-		initiator.stop();
+		pinitiator->stop();
 		return 0;
 	}
 	catch ( FIX::Exception & e )
