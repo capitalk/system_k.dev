@@ -1063,7 +1063,7 @@ void Application::newOrderSingle42(capkproto::new_order_single& nos)
 	nos42.set(orderQty);
 
 	// time in force
-	FIX::TimeInForce timeInForce;
+	FIX::TimeInForce timeInForce = FIX::TimeInForce_DAY;
 	if (nos.time_in_force() == capkproto::GFD) {
 		timeInForce = FIX::TimeInForce_DAY;
 	}
@@ -1071,7 +1071,7 @@ void Application::newOrderSingle42(capkproto::new_order_single& nos)
 		timeInForce = FIX::TimeInForce_IMMEDIATE_OR_CANCEL;
 	}
     else if (nos.time_in_force() == capkproto::FOK) {
-		timeInForce = FIX::TimeInForce_IMMEDIATE_OR_CANCEL;
+		timeInForce = FIX::TimeInForce_FILL_OR_KILL;
 	}
 	nos42.set(timeInForce);
 
