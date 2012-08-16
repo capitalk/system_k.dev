@@ -24,7 +24,7 @@ typedef Side Side_t;
 
 typedef uint32_t orderId_t;
 
-typedef unsigned int msg_t;
+typedef uint32_t msg_t;
 typedef uint32_t venue_id_t;
 
 
