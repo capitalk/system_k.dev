@@ -11,7 +11,8 @@ MYSQL=/usr/local/include/mysql
 STRATEGY_BASE=../../strategy
 ORDER_ENGINE=../../order_engines/order-fix
 
-INCLUDE=-I $(BOOST) -I /usr/local/include/ \
+INCLUDE=-I $(BOOST) \
+		-I /usr/local/include/ \
 		-I $(MYSQL) \
         -I/usr/local/src/quickfix/include \
 		-I.. \
