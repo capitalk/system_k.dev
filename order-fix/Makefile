@@ -3,12 +3,13 @@ CC=g++
 PROTOC=protoc
 PROTO=../../collectors/proto
 
-BOOST=/usr/local/boost
+BOOST=/usr/local/include/boost
 COLLECTORS=../../collectors
 UTILS=../../collectors/utils
 TESTS=./tests
 
-INCLUDE= -I $(BOOST) -I /usr/local/include/ \
+INCLUDE= -I $(BOOST) \
+		-I /usr/local/include/ \
         -I/usr/local/src/quickfix/include \
 		-I.. \
 		-I $(COLLECTORS) \
@@ -41,16 +42,6 @@ PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
 CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
 #LDFLAGS=-static
 
-PROTOBUF_OBJS = new_order_single.pb.o \
-				order_cancel.pb.o \
-				order_cancel_reject.pb.o \
-				order_cancel_replace.pb.o \
-				capk_globals.pb.o \
-				execution_report.pb.o \
-				order_status.pb.o
-				
-
-
 ifeq ($(dbg),1)
         CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb  -DLOG -pg -g
 		LDFLAGS =  -pg
@@ -58,32 +49,10 @@ endif
 
 all: protos order-fix
 
-order-fix : order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o $(PROTOBUF_OBJS)
-	$(CC) $(LDFLAGS) order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
+include $(PROTO)/Makefile.inc
 
-new_order_single.pb.o: $(PROTO)/new_order_single.pb.cc $(PROTO)/new_order_single.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/new_order_single.pb.cc
-
-order_status.pb.o: $(PROTO)/order_status.pb.cc $(PROTO)/order_status.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/order_status.pb.cc
-
-capk_globals.pb.o: $(PROTO)/capk_globals.pb.cc $(PROTO)/capk_globals.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/capk_globals.pb.cc
-
-order_cancel.pb.o: $(PROTO)/order_cancel.pb.cc $(PROTO)/order_cancel.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/order_cancel.pb.cc
-
-order_cancel_reject.pb.o: $(PROTO)/order_cancel_reject.pb.cc $(PROTO)/order_cancel_reject.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/order_cancel_reject.pb.cc
-
-order_cancel_replace.pb.o: $(PROTO)/order_cancel_replace.pb.cc $(PROTO)/order_cancel_replace.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/order_cancel_replace.pb.cc
-
-execution_report.pb.o: $(PROTO)/execution_report.pb.cc $(PROTO)/execution_report.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/execution_report.pb.cc
- 
-spot_fx_md_1.pb.o: $(PROTO)/spot_fx_md_1.pb.cc $(PROTO)/spot_fx_md_1.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/spot_fx_md_1.pb.cc
+order-fix : order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o venue_utils.o $(PROTOBUF_OBJS)
+	$(CC) $(LDFLAGS) order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o venue_utils.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
 
 order-fix.o: order-fix.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
@@ -92,35 +61,38 @@ application.o: application.cpp
 	#$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) application.cpp  
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<  
 
+logging.o: $(UTILS)/logging.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
+
+jenkins_hash.o: $(UTILS)/jenkins_hash.cpp
+	$(CC) -c -I $(UTILS) $(INCLUDE) $(CFLAGS) $<
+
+timing.o: $(UTILS)/timing.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
 msg_processor.o: msg_processor.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 msg_router.o: msg_router.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-logging.o: $(UTILS)/logging.cpp 
-	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
-
-timing.o: $(UTILS)/timing.cpp 
-	$(CC) -c $(INCLUDE) $(CFLAGS) $<
-	
-jenkins_hash.o: $(UTILS)/jenkins_hash.cpp
-	$(CC) -c -I $(UTILS) $(INCLUDE) $(CFLAGS) $<
-
-client_order_interface.o: client_order_interface.cpp
+venue_utils.o: $(UTILS)/venue_utils.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-client_market_data_interface.o: client_market_data_interface.cpp
-	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
+#client_order_interface.o: client_order_interface.cpp
+	#$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-market_data_mux.o: market_data_mux.cpp
-	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
+#client_market_data_interface.o: client_market_data_interface.cpp
+	#$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-order_mux.o: order_mux.cpp
-	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
+#market_data_mux.o: market_data_mux.cpp
+	#$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
-order.o: order.cpp
-	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
+#order_mux.o: order_mux.cpp
+	#$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
+
+#order.o: order.cpp
+	#$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
 # PROTOS
 protos: 
