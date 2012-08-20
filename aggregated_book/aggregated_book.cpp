@@ -28,9 +28,9 @@ namespace po = boost::program_options;
 #define MSGBUF_SIZ 2048
 #define UPDATE_TIMEOUT_MILLIS 5000
 
-#define INIT_BID INT_MIN
-#define INIT_ASK INT_MAX
-#define INIT_SIZE -1
+//#define INIT_BID INT_MIN
+//#define INIT_ASK INT_MAX
+//#define INIT_SIZE -1
 
 /*
  * Unrolled loops if we like
@@ -130,17 +130,17 @@ struct instrument_info
 };
 
 void instrument_reset(capk::SingleMarketBBO_t& bbo)  {
-    bbo.bid_price = INIT_BID;
-    bbo.ask_price = INIT_ASK;
-    bbo.bid_size = INIT_SIZE;
-    bbo.ask_size = INIT_SIZE;
+    bbo.bid_price = capk::INIT_BID;
+    bbo.ask_price = capk::INIT_ASK;
+    bbo.bid_size = capk::INIT_SIZE;
+    bbo.ask_size = capk::INIT_SIZE;
 }
 
 bool instrument_is_unset(capk::SingleMarketBBO_t& bbo) {
-    return (bbo.bid_price == INIT_BID &&
-        bbo.ask_price == INIT_ASK &&
-        bbo.bid_size == INIT_SIZE &&
-        bbo.ask_size == INIT_SIZE);
+    return (bbo.bid_price == capk::INIT_BID &&
+        bbo.ask_price == capk::INIT_ASK &&
+        bbo.bid_size == capk::INIT_SIZE &&
+        bbo.ask_size == capk::INIT_SIZE);
 }
 
 bool isZeroTimespec(const struct timespec& ts) {
@@ -271,8 +271,8 @@ book_manager::run() {
                                         instruments[i].symbol);
 							}
 							*/
-							fprintf(stderr, "<%s:%s>: %f@%f (last update: %lu ms)", 
-									capk::venue_id_to_mic_string(instruments[i].venues[j].venue_id),
+							fprintf(stderr, "<%d:%s>: %f@%f (last update: %lu ms)", 
+									instruments[i].venues[j].venue_id,
 									instruments[i].symbol,
 									instruments[i].venues[j].bid_price, 
 									instruments[i].venues[j].ask_price, 
@@ -315,12 +315,12 @@ book_manager::run() {
 			}
             
             // Setup BBO and re-broadcast
-            fprintf(stderr, "\n***\n<%s> BB: %s:%f-%f BA: %s:%f-%f\n***\n", 
+            fprintf(stderr, "\n***\n<%s> BB: %d:%f-%f BA: %d:%f-%f\n***\n", 
                     sym, 
-                    capk::venue_id_to_mic_string(bb_venue_id), 
+                    bb_venue_id, 
                     bb, 
                     bbvol, 
-                    capk::venue_id_to_mic_string(ba_venue_id), 
+                    ba_venue_id, 
                     ba, 
                     bavol);
 

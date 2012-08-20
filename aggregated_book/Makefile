@@ -33,14 +33,10 @@ PROTOBUF_OBJS = spot_fx_md_1.pb.o \
 
 all: protos aggregated_book
 
+include $(PROTO)/Makefile.inc
+
 aggregated_book.o: aggregated_book.cpp
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) aggregated_book.cpp 
-
-spot_fx_md_1.pb.o: $(PROTO)/spot_fx_md_1.pb.cc $(PROTO)/spot_fx_md_1.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/spot_fx_md_1.pb.cc 
-
-capk_globals.pb.o: $(PROTO)/capk_globals.pb.cc $(PROTO)/capk_globals.pb.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(PROTO)/capk_globals.pb.cc
 
 time_utils.o: $(UTILS)/time_utils.cpp $(UTILS)/time_utils.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS)/time_utils.cpp

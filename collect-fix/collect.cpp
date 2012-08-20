@@ -209,7 +209,7 @@ int main( int argc, char** argv )
 
         capk::get_config_params(g_zmq_context, "tcp://127.0.0.1:11111", &all_venue_config);
         capkproto::venue_configuration my_config = capk::get_venue_config(&all_venue_config, config.mic_string.c_str());
-        std::cout << "My config:\n" << my_config.DebugString() << std::endl;
+        std::cout << "Received config:\n" << my_config.DebugString() << std::endl;
 
         // venue id as for protobuf usage to identify venue
         if (my_config.venue_id() == "") {
