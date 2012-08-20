@@ -6,4 +6,5 @@ store/
 *.o
 *.gch
 *.a
-
+*.Po
+.deps
