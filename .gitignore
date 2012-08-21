@@ -1,7 +1,6 @@
 *.log
 *.la
 *.lo
-*.lo
 *.so
 log/*.log
 store/

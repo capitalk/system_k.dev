@@ -1,0 +1,114 @@
+CC=g++
+
+PROTOC=protoc
+PROTO=../../collectors/proto
+
+BOOST=/usr/local/include/boost
+COLLECTORS=../../collectors
+UTILS=../../collectors/utils
+TESTS=./tests
+
+INCLUDE= -I $(BOOST) \
+		-I /usr/local/include/ \
+        -I/usr/local/src/quickfix/include \
+		-I.. \
+		-I $(COLLECTORS) \
+		-I $(PANTHEIOS_ROOT)/include \
+		-I $(STLSOFT)/include \
+		-I $(UTILS)
+
+LIBS= -L/usr/local/lib \
+      	-lquickfix \
+		-lboost_date_time \
+		-lboost_program_options \
+		-lboost_filesystem \
+		-lzmq \
+		-lprotobuf \
+		-lrt \
+		-lboost_thread \
+		-lgtest
+
+
+PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
+        -l pantheios.1.core.gcc44.file64bit \
+        -l pantheios.1.fe.simple.gcc44.file64bit.debug \
+        -l pantheios.1.util.gcc44.file64bit \
+		-l pantheios.1.be.N.gcc44.file64bit \
+        -l pantheios.1.bec.file.gcc44.file64bit \
+        -l pantheios.1.bec.fprintf.gcc44.file64bit \
+        -l pantheios.1.util.gcc44.file64bit \
+        -l pantheios.1.core.gcc44.file64bit 
+
+CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
+#LDFLAGS=-static
+
+ifeq ($(dbg),1)
+        CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb  -DLOG -pg -g
+		LDFLAGS =  -pg
+endif
+
+all: protos order-fix
+
+include $(PROTO)/Makefile.inc
+
+order-fix : order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o venue_utils.o $(PROTOBUF_OBJS)
+	$(CC) $(LDFLAGS) order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o venue_utils.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
+
+order-fix.o: order-fix.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+application.o: application.cpp
+	#$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) application.cpp  
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<  
+
+logging.o: $(UTILS)/logging.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
+
+jenkins_hash.o: $(UTILS)/jenkins_hash.cpp
+	$(CC) -c -I $(UTILS) $(INCLUDE) $(CFLAGS) $<
+
+timing.o: $(UTILS)/timing.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+msg_processor.o: msg_processor.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+msg_router.o: msg_router.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+venue_utils.o: $(UTILS)/venue_utils.cpp
+	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
+
+#client_order_interface.o: client_order_interface.cpp
+	#$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
+
+#client_market_data_interface.o: client_market_data_interface.cpp
+	#$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
+
+#market_data_mux.o: market_data_mux.cpp
+	#$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
+
+#order_mux.o: order_mux.cpp
+	#$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
+
+#order.o: order.cpp
+	#$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
+
+# PROTOS
+protos: 
+	cd $(PROTO) && make
+
+test: 
+	cd $(TESTS) && make 
+
+#protos testsvr testcli req rep uuid_test cache_test serialize_cache_test
+
+clean :
+	rm -f *.o order-fix req rep testsvr testcli uuid_test cache_test hash_test serialize_cache_test
+
+install :
+	echo "No install available yet"
+
+.PHONY : order_engine 
+
+
