@@ -1,9 +1,0 @@
-package capkproto;
-
-import "capk_globals.proto";
-import "new_order_single.proto";
-
-message recovered_orders {
-    repeated new_order_single orders = 1;
-}
-
