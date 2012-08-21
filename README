@@ -1,3 +1,6 @@
+system_kr contains all code needed to build the trading system
+you will also need the common repository
+
 Data collectors for collecting tick data to file 
 Building collector-fix will also build the order book 
 
