@@ -1,0 +1,42 @@
+package capkproto;
+
+import "capk_globals.proto";
+
+message order_t {
+    enum side_t {
+        BID = 0;
+        ASK = 1;
+    }
+    enum quote_type_t {
+        INDICATIVE = 0;
+        TRADEABLE = 1;
+    }
+    required string name = 1;
+    required string mic = 2;
+    required sfixed32 qid = 3;
+    required side_t side = 4;
+    required double size = 5;
+    required double price = 6;
+
+}
+// Change this to single market bbo
+message single_market_bbo {
+    required sfixed32 venue_id = 1;
+    required string symbol = 2;
+    required double bid_size = 3;
+    required double bid_price = 4;
+    required double ask_size = 5;
+    required double ask_price = 6;
+}
+
+// Change this to multi market bbo
+message instrument_bbo {
+    required string symbol = 1;
+    required sfixed32 bid_venue_id = 2;
+    required double bid_price = 3;
+    required double bid_size = 4;
+    required sfixed32 ask_venue_id = 5;
+    required double ask_price = 6;
+    required double ask_size = 7;
+}
+
