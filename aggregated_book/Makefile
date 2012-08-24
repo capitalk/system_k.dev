@@ -1,19 +1,16 @@
 CC=g++
 
-PROTO=../proto
-UTILS=../utils
 
-INCLUDE=-I/usr/local/boost/ \
-		-I/usr/local/include/ \
-        -I/usr/local/src/quickfix/include \
-		-I.. \
-		-I$(UTILS) \
-		-I$(PROTO)
+COMMON=../../common
 
-LIBS= -L/usr/local/src/quickfix/lib/ \
-		-L/usr/local/lib \
-		-L../order_book/ \
-      	-lquickfix \
+UTILS=$(COMMON)/src/c++
+UTILS_SRC=$(UTILS)/utils
+PROTO=$(COMMON)/proto
+
+INCLUDE= -I$(UTILS) \
+		-I$(COMMON) 
+
+LIBS= -lquickfix \
 		-lboost_date_time \
 		-lboost_thread \
 		-lboost_program_options \
@@ -38,11 +35,11 @@ include $(PROTO)/Makefile.inc
 aggregated_book.o: aggregated_book.cpp
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) aggregated_book.cpp 
 
-time_utils.o: $(UTILS)/time_utils.cpp $(UTILS)/time_utils.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS)/time_utils.cpp
+time_utils.o: $(UTILS_SRC)/time_utils.cpp $(UTILS_SRC)/time_utils.h
+	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS_SRC)/time_utils.cpp
 
-venue_utils.o: $(UTILS)/venue_utils.cpp $(UTILS)/venue_utils.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS)/venue_utils.cpp
+venue_utils.o: $(UTILS_SRC)/venue_utils.cpp $(UTILS_SRC)/venue_utils.h
+	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS_SRC)/venue_utils.cpp
 
 
 aggregated_book : aggregated_book.o time_utils.o venue_utils.o $(PROTOBUF_OBJS)
@@ -58,6 +55,7 @@ install :
 	cp -r ./cfg /usr/local/capk
 	cp ./collect /usr/local/capk
 	cp *.sh /usr/local/capk
-.PHONY : collect orderBook
 
+
+.PHONY: all protos clean install
 

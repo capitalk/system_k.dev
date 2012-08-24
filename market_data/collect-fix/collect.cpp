@@ -49,7 +49,6 @@
 #include "proto/spot_fx_md_1.pb.h"
 #include "proto/venue_configuration.pb.h"
 
-//#include "utils/venue_globals.h"
 #include "utils/venue_utils.h"
 #include "utils/config_server.h"
 

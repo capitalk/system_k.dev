@@ -6,9 +6,9 @@
 #include "proto/order_cancel.pb.h"
 #include "proto/execution_report.pb.h"
 
-#include "msg_types.h"
 #include "order_interface.h"
-#include "logging.h"
+#include "utils/msg_types.h"
+#include "utils/logging.h"
 
 #define NULL_INTERFACE_ID 123
 

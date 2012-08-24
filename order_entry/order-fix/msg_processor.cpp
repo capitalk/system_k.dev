@@ -1,5 +1,5 @@
 #include "msg_processor.h"
-#include "msg_types.h"
+#include "utils/msg_types.h"
 
 namespace capk {
 

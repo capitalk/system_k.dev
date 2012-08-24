@@ -40,8 +40,8 @@
 
 #include "proto/venue_configuration.pb.h"
 
-#include "venue_utils.h"
-#include "logging.h"
+#include "utils/venue_utils.h"
+#include "utils/logging.h"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem; 

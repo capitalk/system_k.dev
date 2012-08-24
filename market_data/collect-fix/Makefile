@@ -1,23 +1,19 @@
 CC=g++
 
-PROTO=../proto
+COMMON=../../../common
+UTILS=$(COMMON)/src/c++
+UTILS_SRC=$(UTILS)/utils
+PROTO=$(COMMON)/proto
 
-ORDERBOOK_DIR=../order_book/order_book.v2
-ORDERBOOK_INC=../order_book
+ORDERBOOK_DIR=../../order_book/order_book.v2
+ORDERBOOK_INC=../../order_book
 
-UTILS_DIR=../utils
 
-INCLUDE=-I/usr/local/boost/ \
-		-I/usr/local/include/ \
-        -I/usr/local/src/quickfix/include \
-		-I.. \
-		-I../.. \
-		-I$(ORDERBOOK_INC) \
+INCLUDE= -I$(ORDERBOOK_INC) \
 		-I$(UTILS) \
+		-I$(COMMON)
 
-LIBS= -L/usr/local/src/quickfix/lib/ \
-		-L/usr/local/lib \
-		-L$(ORDERBOOK_DIR)/ \
+LIBS= -L$(ORDERBOOK_DIR)/ \
       	-lquickfix \
 		-lboost_date_time \
 		-lboost_program_options \
@@ -46,13 +42,13 @@ include $(PROTO)/Makefile.inc
 collect : Application.o  venue_utils.o jenkins_hash.o liborder_book2.a time_utils.o collect.o $(PROTOBUF_OBJS)
 	$(CC) $(CFLAGS) venue_utils.o jenkins_hash.o time_utils.o Application.o collect.o $(PROTOBUF_OBJS) $(ORDERBOOK_DIR)/liborder_book2.a $(LIBS) -o $@ 
 
-jenkins_hash.o: $(UTILS_DIR)/jenkins_hash.cpp
+jenkins_hash.o: $(UTILS_SRC)/jenkins_hash.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-venue_utils.o: $(UTILS_DIR)/venue_utils.cpp
+venue_utils.o: $(UTILS_SRC)/venue_utils.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-time_utils.o: $(UTILS_DIR)/time_utils.cpp
+time_utils.o: $(UTILS_SRC)/time_utils.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 collect.o: collect.cpp

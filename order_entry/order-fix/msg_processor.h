@@ -11,8 +11,9 @@
 #include <string>
 #include <memory.h>
 
-#include "logging.h"
-#include "timing.h"
+#include "utils/logging.h"
+#include "utils/timing.h"
+
 #include "order_interface.h"
 #include "msg_cache.h"
 

@@ -2,8 +2,10 @@ CC=g++
 
 PROTOC=protoc
 
-PROTO=../proto
-UTILS=../utils
+COMMON=../../common
+UTILS=$(COMMON)/src/c++
+UTILS_SRC=$(UTILS)/utils
+PROTO=$(COMMON)/proto
 
 INCLUDE=-I/usr/local/boost/ \
 		-I/usr/local/include/ \
@@ -46,6 +48,7 @@ install :
 	cp -r ./cfg /usr/local/capk
 	cp ./validate_symbols /usr/local/capk
 	cp *.sh /usr/local/capk
-.PHONY : validate_symbols
+
+.PHONY : all install clean
 
 

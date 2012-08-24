@@ -1,9 +1,9 @@
 #ifndef __ORDER_INTERFACE__
 #define __ORDER_INTERFACE__
 
-#include "types.h"
+#include "utils/types.h"
 #include "msg_cache.h"
-#include "msg_types.h"
+#include "utils/msg_types.h"
 
 
 namespace capk

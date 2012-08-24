@@ -1,0 +1,4 @@
+Shared and PosixSocketClient are directly downloaded from IB and unmodified just expanded
+into this directory - overwrite them to upgrade but DO NOT DEVELOP IN THEM!
+
+THE FIX CLIENT DOES NOT WORK SINCE WE DON'T HAVE A FIX ACCOUNT SETUP YET

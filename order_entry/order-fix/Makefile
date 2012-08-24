@@ -1,21 +1,17 @@
 CC=g++
 
-PROTOC=protoc
-PROTO=../../collectors/proto
 
-BOOST=/usr/local/include/boost
-COLLECTORS=../../collectors
-UTILS=../../collectors/utils
+COMMON=../../../common
+UTILS=$(COMMON)/src/c++
+UTILS_SRC=$(UTILS)/utils
+PROTO=$(COMMON)/proto
+PANTHEIOS_ROOT=/opt/src/pantheios
 TESTS=./tests
 
-INCLUDE= -I $(BOOST) \
-		-I /usr/local/include/ \
-        -I/usr/local/src/quickfix/include \
-		-I.. \
-		-I $(COLLECTORS) \
-		-I $(PANTHEIOS_ROOT)/include \
+INCLUDE= -I $(PANTHEIOS_ROOT)/include \
 		-I $(STLSOFT)/include \
-		-I $(UTILS)
+		-I $(UTILS)\
+		-I $(COMMON)
 
 LIBS= -L/usr/local/lib \
       	-lquickfix \
@@ -61,13 +57,13 @@ application.o: application.cpp
 	#$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) application.cpp  
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<  
 
-logging.o: $(UTILS)/logging.cpp 
+logging.o: $(UTILS_SRC)/logging.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
-jenkins_hash.o: $(UTILS)/jenkins_hash.cpp
+jenkins_hash.o: $(UTILS_SRC)/jenkins_hash.cpp
 	$(CC) -c -I $(UTILS) $(INCLUDE) $(CFLAGS) $<
 
-timing.o: $(UTILS)/timing.cpp 
+timing.o: $(UTILS_SRC)/timing.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 msg_processor.o: msg_processor.cpp
@@ -76,7 +72,7 @@ msg_processor.o: msg_processor.cpp
 msg_router.o: msg_router.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-venue_utils.o: $(UTILS)/venue_utils.cpp
+venue_utils.o: $(UTILS_SRC)/venue_utils.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
 #client_order_interface.o: client_order_interface.cpp

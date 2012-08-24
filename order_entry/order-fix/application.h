@@ -90,12 +90,12 @@
 
 #include <zmq.hpp>
 
-#include "timing.h"
-#include "logging.h"
 #include "order_interface.h"
 #include "msg_cache.h"
 #include "msg_processor.h"
 
+#include "utils/timing.h"
+#include "utils/logging.h"
 #include "proto/capk_globals.pb.h"
 #include "proto/new_order_single.pb.h"
 #include "proto/order_cancel.pb.h"
@@ -206,8 +206,8 @@ private:
 //   template <typename T> 
 //   void incremental_update_template(const T& message, const FIX::SessionID& sessionID); 
 
-    void send_to_serialization_service(const strategy_id_t&, const capkproto::execution_report&);
-    void send_to_serialization_service(const strategy_id_t&, const capkproto::new_order_single&);
+    void send_to_serialization_service(const capk::strategy_id_t&, const capkproto::execution_report&);
+    void send_to_serialization_service(const capk::strategy_id_t&, const capkproto::new_order_single&);
 
 	void onCreate(const FIX::SessionID&); 
 	void onLogon(const FIX::SessionID& sessionID);

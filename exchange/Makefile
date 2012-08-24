@@ -1,17 +1,19 @@
 CC=g++
 
+COMMON=../../common
+
+UTILS=$(COMMON)/src/c++
+UTILS_SRC=$(UTILS)/utils
+PROTO=$(COMMON)/proto
+
 ORDERBOOK=../order_book/order_book.v2
 
 ORDERBOOK_DIR=../order_book/order_book.v2
 
-UTILS_DIR=../utils
 
-INCLUDE=-I/usr/local/boost/ \
-		-I/usr/local/include/ \
-        -I/usr/local/src/quickfix/include \
-		-I.. \
-		-I/usr/local/include/gtest/ \
-		-I$(UTILS_DIR)
+INCLUDE= -I/usr/local/include/gtest/ \
+		-I$(UTILS) \
+		
 
 LIBS= -L/usr/local/src/quickfix/lib/ \
 	  -L/usr/local/lib \
@@ -44,7 +46,7 @@ exchange : executor.o Application.o msg_pump.o msg_dispatcher.o fix_convertors.o
 session_info.o: session_info.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $?
 
-fix_convertors.o: $(UTILS_DIR)/fix_convertors.cpp 
+fix_convertors.o: $(UTILS_SRC)/fix_convertors.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $? 
 
 msg_dispatcher.o: msg_dispatcher.cpp
@@ -72,5 +74,6 @@ clean :
 status: 
 	@echo $(status)
 
+.PHONY: clean status 
 
 

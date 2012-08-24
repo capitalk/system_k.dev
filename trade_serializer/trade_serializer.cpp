@@ -5,6 +5,7 @@
 #include <boost/thread.hpp>
 #include "utils/logging.h"
 #include "utils/venue_globals.h"
+#include "utils/time_utils.h"
 #include "proto/capk_globals.pb.h"
 #include "proto/execution_report.pb.h"
 #include "proto/order_cancel.pb.h"
@@ -12,9 +13,10 @@
 #include "proto/new_order_single.pb.h"
 #include "proto/position.pb.h"
 #include "proto/recovered_orders.pb.h"
-#include "utils/time_utils.h"
-#include "order-fix/msg_cache.h"
 #include "strategy_base/order.h"
+#include "utils/types.h"
+#include "utils/order_constants.h"
+#include "order-fix/msg_cache.h"
 #include "order-fix/msg_types.h"
 
 /* Standard C++ headers */
@@ -188,7 +190,7 @@ static void retrieve_rsmetadata_and_print (ResultSet *rs) {
 
 int 
 positionsByStrategyId(sql::Connection* sql_cxn, 
-        const strategy_id_t& strategy_id, 
+        const capk::strategy_id_t& strategy_id, 
         capkproto::position* position)
 {
 /* select order_status, CONVERT(order_status, UNSIGNED INTEGER) as num, CHAR(order_status) as ch from order_state;
@@ -241,7 +243,7 @@ positionsByStrategyId(sql::Connection* sql_cxn,
         sql_prepared_statement = sql_cxn->prepareStatement (kPositionsByStrategyId);
 
         //char strategy_id_buffer[UUID_STRLEN];
-        uuidbuf_t strategy_id_buffer;
+        capk::uuidbuf_t strategy_id_buffer;
         sql_prepared_statement->setString (1, strategy_id.c_str(strategy_id_buffer));
 
         sql_result_set = sql_prepared_statement->executeQuery();
@@ -270,7 +272,7 @@ positionsByStrategyId(sql::Connection* sql_cxn,
 
 int 
 openOrdersByStrategyId(sql::Connection* sql_cxn, 
-        const strategy_id_t& strategy_id, 
+        const capk::strategy_id_t& strategy_id, 
         capkproto::recovered_orders* recovered_orders)
 {
     //select * from order_state where CHAR(order_status) = '0';
@@ -293,7 +295,7 @@ handleRecovery(zmq::context_t* context, sql::Connection* sql_cxn)
 
     int64_t more = 0;
     size_t more_size = sizeof(more);
-    strategy_id_t strategy_id(false);
+    capk::strategy_id_t strategy_id(false);
 
     zmq::message_t msg_strategy_id;
     zmq::message_t msg_type;
@@ -343,8 +345,8 @@ handleRecovery(zmq::context_t* context, sql::Connection* sql_cxn)
 
 bool
 orderExists(Connection* sql_cxn, 
-                const strategy_id_t& strategy_id, 
-                const order_id_t& order_id)
+                const capk::strategy_id_t& strategy_id, 
+                const capk::order_id_t& order_id)
 {
 #ifdef DEBUG
     pan::log_DEBUG("Checking orderExists with parameters:", 
@@ -366,11 +368,11 @@ orderExists(Connection* sql_cxn,
         sql_prepared_statement = sql_cxn->prepareStatement (kSelectCountTrade);
 
         //char strategy_id_buffer[UUID_STRLEN];
-        uuidbuf_t strategy_id_buffer;
+        capk::uuidbuf_t strategy_id_buffer;
         sql_prepared_statement->setString (1, strategy_id.c_str(strategy_id_buffer));
 
         //char order_id_buffer[UUID_STRLEN];
-        uuidbuf_t order_id_buffer;
+        capk::uuidbuf_t order_id_buffer;
         sql_prepared_statement->setString (2, order_id.c_str(order_id_buffer));
 
         sql_result_set = sql_prepared_statement->executeQuery();
@@ -399,7 +401,7 @@ orderExists(Connection* sql_cxn,
 
 void 
 insertTrade(Connection* sql_cxn, 
-        const strategy_id_t& strategy_id, 
+        const capk::strategy_id_t& strategy_id, 
         const capkproto::execution_report& er) 
 {
     int insert_count = 0;
@@ -443,19 +445,19 @@ insertTrade(Connection* sql_cxn,
 
     try {
         sql_prepared_statement = sql_cxn->prepareStatement (kInsertTrade);
-        uuidbuf_t strategy_id_buffer;
+        capk::uuidbuf_t strategy_id_buffer;
         //char strategy_id_buffer[UUID_STRLEN];
         sql_prepared_statement->setString (1, strategy_id.c_str(strategy_id_buffer));
 
-        uuidbuf_t order_id_buffer;
+        capk::uuidbuf_t order_id_buffer;
         //char order_id_buffer[UUID_STRLEN];
-        order_id_t order_id(false);
+        capk::order_id_t order_id(false);
         order_id.set(er.cl_order_id().c_str(), er.cl_order_id().size());
         sql_prepared_statement->setString (2, order_id.c_str(order_id_buffer));
 
-        uuidbuf_t orig_cl_order_id_buffer;
+        capk::uuidbuf_t orig_cl_order_id_buffer;
         //char orig_cl_order_id_buffer[UUID_STRLEN];
-        order_id_t orig_cl_order_id(false);
+        capk::order_id_t orig_cl_order_id(false);
         orig_cl_order_id.set(er.orig_cl_order_id().c_str(), er.orig_cl_order_id().size());
         sql_prepared_statement->setString (3, orig_cl_order_id.c_str(orig_cl_order_id_buffer));
 
@@ -517,8 +519,8 @@ insertTrade(Connection* sql_cxn,
  */
 int 
 setOrderStatus(Connection* sql_cxn,
-        const strategy_id& strategy_id, 
-        const order_id_t& cl_order_id,
+        const capk::strategy_id& strategy_id, 
+        const capk::order_id_t& cl_order_id,
         const capk::OrdStatus_t& ord_status)
 {
     int update_count = 0;
@@ -526,8 +528,8 @@ setOrderStatus(Connection* sql_cxn,
     // get the order ids in string format
     //char strategy_id_buffer[UUID_STRLEN];
     //char cl_order_id_buffer[UUID_STRLEN];
-    uuidbuf_t strategy_id_buffer;
-    uuidbuf_t cl_order_id_buffer;
+    capk::uuidbuf_t strategy_id_buffer;
+    capk::uuidbuf_t cl_order_id_buffer;
 
 #ifdef DEBUG
     pan::log_DEBUG("setOrderStatus() called with parameters:",
@@ -570,7 +572,7 @@ setOrderStatus(Connection* sql_cxn,
 
 void
 insertOrder(Connection* sql_cxn, 
-        const strategy_id_t& strategy_id, 
+        const capk::strategy_id_t& strategy_id, 
         const capkproto::execution_report& er) 
 {
     // We'll usually call this on replace since the old order is 
@@ -604,19 +606,19 @@ insertOrder(Connection* sql_cxn,
         // Setup SQL statements
         sql_prepared_statement = sql_cxn->prepareStatement (kInsertOrder);
         //char strategy_id_buffer[UUID_STRLEN];
-        uuidbuf_t strategy_id_buffer;
+        capk::uuidbuf_t strategy_id_buffer;
         sql_prepared_statement->setString (1, strategy_id.c_str(strategy_id_buffer));
 
         // get the order ids in string format
         //char cl_order_id_buffer[UUID_STRLEN];
-        uuidbuf_t cl_order_id_buffer;
-        order_id_t cl_order_id(false);
+        capk::uuidbuf_t cl_order_id_buffer;
+        capk::order_id_t cl_order_id(false);
         cl_order_id.set(er.cl_order_id().c_str(), er.cl_order_id().size());
         sql_prepared_statement->setString (2, cl_order_id.c_str(cl_order_id_buffer));
 
         //char orig_cl_order_id_buffer[UUID_STRLEN];
-        uuidbuf_t orig_cl_order_id_buffer;
-        order_id_t orig_cl_order_id(false);
+        capk::uuidbuf_t orig_cl_order_id_buffer;
+        capk::order_id_t orig_cl_order_id(false);
         orig_cl_order_id.set(er.orig_cl_order_id().c_str(), er.orig_cl_order_id().size());
         sql_prepared_statement->setString (3, orig_cl_order_id.c_str(orig_cl_order_id_buffer));
 
@@ -660,7 +662,7 @@ insertOrder(Connection* sql_cxn,
 
 int 
 insertOrder(Connection* sql_cxn, 
-        const strategy_id_t& strategy_id, 
+        const capk::strategy_id_t& strategy_id, 
         const capkproto::new_order_single& nos) 
 {
 #ifdef DEBUG
@@ -691,13 +693,13 @@ insertOrder(Connection* sql_cxn,
         // Setup SQL statements
         sql_prepared_statement = sql_cxn->prepareStatement (kInsertOrder);
         //char strategy_id_buffer[UUID_STRLEN];
-        uuidbuf_t strategy_id_buffer;
+        capk::uuidbuf_t strategy_id_buffer;
         sql_prepared_statement->setString (1, strategy_id.c_str(strategy_id_buffer));
 
         // Prepare data to insert
         //char order_id_buffer[UUID_STRLEN];
-        uuidbuf_t order_id_buffer;
-        order_id_t order_id(false);
+        capk::uuidbuf_t order_id_buffer;
+        capk::order_id_t order_id(false);
         order_id.set(nos.order_id().c_str(), nos.order_id().size());
         sql_prepared_statement->setString (2, order_id.c_str(order_id_buffer));
 
@@ -741,7 +743,7 @@ insertOrder(Connection* sql_cxn,
 
 void 
 updateOrder(Connection* sql_cxn, 
-        const strategy_id_t& strategy_id, 
+        const capk::strategy_id_t& strategy_id, 
         const capkproto::execution_report& er) 
 {
 
@@ -752,10 +754,10 @@ updateOrder(Connection* sql_cxn,
 #endif
 
     // prepare the order ids in string format
-    order_id_t cl_order_id(false);
+    capk::order_id_t cl_order_id(false);
     cl_order_id.set(er.cl_order_id().c_str(), er.cl_order_id().size());
 
-    order_id_t orig_cl_order_id(false);
+    capk::order_id_t orig_cl_order_id(false);
     if (er.has_orig_cl_order_id()) {
         orig_cl_order_id.set(er.orig_cl_order_id().c_str(), er.orig_cl_order_id().size());
     }
@@ -867,7 +869,7 @@ handleOrders(zmq::context_t* context, sql::Connection* sql_cxn)
     bool parse_ok;
     int64_t more = 0;
     size_t more_size = sizeof(more);
-    strategy_id_t strategy_id(false);
+    capk::strategy_id_t strategy_id(false);
 
     capkproto::new_order_single nos;
     //capkproto::order_cancel oc;

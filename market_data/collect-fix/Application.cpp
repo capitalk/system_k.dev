@@ -35,7 +35,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include "../proto/spot_fx_md_1.pb.h"
+#include "proto/spot_fx_md_1.pb.h"
 
 namespace fs = boost::filesystem; 
 namespace dt = boost::gregorian; 

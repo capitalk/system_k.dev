@@ -506,9 +506,10 @@ Application::onMessage(const FIX42::ExecutionReport& message,
 	FIX::MinQty minQty;
     FIX::Account account;
     FIX::ExecRefID execRefID;
+    FIX::ExecRestatementReason execRestatementReason;
 
-	order_id_t cloid;
-	order_id_t origcloid;
+    capk::order_id_t cloid;
+    capk::order_id_t origcloid;
 	int ret;
 
 	if (message.isSetField(clOrdID)) {
@@ -660,6 +661,11 @@ Application::onMessage(const FIX42::ExecutionReport& message,
 		er->set_exec_ref_id(execRefID.getValue());
 //pan::log_DEBUG("Q");
 	}
+   	if (message.isSetField(execRestatementReason)) {
+		message.getField(execRestatementReason);
+		er->set_exec_restatement_reason(execRestatementReason.getValue());
+//pan::log_DEBUG("Q");
+	}
 //er->set_mic(_config.mic_string);
     er->set_venue_id(_config.venue_id);
 	
@@ -671,13 +677,13 @@ Application::onMessage(const FIX42::ExecutionReport& message,
 	// properly back to strategy
 	// 3) send the data in the message
 	// 4) end the transmission
-    strategy_id_t strategy_id;
+    capk::strategy_id_t strategy_id;
     if (_pMsgProcessor) {
         bool sndOK;
         assert(_pMsgProcessor);
         KOrderCache* ocache = _pMsgProcessor->getOrderCache();
         assert(ocache);
-        OrderInfo_ptr oinfo = ocache->get(cloid);
+        capk::OrderInfo_ptr oinfo = ocache->get(cloid);
         if (!oinfo) {
             pan::log_CRITICAL("OnMessage(ExecutionReport42) no order info for orderid - can't lookup sid in order cache");	
         }
@@ -730,8 +736,8 @@ Application::onMessage(const FIX42::OrderCancelReject& message,
 	FIX::Text cxlRejText;
 
 	int ret;
-	order_id_t origcloid;
-	order_id_t cloid;
+    capk::order_id_t origcloid;
+    capk::order_id_t cloid;
 
 	if (message.isSetField(origClOrdID)) {
 		message.getField(origClOrdID);
@@ -770,13 +776,13 @@ Application::onMessage(const FIX42::OrderCancelReject& message,
 	// properly back to strategy
 	// 3) send the data in the message
 	// 4) end the transmission
-	strategy_id_t strategy_id;
+    capk::strategy_id_t strategy_id;
     if (_pMsgProcessor) {
         bool sndOK;
         assert(_pMsgProcessor);
         KOrderCache* ocache = _pMsgProcessor->getOrderCache();
         assert(ocache);
-        OrderInfo_ptr oinfo = ocache->get(cloid);
+        capk::OrderInfo_ptr oinfo = ocache->get(cloid);
         if (!oinfo) {
             pan::log_CRITICAL("OrderCancelReject42() - No order info for orderid - can't lookup sid in order cache");	
         }
@@ -1019,11 +1025,11 @@ void Application::newOrderSingle42(capkproto::new_order_single& nos)
 #endif 
 	// pull the data out of protobuf into FIX elements
 
-    strategy_id_t strategy_id(false);
+    capk::strategy_id_t strategy_id(false);
     bool sid_ok = strategy_id.set(nos.strategy_id().c_str(), nos.strategy_id().size());
     assert (sid_ok); 
-    uuidbuf_t cloidbuf;
-	order_id_t cloid;
+    capk::uuidbuf_t cloidbuf;
+    capk::order_id_t cloid;
 	bool order_id_ok = cloid.set(nos.order_id().c_str(), nos.order_id().size());
 	assert(order_id_ok); 
     cloid.c_str(cloidbuf);
@@ -1129,16 +1135,16 @@ void Application::orderCancelReplace42(capkproto::order_cancel_replace& ocr)
 #endif 
 	// OrigOrdID
 	//char origoidbuf[UUID_LEN+1];
-    uuidbuf_t origoidbuf;
-	order_id_t origoid;
+    capk::uuidbuf_t origoidbuf;
+    capk::order_id_t origoid;
 	bool orig_cl_order_id_ok = origoid.set(ocr.orig_order_id().c_str(), ocr.orig_order_id().size());
 	assert (orig_cl_order_id_ok);
     origoid.c_str(origoidbuf);
 	FIX::OrigClOrdID origClOrdID(origoidbuf);
 	// ClOrdID
 	//char clordidbuf[UUID_LEN+1];
-    uuidbuf_t clordidbuf;
-	order_id_t clordid;
+    capk::uuidbuf_t clordidbuf;
+    capk::order_id_t clordid;
 	
     //origoid.set(ocr.cl_order_id().c_str(), ocr.cl_order_id().size());
 	//origoid.c_str(clordidbuf);
@@ -1214,15 +1220,15 @@ void Application::orderCancel42(capkproto::order_cancel& oc)
 	pan::log_DEBUG("orderCancel42() inbound protobuf:\n", oc.DebugString());
 #endif 
 	// OrigOrdID
-    uuidbuf_t origoidbuf;
-	order_id_t origoid;
+    capk::uuidbuf_t origoidbuf;
+    capk::order_id_t origoid;
 	origoid.set(oc.orig_order_id().c_str(), oc.orig_order_id().size());
 	origoid.c_str(origoidbuf);
 	FIX::OrigClOrdID origClOrdID(origoidbuf);
 
 	// ClOrdID
-    uuidbuf_t clordidbuf;
-	order_id_t clordid;
+    capk::uuidbuf_t clordidbuf;
+    capk::order_id_t clordid;
 	clordid.set(oc.cl_order_id().c_str(), oc.cl_order_id().size());
 	clordid.c_str(clordidbuf);
 	FIX::ClOrdID clOrdID(clordidbuf);
@@ -1284,15 +1290,15 @@ void Application::orderStatus42(capkproto::order_status& os)
 #endif 
 	// OrigOrdID
 	//char oidbuf[UUID_LEN+1];
-    uuidbuf_t oidbuf;
-	order_id_t oid;
+    capk::uuidbuf_t oidbuf;
+    capk::order_id_t oid;
 	oid.set(os.order_id().c_str(), os.order_id().size());
 	oid.c_str(oidbuf);
 	FIX::OrderID orderID(oidbuf);
 	// ClOrdID
 	//char clordidbuf[UUID_LEN+1];
-    uuidbuf_t clordidbuf;
-	order_id_t clordid;
+    capk::uuidbuf_t clordidbuf;
+    capk::order_id_t clordid;
 	clordid.set(os.cl_order_id().c_str(), os.cl_order_id().size());
 	clordid.c_str(clordidbuf);
 	FIX::ClOrdID clOrdID(clordidbuf);
@@ -1326,7 +1332,7 @@ void Application::orderStatus42(capkproto::order_status& os)
 }
 
 void
-Application::send_to_serialization_service(const strategy_id_t& strategy_id, 
+Application::send_to_serialization_service(const capk::strategy_id_t& strategy_id, 
         const capkproto::new_order_single& nos)
 {
     // PART 1 - Strategy ID
@@ -1351,7 +1357,7 @@ Application::send_to_serialization_service(const strategy_id_t& strategy_id,
 }
 
 void
-Application::send_to_serialization_service(const strategy_id_t& strategy_id, 
+Application::send_to_serialization_service(const capk::strategy_id_t& strategy_id, 
         const capkproto::execution_report& er)
 {
     // PART 1 - Strategy ID

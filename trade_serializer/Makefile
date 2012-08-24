@@ -1,31 +1,29 @@
 CC=g++
 
 PROTOC=protoc
-PROTO=../../collectors/proto
 
-BOOST=/usr/local/boost
-COLLECTORS=../../collectors
-UTILS=../../collectors/utils
+COMMON=../../common
+UTILS=$(COMMON)/src/c++
+UTILS_SRC=$(UTILS)/utils
+PROTO=$(COMMON)/proto
+
 TESTS=./tests
 MYSQL=/usr/local/include/mysql
 STRATEGY_BASE=../../strategy
-ORDER_ENGINE=../../order_engines/order-fix
+ORDER_ENGINE=../order_entry
 
-INCLUDE=-I $(BOOST) \
-		-I /usr/local/include/ \
-		-I $(MYSQL) \
-        -I/usr/local/src/quickfix/include \
-		-I.. \
-	   	-I $(COLLECTORS) \
+INCLUDE= -I $(MYSQL) \
 		-I $(PANTHEIOS_ROOT)/include \
 		-I $(STLSOFT)/include \
+		-I $(COMMON) \
+		-I $(PROTO) \
 		-I $(UTILS) \
 		-I $(STRATEGY_BASE) \
 		-I $(ORDER_ENGINE) 
 
-LIBS= -L/usr/local/lib \
-	  -L/usr/local/lib64/mysql \
-      	-lquickfix -lboost_date_time \
+LIBS= -L/usr/local/lib64/mysql \
+      	-lquickfix \
+		-lboost_date_time \
 		-lboost_program_options \
 		-lboost_filesystem \
 		-lzmq \
@@ -63,16 +61,16 @@ include $(PROTO)/Makefile.inc
 trade_serializer : trade_serializer.o logging.o jenkins_hash.o timing.o time_utils.o $(PROTOBUF_OBJS)
 	$(CC) $(CFLAGS) trade_serializer.o logging.o jenkins_hash.o timing.o time_utils.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
 
-jenkins_hash.o: $(UTILS)/jenkins_hash.cpp 
+jenkins_hash.o: $(UTILS_SRC)/jenkins_hash.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
-time_utils.o: $(UTILS)/time_utils.cpp 
+time_utils.o: $(UTILS_SRC)/time_utils.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
-logging.o: $(UTILS)/logging.cpp 
+logging.o: $(UTILS_SRC)/logging.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
-timing.o: $(UTILS)/timing.cpp 
+timing.o: $(UTILS_SRC)/timing.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 	
 trade_serializer.o: trade_serializer.cpp

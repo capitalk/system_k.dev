@@ -13,8 +13,8 @@
 #include "order.h"
 #include "order_book.h"
 #include "book_types.h"
-#include "types.h"
 
+#include "utils/types.h"
 #include "utils/jenkins_hash.cpp"
 #include "utils/time_utils.h"
 #include "utils/fix_convertors.h"

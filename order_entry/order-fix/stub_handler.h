@@ -11,7 +11,7 @@
 #include "msg_handler.h"
 
 
-#include "logging.h"
+#include "utils/logging.h"
 
 
 class StubHandler: public capk::MsgHandler

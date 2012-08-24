@@ -38,5 +38,6 @@ clean :
 	cd $(OB2) && make clean
 
 
+.PHONY: all tests test testclean clean
 
 

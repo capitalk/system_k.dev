@@ -91,8 +91,15 @@ throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX:
             std::cout << "Received " << _appMsgCount << " application messages\n";
         }
 	} 
+    FIX::MsgType msgType;
 	FIX::BeginString beginString;
 	message.getHeader().getField(beginString);
+	message.getHeader().getField(msgType);
+    if (msgType.getValue() == "j") {
+        std::cerr << "This message is not supported! Full message below:" << std::endl;
+        std::cerr << message << std::endl;
+        throw FIX::UnsupportedMessageType();
+    }
 	if (beginString == FIX::BeginString_FIX42) {
 		((FIX42::MessageCracker&)(*this)).crack((const FIX42::Message&) message, sessionID);
 	}
@@ -167,8 +174,7 @@ void Application::onMessage(const FIX42::SecurityDefinition& message, const FIX:
                     validSubsetFile << *it << "\n";
                 }
                 else {
-                    std::cout << "ERROR\n";
-                    std::cerr << *it << " INVALID FOR " << _config.mic_code << std::endl;
+                    std::cout << "ERROR" << "(" << *it << " NOT AVAILABLE ON  " << _config.mic_code << ")" << std::endl;
                 }
                 //it++;
             }

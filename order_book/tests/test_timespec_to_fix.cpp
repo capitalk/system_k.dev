@@ -1,5 +1,5 @@
-#include <../utils/fix_convertors.h>
-#include <../utils/time_utils.h>
+#include <utils/fix_convertors.h>
+#include <utils/time_utils.h>
 #include "gtest/gtest.h"
 
 #include "quickfix/Message.h"

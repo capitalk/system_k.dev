@@ -1,7 +1,7 @@
 
 #include "gtest/gtest.h"
-#include "../utils/fix_convertors.h"
-#include "../utils/time_utils.h"
+#include "utils/fix_convertors.h"
+#include "utils/time_utils.h"
 
 #include "quickfix/Message.h"
 #include "quickfix/Parser.h"

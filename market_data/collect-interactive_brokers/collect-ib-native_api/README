@@ -1,0 +1,13 @@
+You need to be logged on to IB API to have the market data subscriptions work
+Paper trading account is imcapk987/2simple
+
+Once you've started IB trader workstation make sure that Edit->Global Configuration->API has the "Enable ActiveX and Socket Clients enabled" 
+
+NOTE: You can use either the "Trader Workstation" or the "IB Gateway" - both should work. 
+
+Note the port that is used for communication (let's use 7496 for example)
+
+The symbol right now is hardcoded in Main.cpp as EUR/USD - you'll need to change this to get any other symbol
+
+N.B. YOU MUST HAVE A ROUTABLE IP ON BOTH FROM GATEWAY (OR TWS) TO THE APPLICATION - 
+Obviously running the "collector" on a remote machine that can't connect back to the gateway won't work.

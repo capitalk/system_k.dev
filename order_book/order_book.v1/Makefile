@@ -1,10 +1,16 @@
 CC=g++
 
-UTILS_DIR=../../utils
+COMMON=../../../common
+UTILS=$(COMMON)/src/c++
+UTILS_SRC=$(UTILS)/utils
+PROTO=$(COMMON)/proto
 
-INCLUDE=-I/usr/local/boost/ -I/usr/local/include/ -I/usr/local/src/quickfix/include -I../gtest/include -I.. -I../.. -I. -I$(UTILS_DIR)
+INCLUDE= -I$(COMMON) \
+		-I$(UTILS)
 
-LIBS=--L/usr/local/src/quickfix/lib/ -L/usr/local/boost_1_45_0/stage/lib/ -L../gtest/lib/.libs -Wl,-rpath,../gtest/lib/.libs -lquickfix -lboost_date_time -lgtest 
+LIBS= -lquickfix \
+	 -lboost_date_time \
+	 -lgtest 
 
 CFLAGS=-Wall  -std=c++0x -O3 # -g -D DEBUG
 
