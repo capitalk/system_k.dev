@@ -36,7 +36,7 @@ public:
     
     inline double getSize() const { return _size; } 
     inline double getPrice() const { return _price; }
-    inline orderId_t getOrderId() const { return _orderId; }
+    inline uint32_t getOrderId() const { return _orderId; }
     inline Side_t getBuySell() const { return _buySell; }
     inline Side_t getSide() const { return _buySell; }
     //inline timespec getEventTime() const { return _eventTime; }

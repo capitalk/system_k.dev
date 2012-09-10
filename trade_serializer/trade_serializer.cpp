@@ -16,8 +16,8 @@
 #include "strategy_base/order.h"
 #include "utils/types.h"
 #include "utils/order_constants.h"
+#include "utils/msg_types.h"
 #include "order-fix/msg_cache.h"
-#include "order-fix/msg_types.h"
 
 /* Standard C++ headers */
 #include <iostream>
