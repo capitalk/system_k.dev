@@ -213,7 +213,7 @@ class KStrategyCache
 			bool bOK;
 			FILE* fp = fopen(filename, "r");
 			if (!fp) {
-				pan::log_CRITICAL("Can't open strategy cache file: ", filename);
+				pan::log_CRITICAL("Can't open strategy cache file for read: ", filename, " error: ", strerror(errno));
 				return false;
 			}	
 			bOK = _cache.unserialize(StrategyCacheSerializer(), fp);	
@@ -228,7 +228,7 @@ class KStrategyCache
 			bool bOK;
 			FILE* fp = fopen(filename, "w");
 			if (!fp) {
-				pan::log_CRITICAL("Can't open strategy cache file: ", filename);
+				pan::log_CRITICAL("Can't open strategy cache file for write: ", filename, " error: ", strerror(errno));
 				return false;
 			}
 			bOK = _cache.serialize(StrategyCacheSerializer(), fp);
@@ -290,7 +290,7 @@ class KOrderCache
 			bool bOK;
 			FILE* fp = fopen(filename, "r");
 			if (!fp) {
-				pan::log_CRITICAL("Can't open order cache file: ", filename);
+				pan::log_CRITICAL("Can't open order cache file: ", filename, " error: ", strerror(errno));
 				return false;
 			}	
 			bOK = _cache.unserialize(OrderCacheSerializer(), fp);	
@@ -305,7 +305,7 @@ class KOrderCache
 			bool bOK;
 			FILE* fp = fopen(filename, "w");
 			if (!fp) {
-				pan::log_CRITICAL("Can't open order cache file: ", filename, " - ABORTING");
+				pan::log_CRITICAL("Can't open order cache file: ", filename, " - ABORTING", " error: ", strerror(errno));
 				return false;
 			}
 			bOK = _cache.serialize(OrderCacheSerializer(), fp);

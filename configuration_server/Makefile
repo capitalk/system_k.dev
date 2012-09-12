@@ -1,5 +1,5 @@
 PROTOC=protoc
-PROTO=../../collectors/proto
+PROTO=../../common/proto
 PROTO_OUT=./proto_objs
 
 all: protos

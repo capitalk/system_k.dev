@@ -1,11 +1,11 @@
 all: itch
 
 
-INCLUDE=-I/usr/local/boost
+INC=-I/usr/local/boost
 
-CXXFLAGS=-g -O2 $(INCLUDE)
+CXXFLAGS=-g -O2 $(INC)
 
-ORDERBOOK_DIR=../../order_book/order_book.v2
+ORDERBOOK_DIR=../order_book/order_book.v2
 
 OBJS=main.o \
 	Session.o \
@@ -38,10 +38,11 @@ OBJS=main.o \
 	./msg/client/ClientMarketDataUnsubscribeMessage.o \
 	./msg/PacketBase.o
 
-LIBS= -L$(ORDERBOOK_DIR) -lrt -lpthread -lboost_program_options -lboost_filesystem -lorder_book2
+LIBS=-L/usr/local/boost_1_45_0/stage/lib/ -L$(ORDERBOOK_DIR)
+LDFLAGS=-lrt -lpthread -lboost_program_options -lboost_filesystem -lorder_book2
 
 itch: $(OBJS) liborder_book2.a
-	g++ $(INCLUDE) -o itch $(LIBS) $(LDFLAGS) $(OBJS)
+	g++ $(INC) -o itch $(LIBS) $(LDFLAGS) $(OBJS)
 
 liborder_book2.a:
 	cd $(ORDERBOOK_DIR) && make 
