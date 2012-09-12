@@ -24,7 +24,7 @@ LIBS= -L/usr/local/lib \
 		-lboost_thread \
 		-lgtest
 
-
+# N.B. MAKE SURE YOU LINK WITH THE RIGHT LIBS (check the compiler gccXX)
 PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
         -l pantheios.1.core.gcc46.file64bit \
         -l pantheios.1.fe.simple.gcc46.file64bit.debug \
