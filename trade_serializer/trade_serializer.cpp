@@ -42,7 +42,8 @@
 #define DBHOST "tcp://127.0.0.1:3306"
 #define USER "capk"
 #define PASSWORD "capk"
-#define DATABASE "`capk.prod`"
+//#define DATABASE "`capk.prod`"
+#define DATABASE "capk.prod"
 
 #define NUMOFFSET 100
 #define COLNAME 200
@@ -990,7 +991,7 @@ int main(int argc, const char *argv[]) {
     pan::log_NOTICE("Connecting to database...");
     pan::log_NOTICE("dbhost: ", url.c_str());
     pan::log_NOTICE("user: ", user.c_str());
-    pan::log_NOTICE("databse: ", database.c_str());
+    pan::log_NOTICE("database: ", database.c_str());
 
 
     // setup logging
