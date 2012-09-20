@@ -11,7 +11,7 @@ protos: configuration_server.py
 	touch $(PROTO_OUT)/__init__.py
 
 clean :
-	rm -f $(PROTO_OUT)/*.py $(PROTO_OUT)/*.pyc
+	rm -f $(PROTO_OUT)/*.py $(PROTO_OUT)/*.pyc *.pid.lock dev-1*
 
 .phony: configuration_server.py
 

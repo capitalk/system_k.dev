@@ -7,9 +7,11 @@ import daemon
 import signal
 import lockfile
 from optparse import OptionParser
+import datetime
 
 full_config = proto_objs.venue_configuration_pb2.configuration()
 
+bind_addr="tcp://127.0.0.1:11111"
 
 def parse(filename):
     config = ConfigParser.ConfigParser()
@@ -27,7 +29,7 @@ def parse(filename):
             single_venue_config = full_config.configs.add()
             make_protobuf(s, config, single_venue_config)
          
-    #print full_config.__str__() 
+    print full_config.__str__() 
     return True
 
 def make_protobuf(section, config, single_venue_config):
@@ -43,11 +45,13 @@ def run(config_filename):
     context = zmq.Context()
     socket = context.socket(zmq.REP)
     
-    socket.bind("tcp://127.0.0.1:11111")
+    socket.setsockopt(zmq.LINGER, 0)
+    print "Binding to: ", bind_addr
+    socket.bind(bind_addr)
     
     while True:
         contents = socket.recv()
-        print "Received msg:<", contents, ">"
+        print datetime.datetime.now(), "Received msg:<", contents, ">"
         if contents == 'R':
             print "Refresh request"
             refresh_ret = parse(config_filename)
@@ -81,6 +85,9 @@ def main():
         parser.error("Missing arguments")
 
     config_filename = args[0]
+    log_filename = "configuration_server.log"
+    log = open(log_filename, 'w+')
+ 
     print "Using config file: ", config_filename
     if os.path.exists(config_filename) == False:
         print "Config file: ", config_filename, " does not exist"
@@ -90,16 +97,17 @@ def main():
         context = daemon.DaemonContext(
                 working_directory='.',
                 umask=0o002,
-                pidfile=lockfile.FileLock('./configuration_server.pid'),
-                )
-        context.signal_map = {
-            signal.SIGTERM: 'terminate',
-            signal.SIGHUP: 'terminate',
-            signal.SIGUSR1: 'terminate',
-                }
-        parse(config_filename)
+                #pidfile=lockfile.FileLock('./configuration_server.pid'),
+                stdout=log,
+                stderr=log)
+        #context.signal_map = {
+            #signal.SIGTERM: 'terminate',
+            #signal.SIGHUP: 'terminate',
+            #signal.SIGUSR1: 'terminate',
+                #}
         #with daemon.DaemonContext():
         with context:
+            parse(config_filename)
             run(config_filename)
     else:
         parse(config_filename)
