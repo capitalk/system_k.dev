@@ -26,14 +26,14 @@ LIBS= -L/usr/local/lib \
 
 # N.B. MAKE SURE YOU LINK WITH THE RIGHT LIBS (check the compiler gccXX)
 PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
-        -l pantheios.1.core.gcc46.file64bit \
-        -l pantheios.1.fe.simple.gcc46.file64bit.debug \
-        -l pantheios.1.util.gcc46.file64bit \
-		-l pantheios.1.be.N.gcc46.file64bit \
-        -l pantheios.1.bec.file.gcc46.file64bit \
-        -l pantheios.1.bec.fprintf.gcc46.file64bit \
-        -l pantheios.1.util.gcc46.file64bit \
-        -l pantheios.1.core.gcc46.file64bit 
+        -l pantheios.1.core.gcc44.file64bit \
+        -l pantheios.1.fe.simple.gcc44.file64bit.debug \
+        -l pantheios.1.util.gcc44.file64bit \
+		-l pantheios.1.be.N.gcc44.file64bit \
+        -l pantheios.1.bec.file.gcc44.file64bit \
+        -l pantheios.1.bec.fprintf.gcc44.file64bit \
+        -l pantheios.1.util.gcc44.file64bit \
+        -l pantheios.1.core.gcc44.file64bit 
 
 CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
 #LDFLAGS=-static
