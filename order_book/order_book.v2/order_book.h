@@ -8,9 +8,10 @@
 
 #include "limit.h"
 #include "order.h"
-#include "utils/types.h"
 #include "book_types.h"
+#include "utils/types.h"
 #include "utils/time_utils.h"
+#include "utils/constants.h"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>

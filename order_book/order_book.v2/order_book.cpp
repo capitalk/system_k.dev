@@ -327,7 +327,7 @@ KBook::bestPrice(Side_t buySell)
         // KTK TODO - NOTE this does not support negative prices
         KTree::reverse_iterator bit = _bidTree.rbegin();
         if (bit == _bidTree.rend()) { 
-            return -1;
+            return NO_BID;
         }
         return (*bit)->getPrice();
         
@@ -336,7 +336,7 @@ KBook::bestPrice(Side_t buySell)
         // KTK TODO - NOTE this does not support negative prices
         KTree::iterator ait = _askTree.begin();
         if (ait == _askTree.end()) { 
-            return -1;
+            return NO_ASK;
         }
         return (*ait)->getPrice();
     }
