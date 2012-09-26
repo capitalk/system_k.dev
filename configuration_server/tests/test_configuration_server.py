@@ -26,6 +26,7 @@ socket.send(config_request_msg)
 configuration = proto_objs.venue_configuration_pb2.configuration()
 configuration.ParseFromString(config_reply)
 print "Configuration request returned: "
+print configuration
 print configuration.trade_serialization_addr
 print configuration.recovery_listener_addr
 
