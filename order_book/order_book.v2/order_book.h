@@ -62,6 +62,7 @@ public:
     const timespec getEventTime() { return _evtTime; }
     const timespec getExchangeSendTime() { return _exchSndTime; }
     void dbg();
+    void clear();
 
 private:
     virtual int addBid(KOrder* bid, timespec eventTime, timespec exchSendTime);
@@ -69,8 +70,6 @@ private:
     KOrderMap _orderMap;
     KTree _bidTree;
     KTree _askTree;
-    KLimit* _bestBid;
-    KLimit* _bestAsk; 
     char _name[128];
     timespec _evtTime;
     timespec _exchSndTime;

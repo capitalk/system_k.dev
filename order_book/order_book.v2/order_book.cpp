@@ -176,6 +176,14 @@ KBook::addAsk(KOrder* ask, timespec evtTime, timespec exchSndTime)
     return 0;
 }
 
+void
+KBook::clear()
+{
+    _orderMap.clear();
+    _bidTree.clear();
+    _askTree.clear();  
+}
+
 int
 KBook::remove(uint32_t orderId, timespec evtTime, timespec exchSndTime) 
 {
@@ -340,7 +348,8 @@ KBook::bestPrice(Side_t buySell)
         }
         return (*ait)->getPrice();
     }
-    return (-1);
+    // This should never happen
+    return (-999999999);
 }
 
 void
