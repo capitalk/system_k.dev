@@ -18,6 +18,7 @@
 #include "utils/venue_globals.h"
 #include "utils/constants.h"
 #include "utils/types.h"
+#include "utils/constants.h"
 
 #include "proto/spot_fx_md_1.pb.h"
 
@@ -49,7 +50,7 @@ namespace po = boost::program_options;
 } while(0)
 
 
-#define SYMBOL_LEN 8
+//#define SYMBOL_LEN 8
 const char symbols[][SYMBOL_LEN] = {
     "EUR/USD", 
     "GBP/USD", 
@@ -101,6 +102,8 @@ const char symbols[][SYMBOL_LEN] = {
     "USD/CZK"
 };
 
+capkproto::configuration all_venue_config;
+
 #define SYMBOL_COUNT (sizeof(symbols) / SYMBOL_LEN)
 
 /*
@@ -113,14 +116,26 @@ char mics[][MIC_LEN] = {
 };
 */
 
+capk::venue_id_t venues[MAX_VENUES];
+
+/*
 capk::venue_id_t venues[] = {
     capk::kXCDE_VENUE_ID,
     capk::kFXCM_VENUE_ID
 };
+*/
 
-#define VENUE_COUNT (sizeof(venues) / sizeof(capk::venue_id_t))
+//#define VENUE_COUNT (sizeof(venues) / sizeof(capk::venue_id_t))
+unsigned int VENUE_COUNT = 0;
 
 zmq::socket_t* bcast_sock;
+
+class worker;
+struct market_data_receiver {
+    worker* w;
+    boost::thread* t;
+};
+         
 
 struct instrument_info
 {
@@ -184,13 +199,13 @@ book_manager::run() {
             // Extract the message from protobufs
             zmq::message_t msg;
             receiver.recv(&msg);
+            fprintf(stderr, "book_manager received: %d bytes\n", msg.size());
             bbo.ParseFromArray(msg.data(), msg.size());
-            //char mic[MIC_LEN];
-            //STRCPY5(mic, bbo.mic());
             capk::venue_id_t bid_venue_id = bbo.bid_venue_id();
             capk::venue_id_t ask_venue_id = bbo.ask_venue_id();
 #ifdef DEBUG
-            fprintf(stderr, "BID VENUE_ID: %d ASK VENUE_ID: %d", bid_venue_id, ask_venue_id);
+            //fprintf(stderr, "BID VENUE_ID: %d ASK VENUE_ID: %d", bid_venue_id, ask_venue_id);
+            fprintf(stderr, "Received protobuf:\n%s\n", bbo.DebugString().c_str());
 #endif
             char sym[SYMBOL_LEN];
             STRCPY8(sym, bbo.symbol());
@@ -212,9 +227,11 @@ book_manager::run() {
                 if (strncmp(sym, instruments[i].symbol, SYMBOL_LEN) == 0) {
                     found_symbol = true;
                     for (unsigned int j = 0; j < VENUE_COUNT; j++) {
+                        //std::cerr << "VENUE_ID: " << instruments[i].venues[j].venue_id << std::endl;
                         // update the specific book that the price came from
                         if (instruments[i].venues[j].venue_id != capk::kNULL_VENUE_ID && 
-                            instruments[i].venues[j].venue_id == bid_venue_id &&                                instruments[i].venues[j].venue_id == ask_venue_id) {
+                            instruments[i].venues[j].venue_id == bid_venue_id && 
+                            instruments[i].venues[j].venue_id == ask_venue_id) {
                                 found_venue = true;
                                 instruments[i].venues[j].bid_price = bid_price; 
                                 instruments[i].venues[j].ask_price = ask_price; 
@@ -240,25 +257,23 @@ book_manager::run() {
 			
 			// Now go through all the books and pick the bbo
             // check the time since last update and reset if too long
-            double bb = INT_MIN;
-            double ba = INT_MAX;
-            //char* bbmic = 0;
-            //char* bamic = 0;
-            double bbvol = 0;
-            double bavol = 0;
+            double bb = capk::NO_BID;
+            double ba = capk::NO_ASK;
+            double bbvol = capk::INIT_SIZE;
+            double bavol = capk::INIT_SIZE;
             capk::venue_id_t bb_venue_id = capk::kNULL_VENUE_ID;
             capk::venue_id_t ba_venue_id = capk::kNULL_VENUE_ID;
             timespec now;
             std::string msg_str;
 			unsigned long last_update_millis;
 
-			// find the symbol and mic in the book structure
+			// find the symbol and venue id in the book structure
             for (unsigned int i = 0; i < SYMBOL_COUNT; i++) {
                 if (strncmp(sym, instruments[i].symbol, SYMBOL_LEN) == 0) {
                     found_symbol = true;
 
                     for (unsigned int j = 0; j < VENUE_COUNT; j++) {
-                        if(instruments[i].venues[j].venue_id != capk::kNULL_VENUE_ID) {
+                        if (instruments[i].venues[j].venue_id != capk::kNULL_VENUE_ID) {
                             // check the elapsed time since last update
                             clock_gettime(CLOCK_MONOTONIC, &now);
                             last_update_millis = 
@@ -278,7 +293,7 @@ book_manager::run() {
 									instruments[i].venues[j].ask_price, 
 									last_update_millis);
 							if (last_update_millis > UPDATE_TIMEOUT_MILLIS) { 
-								fprintf(stderr, "*** TIMEOUT ****");
+								//fprintf(stderr, "*** TIMEOUT ****");
 								instrument_reset(instruments[i].venues[j]);
 							}
 							fprintf(stderr, "\n");
@@ -288,12 +303,12 @@ book_manager::run() {
                             timespec tdelta = 
                                 capk::timespec_delta(instruments[i].venues[j].last_update, now);
 							std::cerr << "Tdelta     : " << tdelta << std::endl;
-                            fprintf(stderr, "<%s:%s>: ms since last update: %lu\n", 
+                            fprintf(stderr, "<%s:%d>: ms since last update: %lu\n", 
                                     instruments[i].symbol, 
-                                    capk::venue_id_to_mic_string(instruments[i].venues[j].venue_id), 
+                                    instruments[i].venues[j].venue_id, 
 									last_update_millis);
-							fprintf(stderr, "<%s:%s>: %f@%f\n", 
-									capk::venue_id_to_mic_string(instruments[i].venues[j].venue_id),
+							fprintf(stderr, "<%d:%s>: %f@%f\n", 
+									instruments[i].venues[j].venue_id,
 									instruments[i].symbol,
 									instruments[i].venues[j].bid_price, 
 									instruments[i].venues[j].ask_price);
@@ -315,7 +330,7 @@ book_manager::run() {
 			}
             
             // Setup BBO and re-broadcast
-            fprintf(stderr, "\n***\n<%s> BB: %d:%f-%f BA: %d:%f-%f\n***\n", 
+            fprintf(stderr, "\n***\n<%s> BB: %d:%f(%f) BA: %d:%f(%f)\n***\n", 
                     sym, 
                     bb_venue_id, 
                     bb, 
@@ -435,29 +450,31 @@ worker::run () {
 
 
 void 
-initialize_instrument_info(zmq::context_t* context)
+initialize_instrument_info(zmq::context_t* context, const capkproto::configuration& conf)
 {
     assert(context);
-
+    assert(SYMBOL_COUNT > 0);
+    assert(VENUE_COUNT > 0);
 #ifdef DEBUG
     std::cerr << "Initializing instruments: " << sizeof(instruments)  << " bytes \n";
     std::cerr << "SYMBOL count: " << SYMBOL_COUNT << "\n"; 
-    std::cerr << "VENUE count: " << VENUE_COUNT << "\n"; 
 #endif
-
+    std::cout << "Initializing: " << SYMBOL_COUNT << " symbols" << std::endl;
     for (unsigned int i=0; i < SYMBOL_COUNT; i++) {
         std::cerr << "Initializing symbol: <" << i << "> to <" << symbols[i] << ">\n";
         STRCPY8(instruments[i].symbol, symbols[i]);
         instruments[i].broadcast_socket = new zmq::socket_t(*context, ZMQ_PUB);  
         assert(instruments[i].broadcast_socket);
 
-        for (unsigned int j=0; j < VENUE_COUNT; j++) {
-            std::cerr << "Initializing venue: <" << j << "> to <" << venues[j] << ">\n";
-            //STRCPY5(instruments[i].venues[j].MIC_name, venues[j]); 
-			instruments[i].venues[j].venue_id = venues[j]; 
+        int num_venues = conf.configs_size();
+        std::cout << "Initializing: " << num_venues << " venues" << std::endl;
+        for (int j=0; j < num_venues; j++) {
+            const capkproto::venue_configuration vc = conf.configs(j);
+            std::cerr << "Initializing venue: <" << j << "> to <" << vc.venue_id() << ">\n";
+			instruments[i].venues[j].venue_id = vc.venue_id(); 
 			instruments[i].venues[j].last_update = {0};
-            instruments[i].venues[j].bid_price = INT_MIN;
-            instruments[i].venues[j].ask_price = INT_MAX;
+            instruments[i].venues[j].bid_price = capk::INIT_BID;
+            instruments[i].venues[j].ask_price = capk::INIT_ASK;
             instruments[i].venues[j].bid_size = -1;
             instruments[i].venues[j].ask_size = -1;
         }
@@ -467,9 +484,8 @@ initialize_instrument_info(zmq::context_t* context)
 #ifdef DEBUG
     for (unsigned int i = 0; i < SYMBOL_COUNT; i++) {
         for (unsigned int j = 0; j < VENUE_COUNT; j++) {
-                    fprintf(stderr, "%s %s <%d>:%f@%f\n", 
+                    fprintf(stderr, "%s <%d>:%f@%f\n", 
                             instruments[i].symbol, 
-                            capk::venue_id_to_mic_string(instruments[i].venues[j].venue_id),
                             instruments[i].venues[j].venue_id,
                             instruments[i].venues[j].bid_price, 
                             instruments[i].venues[j].ask_price);
@@ -532,8 +548,9 @@ main(int argc, char** argv)
     try { 
 		// Global context for ZMQ
 		zmq::context_t context(1);
-		
-		initialize_instrument_info(&context);
+        // Request config params from configuration server
+	    capk::get_config_params((context), "tcp://127.0.0.1:11111", &all_venue_config);
+        
 		bcast_sock = new zmq::socket_t(context, ZMQ_PUB);
         assert(bcast_sock);
         int zero = 0;
@@ -545,15 +562,26 @@ main(int argc, char** argv)
         // connect to inproc socket for orderbook
         book_manager ob(&context, AGGREGATE_OB);
         boost::thread* t0 = new boost::thread(boost::bind(&book_manager::run, &ob));
+        sleep(2);
 
         // subscribers
-        worker w1(&context, capk::kXCDE_BROADCAST_ADDR, AGGREGATE_OB);
-        worker w2(&context, capk::kFXCM_BROADCAST_ADDR, AGGREGATE_OB);
-        boost::thread* t1 = new boost::thread(boost::bind(&worker::run, &w1));
-        boost::thread* t2 = new boost::thread(boost::bind(&worker::run, &w2));
+        // subscribe to all available venues as exist in the config server
+        int num_venues = all_venue_config.configs_size();
+        VENUE_COUNT = num_venues;
+		initialize_instrument_info(&context, all_venue_config);
+        std::cerr << "Configured venues (not necessarily broadcasting): " << num_venues << std::endl;
+        market_data_receiver* receivers = new market_data_receiver[num_venues];
+        boost::thread_group thread_group;
+        for (int i=0; i< num_venues; i++) {
+            const capkproto::venue_configuration vc = all_venue_config.configs(i);
+            std::cerr << "Creating listener for: " << vc.mic_name() << std::endl;
+            receivers[i].w = new worker(&context, vc.market_data_broadcast_addr(), AGGREGATE_OB);
+            receivers[i].t = new boost::thread(boost::bind(&worker::run, receivers[i].w));
+            thread_group.add_thread(receivers[i].t);
+        }
+        thread_group.join_all();
         t0->join();
-        t1->join();
-        t2->join();
+        assert(thread_group.size() == num_venues);
         google::protobuf::ShutdownProtobufLibrary();
     } 
     catch(std::exception& e) {
