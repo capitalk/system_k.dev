@@ -73,12 +73,6 @@ int main( int argc, char** argv )
 	logging_init(logFilename.c_str());
 
 	s_catch_signals();
-	// signal handlers for shutting down cleanly
-/*
-    (void) signal(SIGINT, sighandler);
-    (void) signal(SIGTERM, sighandler);
-    (void) signal(SIGHUP, sighandler);
-*/
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
