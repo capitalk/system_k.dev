@@ -208,19 +208,19 @@ int main( int argc, char** argv )
 
         capk::get_config_params(g_zmq_context, "tcp://127.0.0.1:11111", &all_venue_config);
         capkproto::venue_configuration my_config = capk::get_venue_config(&all_venue_config, config.mic_string.c_str());
-        std::cout << "Received config:\n" << my_config.DebugString() << std::endl;
+        std::cout << "Received config:\n***\n" << my_config.DebugString() << "***\n" << std::endl;
 
-        // venue id as for protobuf usage to identify venue
-        if (my_config.venue_id() == "") {
-            std::cerr << "venue_id not set!" << std::endl;
+        if (my_config.venue_id() <= 0) {
+            std::cerr << "venue_id not set!(" << my_config.venue_id() << ")" << std::endl;
             exit(-1);
         }
         else {
             // boost version of atoi
-            if (qi::parse(my_config.venue_id().begin(), my_config.venue_id().end(),  qi::int_, config.venue_id) == false) {
-                std::cout << "Can't parse venue_id"  << std::endl;
-                exit(-1); 
-            }
+            //if (qi::parse(my_config.venue_id().begin(), my_config.venue_id().end(),  qi::int_, config.venue_id) == false) {
+                //std::cout << "Can't parse venue_id"  << std::endl;
+                //exit(-1); 
+            //}
+            config.venue_id = my_config.venue_id();
             if (config.venue_id == 0) {
                 std::cerr << "venue_id can not be 0" << std::endl;
                 exit(-1);

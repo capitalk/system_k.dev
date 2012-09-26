@@ -29,6 +29,7 @@
 #include "quickfix/Session.h"
 #include "quickfix/FieldConvertors.h"
 #include "utils/time_utils.h"
+#include "utils/types.h"
 #include "utils/fix_convertors.h"
 #include "utils/jenkins_hash.h"
 #include <iostream>
@@ -357,6 +358,8 @@ Application::onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, cons
     if (_config.printDebug) {
 	    std::cout << "Application::onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID)" << "\n"; //(" << message.toString() << ")" << "\n";
     }
+    this->full_refresh_template<FIX44::MarketDataIncrementalRefresh>(message,sessionID); 
+/*
     std::ostream* pLog = NULL;
 	FIX::MsgType msgType;
 	message.getHeader().getField(msgType);
@@ -463,9 +466,8 @@ Application::onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, cons
                 std::string id = mdEntryID.getValue(); 
                 int nid = hashlittle(id.c_str(), id.size(), 0);
 
-                /* since we sometimes don't get entry IDs in snapshots, 
-                   try using the quote entry ID instead 
-                 */ 
+                // since we sometimes don't get entry IDs in snapshots, 
+                //   try using the quote entry ID instead 
                 if (id.length() == 0) {
                     id = quoteEntryID.getValue(); 
                     nid = hashlittle(id.c_str(), id.size(), 0);
@@ -486,7 +488,7 @@ Application::onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, cons
                 if (_config.printDebug) {
                     std::cout << "[FIX 4.4: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n"; 
                 }
-/* KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
+// KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
 				pLog = getStream(symbol.getValue());
 				if (pLog == NULL) {
 					std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
@@ -494,16 +496,14 @@ Application::onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, cons
 					*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
 					*pLog << *pBook;
 				}
-*/
-                 
 			}
             else {
                 std::cerr << "[FIX 4.4: Full Refresh] Orderbook is null - nothing to add to" << "\n";
             }
 		}
 	}
+    */
 }
-
 
 /*
  * Full refresh of order book - all existing orders at all levels 
@@ -515,6 +515,8 @@ Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, cons
     if (_config.printDebug) {
 	    std::cout << "Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID)" << "\n"; //(" << message.toString() << ")" << "\n";
     }
+    this->full_refresh_template<FIX43::MarketDataIncrementalRefresh>(message,sessionID); 
+/*
     std::ostream* pLog = NULL;
 	FIX::MsgType msgType;
 	message.getHeader().getField(msgType);
@@ -621,9 +623,8 @@ Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, cons
                 std::string id = mdEntryID.getValue(); 
                 int nid = hashlittle(id.c_str(), id.size(), 0);
 
-                /* since we sometimes don't get entry IDs in snapshots, 
-                   try using the quote entry ID instead 
-                 */ 
+                // since we sometimes don't get entry IDs in snapshots, 
+                // try using the quote entry ID instead 
                 if (id.length() == 0) {
                     id = quoteEntryID.getValue(); 
                     nid = hashlittle(id.c_str(), id.size(), 0);
@@ -644,7 +645,7 @@ Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, cons
                 if (_config.printDebug) {
                     std::cout << "[FIX 4.3: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n"; 
                 }
-/* KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
+// KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
 				pLog = getStream(symbol.getValue());
 				if (pLog == NULL) {
 					std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
@@ -652,7 +653,6 @@ Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, cons
 					*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
 					*pLog << *pBook;
 				}
-*/                 
                  
 			}
             else {
@@ -660,6 +660,7 @@ Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, cons
             }
 		}
 	}
+    */
 }
 
 /*
@@ -672,6 +673,8 @@ Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, cons
 	if (_config.printDebug) { 
 	    std::cout << "Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
     }
+    this->full_refresh_template<FIX43::MarketDataIncrementalRefresh>(message,sessionID); 
+/*
     std::ostream* pLog = NULL;
 	FIX::MsgType msgType;
 	message.getHeader().getField(msgType);
@@ -782,6 +785,170 @@ Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, cons
 				std::string id = mdEntryID.getValue(); 
                 int nid = hashlittle(id.c_str(), id.size(), 0);
 
+                // since we sometimes don't get entry IDs in snapshots, 
+                // try using the quote entry ID instead 
+                if (id.length() == 0) {
+                    id = quoteEntryID.getValue(); 
+                    nid = hashlittle(id.c_str(), id.size(), 0);
+                }
+				double price = mdEntryPx.getValue(); 
+				unsigned int size = mdEntrySize.getValue(); 
+				//capitalk::PriceDepthEntry* entry = 
+				//	new capitalk::PriceDepthEntry(time, time, side, id, price, size); 
+				
+                //pBook->add(entry); 
+                timespec evtTime, sndTime;
+                clock_gettime(CLOCK_MONOTONIC, &evtTime);
+                FIXConvertors::UTCTimeStampToTimespec(time, &sndTime);
+                pBook->add(nid, nside, size, price, evtTime, sndTime);
+                if (_config.printDebug) {
+                    std::cout << "[FIX4.2: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n";   
+                }
+// KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
+				pLog = getStream(symbol.getValue());
+				if (pLog == NULL) {
+					std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
+				} else {
+					*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
+					*pLog << *pBook;
+				}
+			}
+            else {
+                std::cerr << "{FIX 4.2: Full Refresh] Orderbook is null - nothing to add to" << "\n";
+            }
+		}
+    }
+    */
+}
+
+template <typename T> 
+void 
+Application::full_refresh_template(const T& message, const FIX::SessionID& sessionID) 
+{
+    if (_config.printDebug) { 
+	    std::cout << "Application::full_refresh_template()" 
+            << message.toString() 
+            << "\n";
+    }
+    std::ostream* pLog = NULL;
+	FIX::MsgType msgType;
+	message.getHeader().getField(msgType);
+	FIX::SendingTime sendingTime;
+	message.getHeader().getField(sendingTime);
+	FIX::NoMDEntries noMDEntries;
+	FIX::MDReqID mdReqID;
+	FIX::MDEntryType mdEntryType;
+	FIX::QuoteType quoteType;
+	FIX::MDEntryID mdEntryID;
+	FIX::MDEntryPx mdEntryPx;
+	FIX::MDEntrySize mdEntrySize;
+	FIX::ExecInst execInst;
+	FIX::QuoteEntryID quoteEntryID;
+	FIX::MDEntryOriginator mdEntryOriginator;
+	FIX::MinQty minQty;
+	FIX::MDEntryPositionNo mdEntryPositionNo;
+	FIX::MaturityMonthYear maturityMonthYear;
+	FIX::Symbol symbol;
+	FIX::SecurityType securityType;
+	int nEntries = 0;
+    capk::KBook* pBook = NULL;
+
+	if (message.isSetField(symbol)) {
+		message.getField(symbol);	
+	}
+	if (message.isSetField(mdReqID)) {
+		message.getField(mdReqID);	
+	}
+	if (message.isSetField(noMDEntries)) {
+		try {
+			message.getField(noMDEntries); 
+			nEntries = noMDEntries.getValue();
+		}
+		catch (std::exception& e) {
+			std::cerr << e.what() << "\n";
+		}
+        if (nEntries > 0) {
+            // clear the book since we have a complete refresh
+			if (NULL != (pBook = getBook(symbol.getValue())))  {
+                pBook->clear();
+            }
+        }
+
+		typename T::NoMDEntries mdEntries;
+		// Group indexed on 1 not 0
+		for (int i = 0; i< nEntries; i++) {
+			message.getGroup(i+1, mdEntries);
+	        if (mdEntries.isSetField(symbol)) {
+		        mdEntries.getField(symbol);	
+	        }
+			if (mdEntries.isSetField(mdEntryType)) {
+				mdEntries.getField(mdEntryType);
+			}
+			if (mdEntries.isSetField(mdEntryID)) {
+				mdEntries.getField(mdEntryID);
+			}
+            // KTK Removed 24 Sep 2012 - don't necessarily need 
+            // md_entry_id set here - we can continue without it. 
+            //else {
+				//std::cerr << "NO MDEntryID SET IN SNAPSHOT" << "\n";	
+            //}
+			if (mdEntries.isSetField(mdEntryPx)) {
+				mdEntries.getField(mdEntryPx);
+			}
+			else {
+				std::cerr << "NO MDEntryPrice SET IN SNAPSHOT" << "\n";	
+			}
+			if (mdEntries.isSetField(mdEntrySize)) {
+				mdEntries.getField(mdEntrySize);	
+			}
+			else {
+				std::cerr << "NO MDEntrySize SET IN SNAPSHOT" << "\n";	
+			}
+			if (mdEntries.isSetField(quoteType)) {
+				mdEntries.getField(quoteType);	
+                if (_config.printDebug) {
+				    std::cout << "QuoteType: " << quoteType.getValue() << "\n"; 
+                }
+			}
+			if (mdEntries.isSetField(mdEntryOriginator)) {
+				mdEntries.getField(mdEntryOriginator);	
+                if (_config.printDebug) {
+				    std::cerr << "MDEntryOriginator: " << mdEntryOriginator.getValue() << "\n"; 
+                }
+			}
+			if (mdEntries.isSetField(minQty)) {
+				mdEntries.getField(minQty);	
+                if (_config.printDebug) {
+				    std::cout << "MinQty: " << minQty.getValue() << "\n"; 
+                }
+			}
+			if (mdEntries.isSetField(mdEntryPositionNo)) {
+				mdEntries.getField(mdEntryPositionNo);	
+                if (_config.printDebug) {
+				    std::cout << "MDEntryPositionNo: " << mdEntryPositionNo.getValue() << "\n"; 
+                }
+			}
+			if (mdEntries.isSetField(execInst)) {
+				mdEntries.getField(execInst);	
+			}
+			if (mdEntries.isSetField(quoteEntryID)) {
+				mdEntries.getField(quoteEntryID);	
+			}
+			//if (message.isSetField(securityType)) {
+				//message.getField(securityType);
+			//}
+			//if (message.isSetField(maturityMonthYear)) {
+				//message.getField(maturityMonthYear);
+			//}
+
+            ///capk::KBook* pBook;
+			///if (NULL != (pBook = getBook(symbol.getValue())))  {
+				FIX::UtcTimeStamp time = FIX::UtcTimeStamp(sendingTime); 
+				char side = mdEntryType.getValue(); 
+                capk::Side_t nside = char2side_t(side);
+				std::string id = mdEntryID.getValue(); 
+                int nid = hashlittle(id.c_str(), id.size(), 0);
+
                 /* since we sometimes don't get entry IDs in snapshots, 
                    try using the quote entry ID instead 
                  */ 
@@ -800,8 +967,46 @@ Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, cons
                 FIXConvertors::UTCTimeStampToTimespec(time, &sndTime);
                 pBook->add(nid, nside, size, price, evtTime, sndTime);
                 if (_config.printDebug) {
-                    std::cout << "[FIX4.2: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n";   
+                    std::cout << "[TEMPLATE: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n";   
                 }
+			///}
+		}
+        // At this point all entries in the message are processed
+        // i.e. added to the book. We can now broadcast BBO and 
+        // Broadcast and log orderbook
+        double bbid = pBook->bestPrice(capk::BID);
+        double bask = pBook->bestPrice(capk::ASK);
+        if(bbid > bask) {
+            std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK " << pBook->getName() << " (" << (double) bbid <<  ", " << (double) bask << ") XXXXXXXXXXXXXXXXX\n";
+            //assert(false);
+        }
+
+        double bbsize = pBook->bestPriceVolume(capk::BID);
+        double basize = pBook->bestPriceVolume(capk::ASK);
+			    
+        std::cerr << "========>FULL REFRESH BOOK BBO: " << bbid << "(" << bbsize << ")" << "@" << bask << "(" << basize << ")" << std::endl;
+        ptime time_start(microsec_clock::local_time());
+        broadcast_bbo_book(_pzmq_socket, 
+                symbol.getValue().c_str(),
+                bbid,
+                bask,
+                bbsize, 
+                basize, 
+                _config.venue_id);
+// write log if needed.
+		pLog = getStream(symbol.getValue());
+        if (pLog == NULL) {
+		    std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
+        } else {
+            if (_isLogging) {
+                *pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
+		    *pLog << *pBook;
+            }
+		}
+    }
+}
+
+
 /* KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
 				pLog = getStream(symbol.getValue());
 				if (pLog == NULL) {
@@ -811,11 +1016,36 @@ Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, cons
 					*pLog << *pBook;
 				}
 */                 
-			}
-            else {
-                std::cerr << "{FIX 4.2: Full Refresh] Orderbook is null - nothing to add to" << "\n";
-            }
-		}
+
+void 
+Application::broadcast_bbo_book(void* bcast_socket, const char* symbol, const double best_bid, const double best_ask, const double bbsize, const double basize, const capk::venue_id_t venue_id)
+{
+    zmq_msg_t msg;        
+    char msgbuf[256];
+    capkproto::instrument_bbo bbo;
+    if (_isPublishing) {
+        bbo.set_symbol(symbol);
+        bbo.set_bid_price(best_bid);
+        bbo.set_ask_price(best_ask);
+        bbo.set_bid_size(bbsize);
+        bbo.set_ask_size(basize);
+        bbo.set_bid_venue_id(venue_id);
+        bbo.set_ask_venue_id(venue_id);
+        
+        size_t msgsize = bbo.ByteSize();
+        assert(msgsize < sizeof(msgbuf));
+        if (msgsize > sizeof(msgbuf)) {
+            std::cerr << "WARNING: buf too small for protobuf serialization!" << std::endl;
+        }
+        bbo.SerializeToArray(msgbuf, msgsize);
+
+        zmq_msg_init_size(&msg, msgsize);
+        memcpy(zmq_msg_data(&msg), msgbuf, msgsize);
+        if (_config.printDebug) {
+            std::cerr << "Sending "  << msgsize << " bytes\n";
+            std::cerr << "Protobuf:\n" << bbo.DebugString().c_str() << "\n" << std::endl;
+        }
+        zmq_send(bcast_socket, &msg, 0);
     }
 }
 
@@ -832,7 +1062,6 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 	message.getHeader().getField(msgType);
 	FIX::SendingTime sendingTime;
 	message.getHeader().getField(sendingTime);
-	//if (msgType.getValue() == "X") {
 	FIX::MDReqID mdReqID; 
 	FIX::NoMDEntries noMDEntries;
 
@@ -1095,27 +1324,34 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 				std::cerr << __FILE__ << ":" << __LINE__ << "Can't find orderbook - book is null!" << "\n";
 			}
 		}
-        // PRINT BOOK HERE
+
+        // Broadcast and log orderbook
         double bbid = pBook->bestPrice(capk::BID);
         double bask = pBook->bestPrice(capk::ASK);
         if(bbid > bask) {
             std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK " << pBook->getName() << " (" << (double) bbid <<  ", " << (double) bask << ") XXXXXXXXXXXXXXXXX\n";
             //assert(false);
         }
+
+        double bbsize = pBook->bestPriceVolume(capk::BID);
+        double basize = pBook->bestPriceVolume(capk::ASK);
 			    
         ptime time_start(microsec_clock::local_time());
-        
-        double bbprice = pBook->bestPrice(capk::BID);
-        double bbsize = pBook->bestPriceVolume(capk::BID);
-        double baprice = pBook->bestPrice(capk::ASK);
-        double basize = pBook->bestPriceVolume(capk::ASK);
+        broadcast_bbo_book(_pzmq_socket, 
+                symbol.getValue().c_str(),
+                bbid,
+                bask,
+                bbsize, 
+                basize, 
+                _config.venue_id);
+/* 
 		zmq_msg_t msg;        
 		char msgbuf[256];
         capkproto::instrument_bbo bbo;
         if (_isPublishing) {
             bbo.set_symbol(symbol.getValue());
-            bbo.set_bid_price(bbprice);
-            bbo.set_ask_price(baprice);
+            bbo.set_bid_price(bbid);
+            bbo.set_ask_price(bask);
             bbo.set_bid_size(bbsize);
             bbo.set_ask_size(basize);
             bbo.set_bid_venue_id(_config.venue_id);
@@ -1137,10 +1373,10 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
              //   delete[] msgbuf;
             //}
         }
-
-        if(bbprice > baprice) {
-            std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK (" << bbprice <<  ", " << baprice << ") XXXXXXXXXXXXXXXXX\n";
-        }
+*/
+        //if(bbprice > baprice) {
+            //std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK (" << bbprice <<  ", " << baprice << ") XXXXXXXXXXXXXXXXX\n";
+        //}
 
 		if (pLog == NULL) {
 		    std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";

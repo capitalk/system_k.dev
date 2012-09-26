@@ -59,7 +59,7 @@ Application.o: Application.cpp
 
 
 liborder_book2.a:
-	cd $(ORDERBOOK_DIR) && make
+	cd $(ORDERBOOK_DIR) && make 
 
 protos: 
 	cd $(PROTO) && make
@@ -67,12 +67,13 @@ protos:
 clean :
 	rm -f *.o collect 
 	cd $(PROTO) && make clean
+	cd $(ORDERBOOK_DIR) && make clean
 
 install :
 	cp -r ./cfg /usr/local/capk
 	cp ./collect /usr/local/capk
 	cp *.sh /usr/local/capk
 
-.PHONY : collect orderBook
+.PHONY : collect 
 
 

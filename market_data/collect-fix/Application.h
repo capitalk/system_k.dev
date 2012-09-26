@@ -157,6 +157,11 @@ public:
 	//boost::shared_ptr<std::ostream> getStream(const std::string& symbol);
 
 private:
+    void broadcast_bbo_book(void* bcast_socket, const char* symbol, const double best_bid, const double best_ask, const double bbsize, const double basize, const capk::venue_id_t venue_id);
+        
+
+    template <typename T> 
+    void full_refresh_template(const T& message, const FIX::SessionID& sessionID); 
 
     template <typename T> 
     void incremental_update_template(const T& message, const FIX::SessionID& sessionID); 
