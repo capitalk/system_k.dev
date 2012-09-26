@@ -210,15 +210,8 @@ int main( int argc, char** argv )
         // Should we use synthetic modify? 
 		bool useSyntheticModify = dict.has("UseSyntheticModify") && dict.getBool("UseSyntheticModify");  
 		pan::log_INFORMATIONAL("Using synthetic modify: ", pan::boolean(useSyntheticModify));
-/*
-        // venue ID
-		config.venue_id = dict.has("VenueID") ? atoi(dict.getString("VenueID").c_str()) : 0;
-		if (config.venue_id == 0) { 
-			pan::log_CRITICAL("VenueID may NOT be empty or 0");
-			return (-1);
-		}
-		pan::log_INFORMATIONAL("Using VenueID: ", pan::integer(config.venue_id));
-*/
+
+        // Call the config server
         capk::get_config_params((ctx), "tcp://127.0.0.1:11111", &all_venue_config);
         capkproto::venue_configuration my_config = capk::get_venue_config(&all_venue_config, config.mic_code.c_str());
         std::cout << "\nMy config:\n" << my_config.DebugString() << std::endl;
@@ -306,7 +299,7 @@ int main( int argc, char** argv )
 		application.setLimitOrderChar40(limitOrder);
 		application.setUseCurrency15(useCurrency);
         application.setLogging(isLogging);
-        application.setUseSyntheticModify(useSyntheticModify);
+        //application.setUseSyntheticModify(useSyntheticModify);
 
         // ZMQ initialization
 		application.setZMQContext(&ctx);
