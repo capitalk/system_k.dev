@@ -33,7 +33,7 @@ def parse(filename):
     return True
 
 def make_protobuf(section, config, single_venue_config):
-    single_venue_config.venue_id = config.get(section, 'venue_id')
+    single_venue_config.venue_id = config.getint(section, 'venue_id')
     single_venue_config.mic_name = config.get(section, 'mic_name')
     single_venue_config.order_interface_addr = config.get(section, 'order_interface_addr')
     single_venue_config.order_ping_addr = config.get(section, 'order_ping_addr')
