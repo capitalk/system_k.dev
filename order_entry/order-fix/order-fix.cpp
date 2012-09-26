@@ -67,7 +67,7 @@ int main( int argc, char** argv )
 	std::string configFile;
 	bool printDebug; 
 	bool runInteractive;
-    bool isLogging;
+    bool isLogging = true;
 
     std::string logFilename = createTimestampedLogFilename(argv[0]);
 	logging_init(logFilename.c_str());
@@ -109,13 +109,6 @@ int main( int argc, char** argv )
 			pan::log_ERROR("Config file not set"); 
 			err++;
 		}
-		if (vm.count("i")) {
-			pan::log_NOTICE("Running interactive TEST MODE ");
-			runInteractive = true;
-		} else {
-			pan::log_NOTICE("Running in PRODUCTION MODE (NON-INTERACTIVE)");
-			runInteractive = false;
-        }
 		if (vm.count("nolog")) {
 			pan::log_NOTICE("Logging disabled");
             isLogging = false;
@@ -123,6 +116,15 @@ int main( int argc, char** argv )
 			pan::log_NOTICE("Logging enabled");
             isLogging = true;
 		}
+        // interactive overides logging settings
+		if (vm.count("i")) {
+			pan::log_NOTICE("Running interactive TEST MODE ");
+			runInteractive = true;
+            isLogging = true;
+		} else {
+			pan::log_NOTICE("Running in PRODUCTION MODE (NON-INTERACTIVE)");
+			runInteractive = false;
+        }
 
         // debug? 
 		printDebug = vm.count("d") > 0; 
@@ -204,6 +206,10 @@ int main( int argc, char** argv )
 			return (-1);
 		}
 		pan::log_INFORMATIONAL("Using TargetCompID: ", config.targetCompID);
+
+        // Should we use synthetic modify? 
+		bool useSyntheticModify = dict.has("UseSyntheticModify") && dict.getBool("UseSyntheticModify");  
+		pan::log_INFORMATIONAL("Using synthetic modify: ", pan::boolean(useSyntheticModify));
 /*
         // venue ID
 		config.venue_id = dict.has("VenueID") ? atoi(dict.getString("VenueID").c_str()) : 0;
@@ -215,18 +221,19 @@ int main( int argc, char** argv )
 */
         capk::get_config_params((ctx), "tcp://127.0.0.1:11111", &all_venue_config);
         capkproto::venue_configuration my_config = capk::get_venue_config(&all_venue_config, config.mic_code.c_str());
-        std::cout << "My config:\n" << my_config.DebugString() << std::endl;
+        std::cout << "\nMy config:\n" << my_config.DebugString() << std::endl;
 
-        if (my_config.venue_id() == "") {
+        if (my_config.venue_id() <= 0) {
             std::cerr << "venue_id not set!" << std::endl;
             exit(-1);
         }
         else {
             // boost version of atoi
-            if (qi::parse(my_config.venue_id().begin(),  my_config.venue_id().end(), config.venue_id) == false) {
-                pan::log_CRITICAL("Can't parse venue_id");
-                exit(-1);
-            }
+            //if (qi::parse(my_config.venue_id().begin(),  my_config.venue_id().end(), config.venue_id) == false) {
+               // pan::log_CRITICAL("Can't parse venue_id");
+                //exit(-1);
+            //}
+            config.venue_id = my_config.venue_id();
             if (config.venue_id == 0) {
                 std::cerr << "venue_id can not be 0" << std::endl;
                 exit(-1);
@@ -299,6 +306,7 @@ int main( int argc, char** argv )
 		application.setLimitOrderChar40(limitOrder);
 		application.setUseCurrency15(useCurrency);
         application.setLogging(isLogging);
+        application.setUseSyntheticModify(useSyntheticModify);
 
         // ZMQ initialization
 		application.setZMQContext(&ctx);
@@ -306,7 +314,9 @@ int main( int argc, char** argv )
         if (isLogging) {
             pan::log_INFORMATIONAL("Logging with FileStoreFactory");
 		    FIX::FileStoreFactory fileStoreFactory(storeOutputDir);         
+            pan::log_INFORMATIONAL("FileStoreFactory output dir:", storeOutputDir);
 		    FIX::FileLogFactory logFactory(logOutputDir);
+            pan::log_INFORMATIONAL("LogFactory logOutputDir:", logOutputDir);
             pinitiator = new FIX::SocketInitiator(application, fileStoreFactory, settings, logFactory);
         }
         else {

@@ -71,9 +71,7 @@ void Application::onLogon(const FIX::SessionID& sessionID )
 	_loggedOut = false;
 	//_sessionID = sessionID;
 	_loginCount++;
-#ifdef LOG
 	pan::log_INFORMATIONAL("onLogon:", sessionID.toString().c_str());
-#endif
 }
 
 void Application::onLogout(const FIX::SessionID& sessionID )
@@ -988,11 +986,12 @@ Application::dispatch(capk::msg_t msgType,
 			}
 			else {	
 				if (_config.version == 42) {
-					orderCancelReplace42(ocr);
+					    orderCancelReplace42(ocr);
 				}
 				else {
 					pan::log_CRITICAL("NO SUPPORTED FIX VERSION FOUND FOR CANCEL REPLACE REQUEST");
 				}
+                break;
 			}
 		}
 		
@@ -1013,6 +1012,7 @@ Application::dispatch(capk::msg_t msgType,
 				else {
 					pan::log_CRITICAL("NO SUPPORTED FIX VERSION FOUND FOR CANCEL REPLACE REQUEST");
 				}
+                break;
 			}
 		}
 	}

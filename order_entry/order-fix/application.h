@@ -159,6 +159,8 @@ public:
 
 	inline void setUseCurrency15(const bool useCurrency) { this->_useCurrency15 = useCurrency; };
 
+	//inline void setUseSyntheticModify(const bool useSyntheticModify) { this->_useSyntheticModify = useSyntheticModify; };
+
 	inline void setLimitOrderChar40(const char limitOrderChar) { this->_limitOrderChar40 = limitOrderChar; };
 
     inline void setLogging(const bool isLogging) { this->_isLogging = isLogging; };
@@ -177,7 +179,8 @@ public:
 	void orderCancel44(capkproto::order_cancel& co);
 	void orderCancel50(capkproto::order_cancel& co);
 
-	void orderCancelReplace42(capkproto::order_cancel_replace& co);
+	void orderCancelReplace42(capkproto::order_cancel_replace& ocr);
+	//void syntheticOrderCancelReplace42(capkproto::order_cancel_replace& ocr);
 
 	void orderStatus42(capkproto::order_status& os);
 
@@ -314,7 +317,9 @@ private:
 	char _limitOrderChar40;
     // Set logging status
     bool _isLogging;
-	
+    // Should we simulate cancel/replace with a cancel followed by 
+    // a replace rather than using fix 35=G 	
+    //bool _useSyntheticModify;
 
 	zmq::context_t *_pzmq_context;	
 	zmq::socket_t *_pzmq_strategy_reply_sock;
