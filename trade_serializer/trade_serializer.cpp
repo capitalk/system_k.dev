@@ -188,7 +188,7 @@ static void retrieve_rsmetadata_and_print (ResultSet *rs) {
 
 } // retrieve_rsmetadata_and_print()
 
-
+#if 0
 int 
 positionsByStrategyId(sql::Connection* sql_cxn, 
         const capk::strategy_id_t& strategy_id, 
@@ -343,7 +343,7 @@ handleRecovery(zmq::context_t* context, sql::Connection* sql_cxn)
     }
 }
 
-
+#endif 
 bool
 orderExists(Connection* sql_cxn, 
                 const capk::strategy_id_t& strategy_id, 
@@ -356,8 +356,8 @@ orderExists(Connection* sql_cxn,
             "\norder id: ", pan::blob(order_id.get_uuid(), order_id.size()));
 #endif
 
-    PreparedStatement* sql_prepared_statement;
-    ResultSet* sql_result_set;
+    PreparedStatement* sql_prepared_statement = NULL;
+    ResultSet* sql_result_set = NULL;
     const char* const kSelectCountTrade = "select count(*) \
                                          from order_status \
                                          where strategy_id = ? \
@@ -397,6 +397,12 @@ orderExists(Connection* sql_cxn,
         " (MySQL error code: ", pan::integer(e.getErrorCode()),  \
         ", SQLState: " , e.getSQLState() , ")");
     } 
+    if (sql_prepared_statement) {
+        delete sql_prepared_statement;
+    }
+    if (sql_result_set) {
+        delete sql_result_set;
+    }
     return (result_count == 1); 
 }
 
@@ -567,7 +573,9 @@ setOrderStatus(Connection* sql_cxn,
 #ifdef DEBUG
     pan::log_DEBUG(kUpdateOrderStatus, " updated: ", pan::integer(update_count));
 #endif
-
+    if (sql_prepared_statement) {
+        delete sql_prepared_statement;
+    }
     return update_count;
 }
 
@@ -1073,25 +1081,18 @@ int main(int argc, const char *argv[]) {
         cout << "Cleaning up the resources .." << endl;
 
 #endif 
-        //handleOrders(context, con1); 
         boost::thread* order_listener_thread = 
             new boost::thread(boost::bind(&handleOrders, context, con1));
-
+/* KTK TODO - re-enable for recovery 
         boost::thread* recovery_listener_thread = 
             new boost::thread(boost::bind(&handleRecovery, context, con2));
+*/
 
         order_listener_thread->join();
+/* KTK TODO - re-enable for recovery 
         recovery_listener_thread->join();
-/* 
-        OrderListener order_listener(&context, capk::TRADE_SERIALIZER_ADDR);
-        boost::thread* order_listener_thread = new boost::thread(boost::bind(&order_listener::run, order_listener));
-
-        RecoveryListener recovery_listener(&context, capk::RECOVERY_LISTENER_ADDR);
-        boost::thread* recovery_listener_thread = new boost::thread(boost::bind(&recovery_listener::run, recovery_listener));
-        
-        order_listener_thread.join();
-        recovery_listener_thread.join();
 */
+
         /* Clean up */
         pan::log_DEBUG("Cleaning up the resources ..");
         //delete res;
