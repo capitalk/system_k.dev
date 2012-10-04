@@ -1,1 +1,1 @@
-./validate_symbols --c ./cfg/FXCM.dev.cfg --s ./cfg/symbols-multi.cfg 
+./validate_symbols --c ./cfg/FXCM.dev.cfg --s ./cfg/symbols-FXCM.cfg 

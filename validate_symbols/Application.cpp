@@ -68,6 +68,14 @@ void Application::fromAdmin(const FIX::Message& message, const FIX::SessionID& s
 {
 	FIX::BeginString beginString;
 	message.getHeader().getField(beginString);
+    FIX::MsgType msgType;
+    message.getHeader().getField(msgType);
+    if (msgType == FIX::MsgType_Reject) {
+        std::cerr << "!!!! MESSAGE REJECTED !!!! " << std::endl;
+        std::cerr << message << std::endl;
+        throw FIX::UnsupportedMessageType();
+    }
+
     if (_config.printDebug)  {
 	    std::cout << "fromAdmin(" << message << ")" << "\n"; 	
     }
