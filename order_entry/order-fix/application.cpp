@@ -261,6 +261,53 @@ Application::toApp(FIX::Message& message,
 }
 
 /*****************************************************************************
+ * BUSINESS MESSAGE REJECT
+ ****************************************************************************/
+template <typename T>
+void
+Application::handle_business_message_reject(const T& message,
+        const FIX::SessionID& sessionID)
+{
+    FIX::RefMsgType refMsgType;
+    FIX::BusinessRejectReason businessRejectReason;
+
+    pan::log_CRITICAL("Received business message reject for msgType:", 
+            message.getField(refMsgType).getString(), 
+            " reason(", message.getField(businessRejectReason).getString(), 
+            ")");
+}
+
+void
+Application::onMessage(const FIX42::BusinessMessageReject& message, 
+        const FIX::SessionID& sessionID)
+{
+    this->handle_business_message_reject<FIX42::BusinessMessageReject>(message, sessionID); 
+}
+
+void
+Application::onMessage(const FIX43::BusinessMessageReject& message, 
+        const FIX::SessionID& sessionID)
+{
+    this->handle_business_message_reject<FIX43::BusinessMessageReject>(message, sessionID); 
+}
+
+void
+Application::onMessage(const FIX44::BusinessMessageReject& message, 
+        const FIX::SessionID& sessionID)
+{
+    this->handle_business_message_reject<FIX44::BusinessMessageReject>(message, sessionID); 
+}
+
+void
+Application::onMessage(const FIX50::BusinessMessageReject& message, 
+        const FIX::SessionID& sessionID)
+{
+    this->handle_business_message_reject<FIX44::BusinessMessageReject>(message, sessionID); 
+}
+
+
+
+/*****************************************************************************
  * TRADING SESSION STATUS
  ****************************************************************************/
 void

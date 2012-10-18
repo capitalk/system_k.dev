@@ -41,6 +41,7 @@
 #include "quickfix/fix42/OrderStatusRequest.h"
 #include "quickfix/fix42/ListStatusRequest.h"
 #include "quickfix/fix42/ListStatus.h"
+#include "quickfix/fix42/BusinessMessageReject.h"
 
 #include "quickfix/fix43/Logout.h"
 #include "quickfix/fix43/Logon.h"
@@ -53,6 +54,7 @@
 #include "quickfix/fix43/OrderCancelRequest.h"
 #include "quickfix/fix43/OrderCancelReject.h"
 #include "quickfix/fix43/OrderCancelReplaceRequest.h"
+#include "quickfix/fix43/BusinessMessageReject.h"
 
 #include "quickfix/fix44/Logout.h"
 #include "quickfix/fix44/Logon.h"
@@ -65,6 +67,7 @@
 #include "quickfix/fix44/OrderCancelRequest.h"
 #include "quickfix/fix44/OrderCancelReject.h"
 #include "quickfix/fix44/OrderCancelReplaceRequest.h"
+#include "quickfix/fix44/BusinessMessageReject.h"
 
 #include "quickfix/fixt11/Logout.h"
 #include "quickfix/fixt11/Logon.h"
@@ -79,6 +82,7 @@
 #include "quickfix/fix50/OrderCancelRequest.h"
 #include "quickfix/fix50/OrderCancelReject.h"
 #include "quickfix/fix50/OrderCancelReplaceRequest.h"
+#include "quickfix/fix50/BusinessMessageReject.h"
 
 #include <string>
 #include <queue>
@@ -223,6 +227,9 @@ private:
 	void fromApp(const FIX::Message& message, const FIX::SessionID& sessionID )
 	    throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::UnsupportedMessageType);
 
+    template <typename T>
+    void handle_business_message_reject(const T& message, const FIX::SessionID& sessionID);
+
 	void onMessage(const FIX::Message&, const FIX::SessionID&);
 
 	void onMessage(const FIX42::Logon&, const FIX::SessionID&);
@@ -232,6 +239,7 @@ private:
 	void onMessage(const FIX42::ExecutionReport&, const FIX::SessionID&);
 	void onMessage(const FIX42::OrderCancelReject&, const FIX::SessionID&);
 	void onMessage(const FIX42::ListStatus& message, const FIX::SessionID& sessionID);
+	void onMessage(const FIX42::BusinessMessageReject& message, const FIX::SessionID& sessionID);
 
 	void onMessage(const FIX43::Logon&, const FIX::SessionID&);
 	void onMessage(const FIX43::Logout&, const FIX::SessionID&);
@@ -239,6 +247,7 @@ private:
 	void onMessage(const FIX43::TradingSessionStatus&, const FIX::SessionID&);
 	void onMessage(const FIX43::ExecutionReport&, const FIX::SessionID&);
 	void onMessage(const FIX43::OrderCancelReject&, const FIX::SessionID&);
+	void onMessage(const FIX43::BusinessMessageReject&, const FIX::SessionID&);
 
 	void onMessage(const FIX44::Logon&, const FIX::SessionID&);
 	void onMessage(const FIX44::Logout&, const FIX::SessionID&);
@@ -246,6 +255,7 @@ private:
 	void onMessage(const FIX44::TradingSessionStatus&, const FIX::SessionID&);
 	void onMessage(const FIX44::ExecutionReport&, const FIX::SessionID&);
 	void onMessage(const FIX44::OrderCancelReject&, const FIX::SessionID&);
+	void onMessage(const FIX44::BusinessMessageReject&, const FIX::SessionID&);
 
 	void onMessage(const FIXT11::Logon&, const FIX::SessionID&);
 	void onMessage(const FIXT11::Logout&, const FIX::SessionID&);
@@ -253,6 +263,7 @@ private:
 	void onMessage(const FIX50::TradingSessionStatus&, const FIX::SessionID&);
 	void onMessage(const FIX50::ExecutionReport&, const FIX::SessionID&);
 	void onMessage(const FIX50::OrderCancelReject&, const FIX::SessionID&);
+	void onMessage(const FIX50::BusinessMessageReject&, const FIX::SessionID&);
 
 	// TESTING FUNCTIONS
 	FIX42::NewOrderSingle queryNewOrderSingle42();
