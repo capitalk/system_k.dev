@@ -4,6 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 #include "utils/logging.h"
+#include "/home/timir/pantheios_be_zmq/pantheios_be_zmq.h"
 #include "utils/venue_globals.h"
 #include "utils/time_utils.h"
 #include "proto/capk_globals.pb.h"
@@ -996,19 +997,22 @@ int main(int argc, const char *argv[]) {
                                 database.c_str());
     con2->setClientOption("OPT_RECONNECT", &shouldAutoReconnect);
     assert(con2);
-    pan::log_NOTICE("Connecting to database...");
-    pan::log_NOTICE("dbhost: ", url.c_str());
-    pan::log_NOTICE("user: ", user.c_str());
-    pan::log_NOTICE("database: ", database.c_str());
 
-
+    // must set params for zmq logging BEFORE calling logging init
+    zmq::context_t* context= new zmq::context_t(1);
+    assert(context);
+    pantheios_be_zmq_set_params(context, "tcp://127.0.0.1:5556");
+    sleep(1);
     // setup logging
     std::string logFileName = createTimestampedLogFilename("trade_serializer");
     logging_init(logFileName.c_str());
-    pan::log_NOTICE("Logging to: ", logFileName.c_str()); 
     // initialize zmq context
-    zmq::context_t* context= new zmq::context_t(1);
-    assert(context);
+    pan::log_ALERT("Starting trade serializer");
+    pan::log_NOTICE("Connecting to database");
+    pan::log_NOTICE("dbhost: ", url.c_str());
+    pan::log_NOTICE("user: ", user.c_str());
+    pan::log_NOTICE("database: ", database.c_str());
+    pan::log_NOTICE("Logging to: ", logFileName.c_str()); 
 
     try {
 

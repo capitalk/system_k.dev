@@ -36,7 +36,7 @@ LIBS= -L/usr/local/lib64/mysql \
 
 PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
         -l pantheios.1.core.gcc44.file64bit \
-        -l pantheios.1.fe.simple.gcc44.file64bit.debug \
+        -l pantheios.1.fe.N.gcc44.file64bit.debug \
         -l pantheios.1.util.gcc44.file64bit \
 		-l pantheios.1.be.N.gcc44.file64bit \
         -l pantheios.1.bec.file.gcc44.file64bit \
@@ -58,8 +58,11 @@ all: protos trade_serializer
 
 include $(PROTO)/Makefile.inc
 
-trade_serializer : trade_serializer.o logging.o jenkins_hash.o timing.o time_utils.o $(PROTOBUF_OBJS)
-	$(CC) $(CFLAGS) trade_serializer.o logging.o jenkins_hash.o timing.o time_utils.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
+trade_serializer : trade_serializer.o logging.o jenkins_hash.o timing.o time_utils.o pantheios_be_zmq.o $(PROTOBUF_OBJS)
+	$(CC) $(CFLAGS) trade_serializer.o logging.o jenkins_hash.o timing.o time_utils.o pantheios_be_zmq.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
+
+pantheios_be_zmq.o: /home/timir/pantheios_be_zmq/pantheios_be_zmq.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
 jenkins_hash.o: $(UTILS_SRC)/jenkins_hash.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
