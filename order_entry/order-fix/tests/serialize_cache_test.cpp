@@ -2,13 +2,14 @@
 #include <google/dense_hash_map>
 #include <gtest/gtest.h>
 #include <string>
-#include "utils/jenkins_hash.h"
 #include "msg_cache.h"
-#include "logging.h"
+#include "utils/jenkins_hash.h"
+#include "utils/logging.h"
+#include "utils/types.h"
 
 using google::dense_hash_map;      // namespace where class lives by default
 using std::tr1::hash;  // or __gnu_cxx::hash, or maybe tr1::hash, depending on your OS
-
+using namespace capk;
 
 //typedef dense_hash_map<const int, std::string, std::tr1::hash<const int>,  eq> TESTMAP;
 //

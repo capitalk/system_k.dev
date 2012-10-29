@@ -41,6 +41,18 @@ _stop(false)
 	assert(_ping_addr.length()>0);
 	//assert(in_threads > 0 && in_threads < 4);
 	assert(out_threads > 0 && out_threads < 4);
+
+    memset(_strategy_cache_filename, 0, sizeof(_strategy_cache_filename));
+    snprintf(_strategy_cache_filename, sizeof(_strategy_cache_filename), "SC.%d.cache", _interface->getVenueID());
+#ifdef DEBUG
+    pan::log_DEBUG("Using strategy cache filename: ", _strategy_cache_filename);
+#endif
+
+    memset(_order_cache_filename, 0, sizeof(_order_cache_filename));
+    snprintf(_order_cache_filename, sizeof(_order_cache_filename), "OC.%d.cache", _interface->getVenueID());
+#ifdef DEBUG
+    pan::log_DEBUG("Using strategy cache filename: ", _order_cache_filename);
+#endif
 }
 
 MsgProcessor::~MsgProcessor()
@@ -192,7 +204,7 @@ pan::log_DEBUG("Receiving header: ", pan::blob(header1.data(), header1.size()));
 		T0(a)	
 #endif
 		_scache.add(sid, ret_route);
-		_scache.write(STRATEGY_CACHE_FILENAME);	
+		_scache.write(_strategy_cache_filename);	
 #ifdef LOG
 		TN(b)
 		TDIFF(tdiff, a, b)	
@@ -242,7 +254,7 @@ pan::log_DEBUG("Receiving header: ", pan::blob(header1.data(), header1.size()));
 #endif 
 		_ocache.add(oid, op);
 		T0(a)	
-		_ocache.write(ORDER_CACHE_FILENAME);	
+		_ocache.write(_order_cache_filename);	
 		TN(b)
 #ifdef LOG
 		TDIFF(tdiff, a, b)	
@@ -334,10 +346,10 @@ void
 MsgProcessor::init()
 {
 	bool bOK;
-	bOK =_scache.read(STRATEGY_CACHE_FILENAME);
+	bOK =_scache.read(_strategy_cache_filename);
 	//assert(bOK);// blow up if we can't read the cache file
 #ifdef SERIALIZE_ORDER_CACHE
-	bOK =_ocache.read(ORDER_CACHE_FILENAME);
+	bOK =_ocache.read(_order_cache_filename);
 	//assert(bOK);// blow up if we can't read the cache file
 #endif // SERIALIZE_CACHE_FILE
 

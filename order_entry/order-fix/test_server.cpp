@@ -29,6 +29,7 @@ main(int argc, char **argv)
     capk::MsgProcessor k(&ctx,
 				"tcp://127.0.0.1:9999", 
 				"inproc://msgout",
+                "tcp://127.0.0.1:7999",
 				1,
 				&noi);
 	noi.setMsgProcessor(&k);

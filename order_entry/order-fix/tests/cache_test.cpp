@@ -7,6 +7,10 @@
 #include "utils/jenkins_hash.h"
 
 #include "gtest/gtest.h"
+#include "utils/types.h"
+#include "utils/constants.h"
+
+using namespace capk;
 
 // Number of test items default
 //#define TEST_SIZE 2048
@@ -109,26 +113,26 @@ TEST(CacheTest, GetSet) {
 void
 print_node(const char* prefix, node_t& node) {
 		std::cerr << prefix << ": ";
-		for (int i = 0; i<MSG_ADDR_LEN; i++) { std::cerr << node.addr[i];}; std::cerr << std::endl;
+		for (int i = 0; i<ZMQ_ADDR_LEN; i++) { std::cerr << node.addr[i];}; std::cerr << std::endl;
 }
 
 TEST(CacheTest, RouteModification) {
 	// Test node and route add/get
 	//
 	route_t ret_route;	
-	char node1[MSG_ADDR_LEN]; memset(node1, 'a', sizeof(node1));
+	char node1[ZMQ_ADDR_LEN]; memset(node1, 'a', sizeof(node1));
 	//print_node("node1", node1);
 
-	char node2[MSG_ADDR_LEN]; memset(node2, 'b', sizeof(node2));
+	char node2[ZMQ_ADDR_LEN]; memset(node2, 'b', sizeof(node2));
 	//print_node("node2", node1);
 
-	char node3[MSG_ADDR_LEN];  memset(node3, 'c', sizeof(node3));
+	char node3[ZMQ_ADDR_LEN];  memset(node3, 'c', sizeof(node3));
 	//print_node("node3", node1);
 
-	char node4[MSG_ADDR_LEN];  memset(node4, 'd', sizeof(node4));
+	char node4[ZMQ_ADDR_LEN];  memset(node4, 'd', sizeof(node4));
 	//print_node("node4", node1);
 
-	char node5[MSG_ADDR_LEN];  memset(node5, 'e', sizeof(node5));
+	char node5[ZMQ_ADDR_LEN];  memset(node5, 'e', sizeof(node5));
 	//print_node("node5", node1);
 
 	int ret;
@@ -154,7 +158,7 @@ TEST(CacheTest, RouteModification) {
 	EXPECT_EQ(0, ret);
 /*
 	std::cerr << "cur_node (list): " ;
-	for (int i = 0; i<MSG_ADDR_LEN; i++) { std::cerr << cur_node.addr[i];}; std::cerr << std::endl;
+	for (int i = 0; i<ZMQ_ADDR_LEN; i++) { std::cerr << cur_node.addr[i];}; std::cerr << std::endl;
 */
 
 	// current node is NOT s3 - it should be node4
@@ -165,7 +169,7 @@ TEST(CacheTest, RouteModification) {
 		node_t* pnode = new node_t();
 		ret = ret_route.getNode(i, pnode);
 		EXPECT_EQ(0, ret);
-		//for (int i = 0; i<MSG_ADDR_LEN; i++) { std::cerr << pnode->addr[i];}; std::cerr << std::endl;
+		//for (int i = 0; i<ZMQ_ADDR_LEN; i++) { std::cerr << pnode->addr[i];}; std::cerr << std::endl;
 	}
 	
 	// copy the return route 
@@ -176,7 +180,7 @@ TEST(CacheTest, RouteModification) {
 		node_t* pnode = new node_t();
 		ret = copyroute.getNode(i, pnode);
 		EXPECT_EQ(0, ret);
-		//for (int i = 0; i<MSG_ADDR_LEN; i++) { std::cerr << pnode->addr[i];}; std::cerr << std::endl;
+		//for (int i = 0; i<ZMQ_ADDR_LEN; i++) { std::cerr << pnode->addr[i];}; std::cerr << std::endl;
 	}
 
 	// Causes assertion failure in stack - too many routes

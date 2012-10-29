@@ -415,7 +415,23 @@ Application::onMessage(const FIX42::Heartbeat& message,
 #ifdef LOG
 	pan::log_DEBUG(message.toString());		
 #endif
+    /*
+    // PART 1 - Message type
+    zmq::message_t msg_type_msg(sizeof(capk::msg_t));
+    *(static_cast<int*>(msg_type_msg.data())) = capk::HEARTBEAT;
+    _pzmq_serialization_sock->send(msg_type_msg, ZMQ_SNDMORE);
+
+    // PART 2 - Message body
+    zmq::message_t heartbeat_msg(er.ByteSize());;
+    er.SerializeToArray(heartbeat_msg.data(), 
+           serialize_new_order_msg.size()); 
+    bool sendOK = _pzmq_serialization_sock->send(heartbeat_msg, 0);
+    if (sendOK == false) {
+        pan::log_CRITICAL("FAILED TO SEND HEARTBEAT FIX42\n"); 
+    } 
+    */
 }
+
 
 void 
 Application::onMessage(const FIX43::Heartbeat& message, 
@@ -753,6 +769,7 @@ Application::onMessage(const FIX42::ExecutionReport& message,
         er->SerializeToArray(dataframe.data(), dataframe.size());
         sndOK = _pzmq_strategy_reply_sock->send(dataframe, 0);
         assert(sndOK);
+    pan::log_CRITICAL("----------------------------------------------------------------> INSIDE SEND OnMessage(ExecutionReport42) forwarded protobuf:\n", er->DebugString());
 
         // persist the order/trade info
         send_to_serialization_service(strategy_id, *er);

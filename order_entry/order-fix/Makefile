@@ -6,6 +6,7 @@ UTILS=$(COMMON)/src/c++
 UTILS_SRC=$(UTILS)/utils
 PROTO=$(COMMON)/proto
 PANTHEIOS_ROOT=/opt/src/pantheios
+PANTHEIOS_EXT=/home/timir/pantheios_be_zmq
 TESTS=./tests
 
 INCLUDE= -I $(PANTHEIOS_ROOT)/include \
@@ -27,7 +28,7 @@ LIBS= -L/usr/local/lib \
 # N.B. MAKE SURE YOU LINK WITH THE RIGHT LIBS (check the compiler gccXX)
 PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
         -l pantheios.1.core.gcc44.file64bit \
-        -l pantheios.1.fe.simple.gcc44.file64bit.debug \
+        -l pantheios.1.fe.N.gcc44.file64bit.debug \
         -l pantheios.1.util.gcc44.file64bit \
 		-l pantheios.1.be.N.gcc44.file64bit \
         -l pantheios.1.bec.file.gcc44.file64bit \
@@ -47,8 +48,8 @@ all: protos order-fix
 
 include $(PROTO)/Makefile.inc
 
-order-fix : order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o venue_utils.o $(PROTOBUF_OBJS)
-	$(CC) $(LDFLAGS) order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o venue_utils.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
+order-fix : order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o venue_utils.o pantheios_be_zmq.o $(PROTOBUF_OBJS)
+	$(CC) $(LDFLAGS) order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o venue_utils.o pantheios_be_zmq.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
 
 order-fix.o: order-fix.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
@@ -56,6 +57,9 @@ order-fix.o: order-fix.cpp
 application.o: application.cpp
 	#$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) application.cpp  
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<  
+
+pantheios_be_zmq.o: $(PANTHEIOS_EXT)/pantheios_be_zmq.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
 logging.o: $(UTILS_SRC)/logging.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<

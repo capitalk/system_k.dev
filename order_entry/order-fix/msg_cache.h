@@ -18,8 +18,8 @@ using google::dense_hash_map;
 using std::tr1::hash; // for hash function - specialized to Jenkns hash 
 
 
-static const char* const STRATEGY_CACHE_FILENAME = "StrategyRouteMap.cache";
-static const char* const ORDER_CACHE_FILENAME = "OrderStatusMap.cache";
+//static const char* const STRATEGY_CACHE_FILENAME = "StrategyRouteMap.cache";
+//static const char* const ORDER_CACHE_FILENAME = "OrderStatusMap.cache";
 
 
 namespace std {

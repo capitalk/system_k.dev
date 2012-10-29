@@ -117,8 +117,10 @@ class MsgProcessor
 		capk::OrderInterface* _interface;
 
 		// cache for current orders
+        char _order_cache_filename[256];
 		KOrderCache _ocache;
 		// cache for strategy reply routes
+        char _strategy_cache_filename[256];
 		KStrategyCache _scache;
 
 		bool _stop;
