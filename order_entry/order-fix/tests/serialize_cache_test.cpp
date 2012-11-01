@@ -72,6 +72,8 @@ TEST(Serialization, SerializeSIDCache)
 // TEST STRATEGY CACHE SERIALIZATION
 	KStrategyCache sc1;
 	strategy_id_t sid1(true);
+    uuidbuf_t buf;
+    std::cerr << "sid1:(" << sid1.c_str(buf) <<")" << std::endl;
 	route_t r1;
 	r1.addNode("11111111111111111", 17);
 	r1.addNode("22222222222222222", 17);
@@ -114,7 +116,7 @@ TEST(Serialization, SerializeSIDCache)
 // SANITY PRINT
 	StrategyRoute_map::iterator it1 = pscm1->begin();
 	StrategyRoute_map::iterator it2 = pscm2->begin();
-	char uuidbuf[UUID_STRLEN];
+	uuidbuf_t uuidbuf;
 	for (it1 = pscm1->begin(), it2 = pscm2->begin(); it1 != pscm1->end(), it2 != pscm2->end(); it1++, it2++) {
 		std::cout << "Comparing1: " << it1->first.c_str(uuidbuf) << std::endl;
 		std::cout << "Comparing2: " << it2->first.c_str(uuidbuf) << std::endl;
@@ -165,7 +167,7 @@ TEST(Serialization, SerializeOIDCache)
 // SANTIY PRINT
 	OrderInfo_map::iterator it1 = poim1->begin();
 	OrderInfo_map::iterator it2 = poim2->begin();
-	char uuidbuf[UUID_STRLEN];
+	uuidbuf_t uuidbuf;
 
 	std::cout << "Cache1 size(): " << poim1->size() << std::endl;
 	std::cout << "Cache2 size(): " << poim2->size() << std::endl;

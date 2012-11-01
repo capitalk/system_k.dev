@@ -24,15 +24,15 @@ read_cache(const char* filename) {
 
 void
 print_cache(StrategyRoute_map* pcache) {
-	char uuidbuf[UUID_STRLEN];
+    capk::uuidbuf_t uuidbuf;
 	StrategyRoute_map::iterator cacheiter;
 	cacheiter = pcache->begin(); 
     while (cacheiter != pcache->end()) {
         std::cout << "UUID: " << cacheiter->first.c_str(uuidbuf) << std::endl;
         std::cout << "NumNodes: " << cacheiter->second.num_nodes << std::endl;
         std::cout << "Routing table: " << std::endl;
-        node_t node;
-        route_t route = cacheiter->second;
+        capk::node_t node;
+        capk::route_t route = cacheiter->second;
         for (size_t i = 0; i<cacheiter->second.num_nodes; i++) {
             route.getNode(i, &node);
             fprintf(stderr, "\t%d\n", (*((int*)(node.data()))));

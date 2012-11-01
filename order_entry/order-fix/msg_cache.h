@@ -240,8 +240,26 @@ class KStrategyCache
 		size_t size() { return _cache.size(); };
 
 		void print_stats() {
+            pan::log_DEBUG("<Strategy cache statistics>");
 			pan::log_DEBUG("Cache size: ", pan::integer(_cache.size()));
 			pan::log_DEBUG("Cache bucket_count: ", pan::integer(_cache.bucket_count()));
+            capk::uuidbuf_t uuidbuf;
+            StrategyRoute_map::iterator cacheiter;
+            cacheiter = _cache.begin();
+            while (cacheiter != _cache.end()) {
+                pan::log_DEBUG("UUID: ", cacheiter->first.c_str(uuidbuf));
+                pan::log_DEBUG("NumNodes: ", pantheios::integer(cacheiter->second.num_nodes));
+                pan::log_DEBUG("Routing table: ");
+                capk::node_t node;
+                capk::route_t route = cacheiter->second;
+                for (size_t i = 0; i<cacheiter->second.num_nodes; i++) {
+                    route.getNode(i, &node);
+                    pan::log_DEBUG("\t", pantheios::integer(*((int*)(node.data()))));
+                }
+                cacheiter++;
+            }
+
+            pan::log_DEBUG("</Strategy cache statistics>");
 		}
 
 	private:

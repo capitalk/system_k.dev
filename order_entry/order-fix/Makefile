@@ -104,7 +104,7 @@ test:
 #protos testsvr testcli req rep uuid_test cache_test serialize_cache_test
 
 clean :
-	rm -f *.o order-fix req rep testsvr testcli uuid_test cache_test hash_test serialize_cache_test
+	rm -f *.o order-fix req rep testsvr testcli uuid_test cache_test hash_test serialize_cache_test *.cache
 
 install :
 	echo "No install available yet"

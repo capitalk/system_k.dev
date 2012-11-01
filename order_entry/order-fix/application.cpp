@@ -101,11 +101,16 @@ void Application::fromAdmin(const FIX::Message& message,
     FIX::IncorrectTagValue, 
     FIX::RejectLogon )
 {
-#ifdef LOG
-		pan::log_DEBUG("RECEIVED MSG fromAdmin(", message.toString() ,")");
-#endif 
 	FIX::BeginString beginString;
+    FIX::MsgType msgType;
 	message.getHeader().getField(beginString);
+	message.getHeader().getField(msgType);
+    if (msgType.getValue() != "0") {
+#ifdef LOG
+		pan::log_DEBUG("RECEIVED MSG fromAdmin(", message.toString() ,") - skipping heartbeats", "(TYPE=", msgType.getValue(), ")");
+#endif 
+    }
+
     crack(message, sessionID);
 /*
 	if (beginString == FIX::BeginString_FIX42) {
@@ -127,11 +132,14 @@ void
 Application::toAdmin(FIX::Message& message, 
                     const FIX::SessionID& sessionID) 
 {
-#ifdef LOG
-		pan::log_DEBUG("SENDING MSG toAdmin(", message.toString(), ")");
-#endif
 	FIX::MsgType msgType;
 	message.getHeader().getField(msgType);
+	if (msgType.getValue() != "0") { 
+#ifdef LOG
+		pan::log_DEBUG("SENDING MSG toAdmin(", message.toString(), ")");
+		//pan::log_DEBUG("Sending Heartbeat");
+#endif
+	}	
 	if (msgType.getValue() == "1") { 
 #ifdef LOG
 		pan::log_DEBUG("Sending TestRequest");
@@ -148,11 +156,6 @@ Application::toAdmin(FIX::Message& message,
 		pan::log_CRITICAL("Sending Reject");
 #endif 
     }
-	if (msgType.getValue() == "0") { 
-#ifdef LOG
-		pan::log_DEBUG("Sending Heartbeat");
-#endif
-	}	
 	if (msgType.getValue() == "4") {
 #ifdef LOG
 		pan::log_DEBUG("Sending SequenceReset(", message.toString(), ")");
@@ -413,7 +416,7 @@ Application::onMessage(const FIX42::Heartbeat& message,
                         const FIX::SessionID& sessionID) 
 {
 #ifdef LOG
-	pan::log_DEBUG(message.toString());		
+	//pan::log_DEBUG(message.toString());		
 #endif
     /*
     // PART 1 - Message type
