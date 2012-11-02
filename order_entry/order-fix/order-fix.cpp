@@ -229,7 +229,7 @@ int main( int argc, char** argv )
         }
 
         if (my_config.order_ping_addr() == "") {
-            std::cout << "Order interface ping address is not set!" << std::endl;
+            std::cout << "Order interface ping address is not set - exiting!" << std::endl;
             exit(-1);
         }
         else {
@@ -237,12 +237,25 @@ int main( int argc, char** argv )
         }
 
         if (my_config.order_interface_addr() == "") {
-            std::cout << "Order interface listener address is not set!" << std::endl;
+            std::cout << "Order interface listener address is not set - exiting!" << std::endl;
             exit(-1);
         }
         else {
             config.orderListenerAddr = my_config.order_interface_addr();
         }
+
+        if (my_config.logging_broadcast_addr() == "" || my_config.has_logging_broadcast_addr() == false) {
+            std::cout << "Logging broadcast address is not set" << std::endl;
+            config.loggingBroadcastAddr = my_config.logging_broadcast_addr();
+        }
+
+        if (my_config.has_use_synthetic_cancel_replace()) {
+            std::cout << "Using SYNTHETIC cancel/replace: "  << my_config.use_synthetic_cancel_replace() << std::endl;
+        }
+        else {
+            std::cout << "Use synthetic cancel/replace is not set" << std::endl;
+        }
+
 /*
 		// Order interface listener addr 
 		config.orderListenerAddr = dict.has("OrderListenerAddr") ? dict.getString("OrderListenerAddr").c_str() : "";

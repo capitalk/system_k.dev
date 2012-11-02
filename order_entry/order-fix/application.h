@@ -135,6 +135,7 @@ struct ApplicationConfig {
 	capk::venue_id_t venue_id;
     std::string orderListenerAddr;
     std::string pingListenerAddr;
+    std::string loggingBroadcastAddr;
 }; 
 
 class Application :
