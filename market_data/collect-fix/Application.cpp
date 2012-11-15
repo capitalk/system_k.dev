@@ -995,14 +995,21 @@ Application::full_refresh_template(const T& message, const FIX::SessionID& sessi
                 _config.venue_id);
 // write log if needed.
 		pLog = getStream(symbol.getValue());
+#ifdef DEBUG
         if (pLog == NULL) {
 		    std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
-        } else {
-            if (_isLogging) {
-                *pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
+        } 
+#endif
+        if (_isLogging && pLog != NULL) {
+            *pLog << "OB," 
+                << pBook->getName() 
+                << "," 
+                << pBook->getEventTime() 
+                << "," 
+                << pBook->getExchangeSendTime() 
+                << "\n";
 		    *pLog << *pBook;
-            }
-		}
+        }
     }
 }
 
@@ -1378,15 +1385,22 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
             //std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK (" << bbprice <<  ", " << baprice << ") XXXXXXXXXXXXXXXXX\n";
         //}
 
+#ifdef DEBUG
 		if (pLog == NULL) {
 		    std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
-        } else {
-            if (_isLogging) {
+        } 
+#endif
+        if (_isLogging && pLog != NULL) {
             // KTK MOVED TO MATCH CONFLUENCE 12/9/2011
-                *pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
+            *pLog << "OB," 
+                << pBook->getName() 
+                << "," 
+                << pBook->getEventTime() 
+                << "," 
+                << pBook->getExchangeSendTime() 
+                << "\n";
 		    *pLog << *pBook;
-            }
-		}
+        }
         
         ptime time_end(microsec_clock::local_time());
         time_duration duration(time_end - time_start);
@@ -1571,27 +1585,35 @@ std::string  remove_bad_filename_chars(const std::string& str) {
 void 
 Application::run()
 {
-    boost::gregorian::date today = boost::gregorian::day_clock::universal_day();
-    std::string dateToday = date_to_string(today); 
-//	std::string dateToday =  to_iso_string(d); 
-    fs::path datePath = _pathToLog / fs::path(dateToday); 
-    if (!fs::exists(datePath)) { fs::create_directory(datePath); }
-
-	// KTK - make sure that this is the date at UTC
 	std::cout << "Application::run()" << "\n";
 
 	std::vector<std::string>::const_iterator it = _symbols.begin();
-	// KTK - Create hash of orderbooks here - OK
-	// Create for each symbol:
-	// 1) OrderBook
-	// 2) Log file	
-	std::string logFileName;
+
+    std::string logFileName;
 	std::ofstream* pLog;
     capk::KBook* pBook = NULL;
 	std::string MIC_prefix = _config.mic_string.length() > 0 ? _config.mic_string + "_" : ""; 
 	std::string symbol; 
 	fs::path fullPathToLog;
+    boost::gregorian::date today;
+    std::string dateToday;
+    fs::path datePath;
 
+    if (_isLogging) {
+        today = boost::gregorian::day_clock::universal_day();
+        dateToday = date_to_string(today); 
+        //	std::string dateToday =  to_iso_string(d); 
+        datePath = _pathToLog / fs::path(dateToday); 
+        if (!fs::exists(datePath)) { 
+            fs::create_directory(datePath); 
+        }
+    }
+
+
+	// KTK - Create hash of orderbooks here - OK
+	// Create for each symbol:
+	// 1) OrderBook
+	// 2) Log file	
 	while(it != _symbols.end() && *it != "") {
         bool isRestart = false;
 		symbol = *it; 
@@ -1602,31 +1624,43 @@ Application::run()
             << symbol 
             << "(" << pBook->getDepth() << ")" 
             << "\n";
-		logFileName = MIC_prefix + remove_bad_filename_chars(symbol) + "_" + dateToday;
-		logFileName.append(".csv");
-        fullPathToLog = datePath / fs::path(logFileName);
-        if (fs::exists(fullPathToLog)) {
-            isRestart = true; 
-        }
-		pLog =  new std::ofstream(fullPathToLog.string(), std::ios::app | std::ios::out);
-        if (isRestart) { 
-            timespec evtTime;
-            clock_gettime(CLOCK_MONOTONIC, &evtTime);
-            if (_isLogging) {
-                *pLog << "RESTART: " << evtTime << "\n";
+        if (_isLogging) {
+		    logFileName = MIC_prefix + remove_bad_filename_chars(symbol) + "_" + dateToday;
+		    logFileName.append(".csv");
+            fullPathToLog = datePath / fs::path(logFileName);
+            if (fs::exists(fullPathToLog)) {
+                isRestart = true; 
             }
-		        std::cout << "Appening to log for: " << symbol  << " as (" << fullPathToLog.string() << ") " << pLog->is_open()   << "\n";
-        }
-        else {
-		    std::cout << "Created new log for: " << symbol  << " as (" << fullPathToLog.string() << ") " << pLog->is_open()   << "\n";
-            timespec evtTime;
-            clock_gettime(CLOCK_MONOTONIC, &evtTime);
-            if (_isLogging) {
+		    pLog =  new std::ofstream(fullPathToLog.string(), std::ios::app | std::ios::out);
+            if (isRestart) { 
+                timespec evtTime;
+                clock_gettime(CLOCK_MONOTONIC, &evtTime);
+                if (_isLogging) {
+                    *pLog << "RESTART: " << evtTime << "\n";
+                }
+		            std::cout << "Appening to log for: " 
+                        << symbol  
+                        << " as (" 
+                        << fullPathToLog.string() 
+                        << ") " 
+                        << pLog->is_open()   
+                        << "\n";
+            }
+            else {
+		        std::cout << "Created new log for: " 
+                    << symbol  
+                    << " as (" << fullPathToLog.string() 
+                    << ") " 
+                    << pLog->is_open() 
+                    << "\n";
+                timespec evtTime;
+                clock_gettime(CLOCK_MONOTONIC, &evtTime);
+                ///if (_isLogging) {
                 *pLog << pBook->getOutputVersionString() << "," << pBook->getName() << "," << pBook->getDepth() << "," << evtTime << "\n"; 
+                ///}
             }
-        }
-        
-		addStream(symbol, pLog);
+		    addStream(symbol, pLog);
+        } 
 		addBook(symbol, pBook);
 		std::cout << "NUM BOOKS: " << _symbolToBook.size() << "\n";
 		it++;
