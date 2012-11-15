@@ -38,6 +38,8 @@ def make_protobuf(section, config, single_venue_config):
     single_venue_config.order_interface_addr = config.get(section, 'order_interface_addr')
     single_venue_config.order_ping_addr = config.get(section, 'order_ping_addr')
     single_venue_config.market_data_broadcast_addr = config.get(section, 'market_data_broadcast_addr')
+    if config.has_option(section, 'use_synthetic_cancel_replace'):
+        single_venue_config.use_synthetic_cancel_replace = config.getboolean(section, 'use_synthetic_cancel_replace')
 
 def run(config_filename):
 
