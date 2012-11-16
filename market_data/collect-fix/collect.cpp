@@ -35,21 +35,18 @@
 #include <fstream>
 #include <cassert>
 
-//#include "getopt-repl.h"
-
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp> 
 #include <boost/spirit/include/qi.hpp>
 
-
 #include <zmq.hpp>
 
 #include "proto/spot_fx_md_1.pb.h"
 #include "proto/venue_configuration.pb.h"
 
-#include "utils/venue_utils.h"
+#include "utils/config_server.h"
 #include "utils/config_server.h"
 
 namespace po = boost::program_options;

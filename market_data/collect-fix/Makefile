@@ -39,13 +39,13 @@ all: protos collect
 
 include $(PROTO)/Makefile.inc
 
-collect : Application.o  venue_utils.o jenkins_hash.o liborder_book2.a time_utils.o collect.o $(PROTOBUF_OBJS)
-	$(CC) $(CFLAGS) venue_utils.o jenkins_hash.o time_utils.o Application.o collect.o $(PROTOBUF_OBJS) $(ORDERBOOK_DIR)/liborder_book2.a $(LIBS) -o $@ 
+collect : Application.o  config_server.o jenkins_hash.o liborder_book2.a time_utils.o collect.o $(PROTOBUF_OBJS)
+	$(CC) $(CFLAGS) config_server.o jenkins_hash.o time_utils.o Application.o collect.o $(PROTOBUF_OBJS) $(ORDERBOOK_DIR)/liborder_book2.a $(LIBS) -o $@ 
 
 jenkins_hash.o: $(UTILS_SRC)/jenkins_hash.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-venue_utils.o: $(UTILS_SRC)/venue_utils.cpp
+config_server.o: $(UTILS_SRC)/config_server.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 time_utils.o: $(UTILS_SRC)/time_utils.cpp
