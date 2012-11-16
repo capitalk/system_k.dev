@@ -1,6 +1,6 @@
-#include "logging.h"
-#include "timing.h"
-#include "venue_utils.h"
+#include "utils/logging.h"
+#include "utils/timing.h"
+#include "utils/config_server.h"
 #include "gtest/gtest.h"
 #include <zmq.h>
 

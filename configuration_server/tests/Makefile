@@ -1,19 +1,30 @@
 CC=g++
 
+ROOT=../../..
 PROTOC=protoc
-PROTO=../../../collectors/proto
-
+COMMON=$(ROOT)/common
+PROTO=$(COMMON)/proto
 
 SRC=.
 
 BOOST=/usr/local/boost
-COLLECTORS=../../../collectors
-UTILS=../../../collectors/utils
+COLLECTORS=$(ROOT)/collectors
+UTILS=$(ROOT)/common/src/c++/utils
 
-INCLUDE=-I$(BOOST) -I/usr/local/include/ \
-        -I/usr/local/src/quickfix/include -I.. -I$(COLLECTORS) \
-		-I $(PANTHEIOS_ROOT)/include -I $(STLSOFT)/include \
-		-I $(UTILS)
+PANTHEIOS_EXT=/home/timir/pantheios_be_zmq
+
+
+INCLUDE=-I$(BOOST) \
+        -I/usr/local/src/quickfix/include \
+		-I.. \
+		-I. \
+		-I$(COLLECTORS) \
+		-I $(PANTHEIOS_ROOT)/include \
+		-I $(STLSOFT)/include \
+		-I $(UTILS)/ \
+		-I $(ROOT)/common/src/c++ \
+		-I $(PROTO)\
+		-I $(PROTO)/proto 
 
 LIBS= -L/usr/local/src/quickfix/lib/ \
 		-L/usr/local/lib \
@@ -29,7 +40,7 @@ LIBS= -L/usr/local/src/quickfix/lib/ \
 
 PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
         -l pantheios.1.core.gcc44.file64bit \
-        -l pantheios.1.fe.simple.gcc44.file64bit.debug \
+        -l pantheios.1.fe.N.gcc44.file64bit.debug \
         -l pantheios.1.util.gcc44.file64bit \
 		-l pantheios.1.be.N.gcc44.file64bit \
         -l pantheios.1.bec.file.gcc44.file64bit \
@@ -60,8 +71,11 @@ test_configuration_server.o: $(SRC)/test_configuration_server.cpp
 strategy_test.o: $(SRC)/strategy_test.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-test_configuration_server: test_configuration_server.o logging.o timing.o venue_utils.o $(PROTOBUF_OBJS)
-	$(CC) $(CFLAGS) test_configuration_server.o logging.o timing.o venue_utils.o $(PROTOBUF_OBJS) $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+test_configuration_server: test_configuration_server.o logging.o timing.o config_server.o pantheios_be_zmq.o $(PROTOBUF_OBJS)
+	$(CC) $(CFLAGS) test_configuration_server.o logging.o timing.o config_server.o pantheios_be_zmq.o $(PROTOBUF_OBJS) $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+
+pantheios_be_zmq.o: $(PANTHEIOS_EXT)/pantheios_be_zmq.cpp
+	    $(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
 logging.o: $(UTILS)/logging.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
@@ -69,7 +83,7 @@ logging.o: $(UTILS)/logging.cpp
 timing.o: $(UTILS)/timing.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-venue_utils.o: $(UTILS)/venue_utils.cpp 
+config_server.o: $(UTILS)/config_server.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 # PROTOS

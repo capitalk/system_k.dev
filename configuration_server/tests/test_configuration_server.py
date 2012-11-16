@@ -29,6 +29,8 @@ print "Configuration request returned: "
 print configuration
 print configuration.trade_serialization_addr
 print configuration.recovery_listener_addr
+print configuration.aggregated_bbo_book_addr
+print configuration.aggregated_bbo_book_id
 
 for venue_config in configuration.configs:
     print venue_config.mic_name

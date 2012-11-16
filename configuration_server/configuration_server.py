@@ -23,6 +23,8 @@ def parse(filename):
          if s == 'global':
              full_config.trade_serialization_addr  = config.get(s, 'trade_serialization_addr')
              full_config.recovery_listener_addr  = config.get(s, 'recovery_listener_addr')
+             full_config.aggregated_bbo_book_addr  = config.get(s, 'aggregated_bbo_book_addr')
+             full_config.aggregated_bbo_book_id  = config.getint(s, 'aggregated_bbo_book_id')
          else:
             i+=1
             print ("Adding venue: %d " % i)
