@@ -1,11 +1,13 @@
 CC=g++
 
+ROOT=../../../..
+SYS_ROOT=$(ROOT)/capitalk
 
-COMMON=../../../common
+
+COMMON=$(SYS_ROOT)/common
 UTILS=$(COMMON)/src/c++
 UTILS_SRC=$(UTILS)/utils
 PROTO=$(COMMON)/proto
-PANTHEIOS_ROOT=/opt/src/pantheios
 PANTHEIOS_EXT=/home/timir/pantheios_be_zmq
 TESTS=./tests
 

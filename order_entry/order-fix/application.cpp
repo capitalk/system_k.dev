@@ -772,7 +772,6 @@ Application::onMessage(const FIX42::ExecutionReport& message,
         er->SerializeToArray(dataframe.data(), dataframe.size());
         sndOK = _pzmq_strategy_reply_sock->send(dataframe, 0);
         assert(sndOK);
-    pan::log_CRITICAL("----------------------------------------------------------------> INSIDE SEND OnMessage(ExecutionReport42) forwarded protobuf:\n", er->DebugString());
 
         // persist the order/trade info
         send_to_serialization_service(strategy_id, *er);
