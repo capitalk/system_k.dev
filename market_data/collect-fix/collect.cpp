@@ -38,16 +38,18 @@ namespace qi = boost::spirit::qi;
 
 void sighandler(int sig);
 
-// Global pointers for signal handlers to cleanup properly
-//FIX::ThreadedSocketInitiator* pinitiator;
+/*
+ * Global pointers for signal handlers to cleanup properly
+ */
 FIX::SocketInitiator* pinitiator;
 Application* papplication;
 
-// ZMQ Globals - can't have these go out of scope
-//zmq::context_t context(1);
-//zmq::socket_t publisher(context, ZMQ_PUB);
+/*
+ * ZMQ Globals - can't have these go out of scope
+ */
 void *g_zmq_context;
 void *pub_socket;
+
 
 capkproto::configuration all_venue_config;
 
@@ -55,17 +57,20 @@ std::vector<std::string>
 readSymbols(std::string symbolFileName)
 {
 	std::string line;
-	std::vector<std::string> symbols; 
+	std::vector<std::string> symbols;
 	std::ifstream symbolsFile(symbolFileName);
-	//std::cerr << "---->BEGIN CONFIG" << std::endl;
+#ifdef LOG
+    pan::log_DEBUG("Reading symbol file: ", symbolFileName);
+#endif
 	if (symbolsFile.is_open()) {
 		while(symbolsFile.good()) {
 			std::getline(symbolsFile, line);
-			//std::cerr << "LINE: " << line << std::endl;
+#ifdef LOG
+            pan::log_DEBUG("Symbol: ",  pan::integer(line));
+#endif
 			symbols.push_back(line);	
 		}
 	}
-	//std::cerr << "---->END CONFIG" << std::endl;
 	return symbols;
 
 }
