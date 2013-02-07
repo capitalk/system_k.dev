@@ -1,21 +1,3 @@
-/****************************************************************************
-** Copyright (c) quickfixengine.org	All rights reserved.
-**
-** This file is part of the QuickFIX FIX Engine
-**
-** This file may be distributed under the terms of the quickfixengine.org
-** license as defined by quickfixengine.org and appearing in the file
-** LICENSE included in the packaging of this file.
-**
-** This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
-** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-**
-** See http://www.quickfixengine.org/LICENSE for licensing information.
-**
-** Contact ask@quickfixengine.org if any conditions of this licensing are
-** not clear to you.
-**
-****************************************************************************/
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4503 4355 4786 )
@@ -56,16 +38,18 @@ namespace qi = boost::spirit::qi;
 
 void sighandler(int sig);
 
-// Global pointers for signal handlers to cleanup properly
-//FIX::ThreadedSocketInitiator* pinitiator;
+/*
+ * Global pointers for signal handlers to cleanup properly
+ */
 FIX::SocketInitiator* pinitiator;
 Application* papplication;
 
-// ZMQ Globals - can't have these go out of scope
-//zmq::context_t context(1);
-//zmq::socket_t publisher(context, ZMQ_PUB);
+/*
+ * ZMQ Globals - can't have these go out of scope
+ */
 void *g_zmq_context;
 void *pub_socket;
+
 
 capkproto::configuration all_venue_config;
 
@@ -73,17 +57,20 @@ std::vector<std::string>
 readSymbols(std::string symbolFileName)
 {
 	std::string line;
-	std::vector<std::string> symbols; 
+	std::vector<std::string> symbols;
 	std::ifstream symbolsFile(symbolFileName);
-	//std::cerr << "---->BEGIN CONFIG" << std::endl;
+#ifdef LOG
+    pan::log_DEBUG("Reading symbol file: ", symbolFileName);
+#endif
 	if (symbolsFile.is_open()) {
 		while(symbolsFile.good()) {
 			std::getline(symbolsFile, line);
-			//std::cerr << "LINE: " << line << std::endl;
+#ifdef LOG
+            pan::log_DEBUG("Symbol: ",  pan::integer(line));
+#endif
 			symbols.push_back(line);	
 		}
 	}
-	//std::cerr << "---->END CONFIG" << std::endl;
 	return symbols;
 
 }
