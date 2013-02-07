@@ -40,7 +40,7 @@
 
 #include "proto/venue_configuration.pb.h"
 
-#include "utils/venue_utils.h"
+#include "utils/config_server.h"
 #include "utils/logging.h"
 
 namespace po = boost::program_options;

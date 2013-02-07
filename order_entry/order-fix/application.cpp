@@ -768,6 +768,7 @@ Application::onMessage(const FIX42::ExecutionReport& message,
 
         // send the rest of the message using zero-copy since 
         // exection report was created on heap
+        // TODO - KTK good idea except you're not using zero-copy
         zmq::message_t dataframe(er->ByteSize());
         er->SerializeToArray(dataframe.data(), dataframe.size());
         sndOK = _pzmq_strategy_reply_sock->send(dataframe, 0);
@@ -1096,7 +1097,7 @@ void Application::newOrderSingle42(capkproto::new_order_single& nos)
     assert (sid_ok); 
     capk::uuidbuf_t cloidbuf;
     capk::order_id_t cloid;
-	bool order_id_ok = cloid.set(nos.order_id().c_str(), nos.order_id().size());
+	bool order_id_ok = cloid.set(nos.cl_order_id().c_str(), nos.cl_order_id().size());
 	assert(order_id_ok); 
     cloid.c_str(cloidbuf);
 	FIX::ClOrdID clOrdID(cloidbuf);

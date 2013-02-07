@@ -50,8 +50,8 @@ all: protos order-fix
 
 include $(PROTO)/Makefile.inc
 
-order-fix : order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o venue_utils.o pantheios_be_zmq.o $(PROTOBUF_OBJS)
-	$(CC) $(LDFLAGS) order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o venue_utils.o pantheios_be_zmq.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
+order-fix : order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o config_server.o pantheios_be_zmq.o $(PROTOBUF_OBJS)
+	$(CC) $(LDFLAGS) order-fix.o application.o logging.o jenkins_hash.o timing.o  msg_processor.o config_server.o pantheios_be_zmq.o $(LIBS) $(PROTOBUF_OBJS) $(PANTHEIOS_LIBS) -o $@ 
 
 order-fix.o: order-fix.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
@@ -78,7 +78,7 @@ msg_processor.o: msg_processor.cpp
 msg_router.o: msg_router.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-venue_utils.o: $(UTILS_SRC)/venue_utils.cpp
+config_server.o: $(UTILS_SRC)/config_server.cpp
 	$(CC) -c -I $(INCLUDE) $(CFLAGS) $<
 
 #client_order_interface.o: client_order_interface.cpp

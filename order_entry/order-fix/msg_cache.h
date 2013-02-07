@@ -91,7 +91,7 @@ struct OrderCacheSerializer {
 		}
 
 		if (value.second == capk::OrderInfo_ptr()) {
-			std::cerr << "SOMETHING IS ROTTEN HERE" << std::endl;
+			std::cerr << "Error writing hash table in OrderCacheSerialiser - value.second is empty!" << std::endl;
 		}
 		// Write the order id
 		const capk::order_id_t& oid = value.second->getOrderID();
