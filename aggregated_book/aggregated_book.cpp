@@ -4,6 +4,11 @@
 #include <exception>
 
 #include <stdio.h>
+// For printing size_t across platforms where size_t differs
+// @see http://stackoverflow.com/questions/174612/cross-platform-format-string-for-variables-of-type-size-t
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 
 #include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -14,7 +19,7 @@
 #include "utils/zhelpers.hpp"
 #include "utils/time_utils.h"
 #include "utils/bbo_book_types.h"
-#include "utils/venue_utils.h"
+#include "utils/config_server.h"
 #include "utils/venue_globals.h"
 #include "utils/constants.h"
 #include "utils/types.h"
@@ -163,6 +168,7 @@ bool isZeroTimespec(const struct timespec& ts) {
 }
 
 instrument_info instruments[MAX_SYMBOLS];
+int32_t seq_num = 0;
 
 class book_manager
 {
@@ -199,12 +205,13 @@ book_manager::run() {
             // Extract the message from protobufs
             zmq::message_t msg;
             receiver.recv(&msg);
-            fprintf(stderr, "book_manager received: %d bytes\n", msg.size());
+#ifdef DEBUG
+            fprintf(stderr, "book_manager received: %" PRIuPTR" bytes\n",  msg.size());
+#endif
             bbo.ParseFromArray(msg.data(), msg.size());
             capk::venue_id_t bid_venue_id = bbo.bid_venue_id();
             capk::venue_id_t ask_venue_id = bbo.ask_venue_id();
 #ifdef DEBUG
-            //fprintf(stderr, "BID VENUE_ID: %d ASK VENUE_ID: %d", bid_venue_id, ask_venue_id);
             fprintf(stderr, "Received protobuf:\n%s\n", bbo.DebugString().c_str());
 #endif
             char sym[SYMBOL_LEN];
@@ -350,6 +357,7 @@ book_manager::run() {
             ins_bbo.set_ask_venue_id(ba_venue_id);
             ins_bbo.set_ask_price(ba);
             ins_bbo.set_ask_size(bavol); 
+            ins_bbo.set_sequence(seq_num++);
 
             int msgsize = bbo.ByteSize();
             if (msgsize > MSGBUF_SIZ) {

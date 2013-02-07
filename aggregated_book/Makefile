@@ -38,12 +38,12 @@ aggregated_book.o: aggregated_book.cpp
 time_utils.o: $(UTILS_SRC)/time_utils.cpp $(UTILS_SRC)/time_utils.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS_SRC)/time_utils.cpp
 
-venue_utils.o: $(UTILS_SRC)/venue_utils.cpp $(UTILS_SRC)/venue_utils.h
-	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS_SRC)/venue_utils.cpp
+config_server.o: $(UTILS_SRC)/config_server.cpp $(UTILS_SRC)/config_server.h
+	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $(UTILS_SRC)/config_server.cpp
 
 
-aggregated_book : aggregated_book.o time_utils.o venue_utils.o $(PROTOBUF_OBJS)
-	$(CC) $(CFLAGS) aggregated_book.o time_utils.o venue_utils.o $(PROTOBUF_OBJS) $(LIBS) -o $@ 
+aggregated_book : aggregated_book.o time_utils.o config_server.o $(PROTOBUF_OBJS)
+	$(CC) $(CFLAGS) aggregated_book.o time_utils.o config_server.o $(PROTOBUF_OBJS) $(LIBS) -o $@ 
 
 protos : 
 	cd $(PROTO) && make 
