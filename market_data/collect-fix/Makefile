@@ -24,7 +24,7 @@ LIBS= -L$(ORDERBOOK_DIR)/ \
 		-lgtest
 
 CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
-LDFLAGS=-static
+#LDFLAGS=-static
 
 PROTOC=protoc
 
@@ -32,7 +32,7 @@ ifeq ($(dbg),1)
         CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb -g -DLOG# -DDEBUG_BOOK
 endif
 
-LDFLAGS=-static
+#LDFLAGS=-static
 
 
 all: protos collect
