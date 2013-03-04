@@ -66,6 +66,7 @@ protos:
 
 clean :
 	rm -f *.o collect 
+	rm *.pid
 	cd $(PROTO) && make clean
 	cd $(ORDERBOOK_DIR) && make clean
 
