@@ -653,7 +653,7 @@ Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, cons
 	if (_config.printDebug) { 
 	    std::cout << "Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
     }
-    this->full_refresh_template<FIX43::MarketDataIncrementalRefresh>(message,sessionID); 
+    this->full_refresh_template<FIX42::MarketDataIncrementalRefresh>(message,sessionID); 
 /*
     std::ostream* pLog = NULL;
 	FIX::MsgType msgType;
