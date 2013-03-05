@@ -28,7 +28,6 @@ void Application::onLogon(const FIX::SessionID& sessionID )
 	_loggedIn = true;
 	_loggedOut = false;
 	_sessionID = sessionID;
-	std::cout << "Logged in" << "\n";
 	std::cout << "onLogon - " << sessionID << "\n";
 	_loginCount++;
 	//sendTestRequest();

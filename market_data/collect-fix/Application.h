@@ -91,6 +91,7 @@
 #include "order_book.v2/book_types.h"
 #include "utils/types.h"
 #include "utils/time_utils.h"
+#include "utils/logging.h"
 
 enum FIXVersion {
 	FIX_42 = 42,
@@ -110,6 +111,7 @@ struct ApplicationConfig {
 	FIXVersion version;
 	bool printDebug; 
     int marketDepth;
+    std::string loggingBroadcastAddr;
 }; 
 
 class Application :
@@ -118,7 +120,8 @@ class Application :
 {
 public:
 	Application(bool bReset, const ApplicationConfig& config) 
-         :  _loggedIn(false), _loggedOut(false), _loginCount(0), 
+         :  _loggedIn(false), 
+            _loggedOut(false), _loginCount(0), 
             _appMsgCount(0), _resetSequence(bReset), _config(config) {
 
 		std::cout << "Application::Application()" << std::endl;

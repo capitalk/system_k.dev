@@ -41,14 +41,14 @@ void sighandler(int sig);
 /*
  * Global pointers for signal handlers to cleanup properly
  */
-FIX::SocketInitiator* pinitiator;
-Application* papplication;
+FIX::SocketInitiator* g_pinitiator = NULL;
+Application* g_papplication = NULL;
 
 /*
- * ZMQ Globals - can't have these go out of scope
+ * ZMQ Globals 
  */
-void *g_zmq_context;
-void *pub_socket;
+void *g_zmq_context = NULL;
+void *g_pub_socket = NULL;
 
 
 capkproto::configuration all_venue_config;
@@ -92,13 +92,12 @@ int main( int argc, char** argv )
 
 	g_zmq_context = zmq_init(1);
 	assert(g_zmq_context);
-	pub_socket = zmq_socket(g_zmq_context, ZMQ_PUB);
-    zmq_setsockopt(pub_socket, ZMQ_LINGER, &zero, sizeof(zero));
-	assert(pub_socket);
 
+	g_pub_socket = zmq_socket(g_zmq_context, ZMQ_PUB);
+    zmq_setsockopt(g_pub_socket, ZMQ_LINGER, &zero, sizeof(zero));
+	assert(g_pub_socket);
 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
-
 
 	try {
 		po::options_description desc("Allowed options");
@@ -249,7 +248,7 @@ int main( int argc, char** argv )
 		config.printDebug = printDebug; 
 
 		Application application(bReset, config);
-        papplication = &application;
+        g_papplication = &application;
 		application.addSymbols(symbols);
     
         // if user specified an output dir, then put files into date-sorted
@@ -302,9 +301,9 @@ int main( int argc, char** argv )
 
         // ZMQ initialization
         if (isPublishing) {
-            zmq_bind(pub_socket, my_config.market_data_broadcast_addr().c_str());
+            zmq_bind(g_pub_socket, my_config.market_data_broadcast_addr().c_str());
             application.setZMQContext(g_zmq_context);
-            application.setZMQSocket(pub_socket);
+            application.setZMQSocket(g_pub_socket);
         }
         application.setPublishing(isPublishing);
         application.setLogging(isLogging);
@@ -320,16 +319,16 @@ int main( int argc, char** argv )
             std::cout << "Logging with FileStoreFactory" << std::endl;
 		    FIX::FileStoreFactory fileStoreFactory(storeOutputDir);         
 		    FIX::FileLogFactory logFactory(logOutputDir);
-		    pinitiator = new FIX::SocketInitiator(application, fileStoreFactory, settings, logFactory);
+		    g_pinitiator = new FIX::SocketInitiator(application, fileStoreFactory, settings, logFactory);
         }
         else {
             std::cout << "Logging with NullStoreFactory" << std::endl;
             FIX::NullStoreFactory nullStoreFactory;
-		    pinitiator = new FIX::SocketInitiator(application, nullStoreFactory, settings);
+		    g_pinitiator = new FIX::SocketInitiator(application, nullStoreFactory, settings);
         }
-        //pinitiator = &initiator;
+        //g_pinitiator = &initiator;
 		std::cout << "Starting initiator" << std::endl; 
-		pinitiator->start();
+		g_pinitiator->start();
 
 		char x;
 		while(std::cin >> x) {
@@ -338,7 +337,7 @@ int main( int argc, char** argv )
 			}
 		}
 		std::cout << "Stopping initiator..." << std::endl;
-		pinitiator->stop();
+		g_pinitiator->stop();
 		return 0;
 	}
 	catch ( FIX::Exception & e )
@@ -352,10 +351,10 @@ int main( int argc, char** argv )
 void 
 sighandler(int sig) {  
     fprintf(stderr, "Received signal: %d\n", sig);
-    assert(pinitiator);
-	pinitiator->stop();
-    papplication->deleteBooks();
-    papplication->flushLogs();
+    assert(g_pinitiator);
+	g_pinitiator->stop();
+    g_papplication->deleteBooks();
+    g_papplication->flushLogs();
     exit(sig); 
 }
 
