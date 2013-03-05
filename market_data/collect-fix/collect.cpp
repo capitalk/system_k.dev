@@ -38,21 +38,26 @@ namespace qi = boost::spirit::qi;
 
 void sighandler(int sig);
 
-/*
+/**
  * Global pointers for signal handlers to cleanup properly
  */
 FIX::SocketInitiator* pinitiator;
 Application* papplication;
 
-/*
+/**
  * ZMQ Globals - can't have these go out of scope
  */
 void *g_zmq_context;
 void *pub_socket;
 
-
+/**
+ * configuration protobuf to receive into from config server
+ */
 capkproto::configuration all_venue_config;
 
+/**
+ * Read symbol config file - one symbol per line 
+ */
 std::vector<std::string> 
 readSymbols(std::string symbolFileName)
 {
@@ -78,12 +83,12 @@ readSymbols(std::string symbolFileName)
 int main( int argc, char** argv )
 {
 	int err = 0;
-	std::string argOutputDir; 
-	std::string symbolFile;
-	std::string configFile;
+	std::string arg_output_dir; 
+	std::string symbil_file_name;
+	std::string config_file_name;
 	std::string password;
-	bool printDebug; 
-    bool isLogging;
+	bool print_debug; 
+    bool is_logging;
     int zero = 0;  
 
     (void) signal(SIGINT, sighandler);
@@ -117,12 +122,11 @@ int main( int argc, char** argv )
 
 		if (vm.count("nolog")) {
             std::cout << "Logging disabled" << std::endl;
-            //isLogging = (vm["nolog"].as<int>() == 1 ? false : true);
-            isLogging = false;
+            is_logging = false;
 		}
         else { 
             std::cout << "Logging enabled" << std::endl;
-            isLogging = true;
+            is_logging = true;
         }
 		if (vm.count("help")) {
 			std::cout << desc << "\n";
@@ -130,29 +134,29 @@ int main( int argc, char** argv )
 		}
 		if (vm.count("o")) {
 			std::cout << "Output path: " << vm["o"].as<std::string>() << "\n";
-            argOutputDir = vm["o"].as<std::string>();
+            arg_output_dir<std::string>();
 		} else {
 			// set default
 			std::cout << "Output path file was not set \n";
 		}
 		if (vm.count("s")) {
 			std::cout << "Symbol file: " << vm["s"].as<std::string>() << "\n";
-			symbolFile = vm["s"].as<std::string>();
+			symbil_file_name = vm["s"].as<std::string>();
 		} else {
 			// use default name for symbols file name 
-			symbolFile = "symbols.cfg"; 
+			symbil_file_name = "symbols.cfg"; 
 			std::cout << "Using default symbols file: symbols.cfg\n"; 
 		}
 		if (vm.count("c")) {
 			std::cout << "Config file: " << vm["c"].as<std::string>() << ".\n";
-			configFile = vm["c"].as<std::string>();
+			config_file_name = vm["c"].as<std::string>();
 		} else {
 			std::cout << "Config file was not set.\n";
 			err++;
 		}
-		printDebug = vm.count("d") > 0; 
+		print_debug = vm.count("d") > 0; 
 			
-		/* moved passwords to cfg files 
+		/** moved passwords to cfg files 
 		if (vm.count("p")) {
 			std::cout << "Pass: " << vm["p"].as<std::string>() << ".\n";
 			password = vm["p"].as<std::string>();
@@ -171,14 +175,11 @@ int main( int argc, char** argv )
 		return 1;
 	}
 	
-	/* 
- 	* @see http://www.boost.org/doc/libs/1_41_0/doc/html/program_options.html
- 	*/
-	
-	std::vector<std::string> symbols = readSymbols(symbolFile);
+	std::vector<std::string> symbols = readSymbols(symbil_file_name);
+
 	try
 	{
-		FIX::SessionSettings settings(configFile);
+		FIX::SessionSettings settings(config_file_name);
                 std::set<FIX::SessionID> sessions = settings.getSessions ();
 		assert(sessions.size() == 1); 
 		FIX::SessionID sessionId = *(sessions.begin()); 
@@ -246,7 +247,7 @@ int main( int argc, char** argv )
 		std::cout << "Setting update type: " << updateType << std::endl;
 
         // Debug settings
-		config.printDebug = printDebug; 
+		config.print_debug = print_debug; 
 
 		Application application(bReset, config);
         papplication = &application;
@@ -259,12 +260,12 @@ int main( int argc, char** argv )
         std::string logOutputDir = dict.has("FileLogPath") ? dict.getString("FileLogPath") : "."; 
         std::string storeOutputDir = dict.has("FileStorePath") ? dict.getString("FileStorePath") : ".";
 
-        if (argOutputDir.length() > 0) { 
-            orderBooksOutputDir = argOutputDir; 
-            fs::path argPath = fs::path(argOutputDir); 
+        if (arg_output_dir.length() > 0) { 
+            orderBooksOutputDir = arg_output_dir; 
+            fs::path argPath = fs::path(arg_output_dir); 
             if (!fs::exists(argPath)) { fs::create_directories(argPath); }
             
-            /* put both order books and message logs in subdirs, 
+            /** put both order books and message logs in subdirs, 
                but put the store at the root dir 
             */ 
             fs::path logOutputPath = argPath / fs::path("log");  
@@ -307,7 +308,7 @@ int main( int argc, char** argv )
             application.setZMQSocket(pub_socket);
         }
         application.setPublishing(isPublishing);
-        application.setLogging(isLogging);
+        application.setLogging(is_logging);
 
 		// Set MDUpdateType
 		application.setUpdateType(updateType);
@@ -316,7 +317,7 @@ int main( int argc, char** argv )
 		application.setDataPath(orderBooksOutputDir);
         // fix logging params
 
-        if (isLogging) {
+        if (is_logging) {
             std::cout << "Logging with FileStoreFactory" << std::endl;
 		    FIX::FileStoreFactory fileStoreFactory(storeOutputDir);         
 		    FIX::FileLogFactory logFactory(logOutputDir);
