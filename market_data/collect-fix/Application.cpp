@@ -387,8 +387,17 @@ Application::full_refresh_template(const T& message, const FIX::SessionID& sessi
 			if (mdEntries.isSetField(mdEntryType)) {
 				mdEntries.getField(mdEntryType);
 			}
+            /** 
+             * Below is required for some ECNs that don't really know what they are doing
+            FIX::QuoteCondition condition;
+            if (mdEntries.isSetField(condition)) {
+				mdEntries.getField(condition);
+                std::cerr << "QUOTE COND ====================> "  << condition.getValue() << std::endl;
+            }
+            */
 			if (mdEntries.isSetField(mdEntryID)) {
 				mdEntries.getField(mdEntryID);
+                std::cerr << "MD ENTRY ID ====================> "  << mdEntryID.getValue() << std::endl;
 			}
 			if (mdEntries.isSetField(mdEntryPx)) {
 				mdEntries.getField(mdEntryPx);
@@ -463,6 +472,7 @@ Application::full_refresh_template(const T& message, const FIX::SessionID& sessi
                 timespec evtTime, sndTime;
                 clock_gettime(CLOCK_MONOTONIC, &evtTime);
                 FIXConvertors::UTCTimeStampToTimespec(time, &sndTime);
+                std::cerr << "EVTTIME ON FULL REFRESH: " << evtTime << std::endl;
                 pBook->add(nid, nside, size, price, evtTime, sndTime);
                 if (_config.print_debug) {
                     std::cout << "[TEMPLATE: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n";   
