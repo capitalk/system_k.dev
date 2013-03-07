@@ -12,6 +12,7 @@
 #include "utils/types.h"
 #include "utils/fix_convertors.h"
 #include "utils/jenkins_hash.h"
+#include "utils/logging.h"
 #include <iostream>
 
 #include <boost/lexical_cast.hpp>
@@ -21,14 +22,27 @@
 namespace fs = boost::filesystem; 
 namespace dt = boost::gregorian; 
 
-//using namespace capitalk;
+Application::Application(const ApplicationConfig& config) 
+         :  _loggedIn(false), 
+            _loggedOut(true), 
+            _loginCount(0), 
+            _appMsgCount(0), 
+            _config(config) 
+{
+#ifdef LOG
+    pan::log_DEBUG("Application()");
+#endif
+}
 
 void Application::onLogon(const FIX::SessionID& sessionID )
 {
 	_loggedIn = true;
 	_loggedOut = false;
 	_sessionID = sessionID;
-	std::cout << "onLogon - " << sessionID << "\n";
+
+#ifdef LOG
+    pan::log_DEBUG("onLogon - session ID:", sessionID.toString().c_str());
+#endif
 	_loginCount++;
 	//sendTestRequest();
 	run();				
@@ -38,12 +52,17 @@ void Application::onLogout(const FIX::SessionID& sessionID )
 {
 	_loggedIn = false;
 	_loggedOut = true;
-	std::cout << "onLogout - " << sessionID << "\n";
+
+#ifdef LOG
+    pan::log_DEBUG("onLogout - session ID:", sessionID.toString().c_str());
+#endif
 }
 
 void Application::onCreate(const FIX::SessionID& sessionID )
 {
-	std::cout << "\n" << "onCreate - " << sessionID << "\n";
+#ifdef LOG
+    pan::log_DEBUG("onCreate - session ID:", sessionID.toString().c_str());
+#endif
 }
 
 void Application::fromAdmin(const FIX::Message& message, const FIX::SessionID& sessionID)
@@ -51,8 +70,10 @@ void Application::fromAdmin(const FIX::Message& message, const FIX::SessionID& s
 {
 	FIX::BeginString beginString;
 	message.getHeader().getField(beginString);
-    if (_config.printDebug)  {
-	    std::cout << "fromAdmin(" << message << ")" << "\n"; 	
+    if (_config.print_debug)  {
+#ifdef LOG
+        pan::log_DEBUG("fromAdmin: ", message.toString().c_str()); 	
+#endif
     }
 	if (beginString == FIX::BeginString_FIX42) {
 		((FIX42::MessageCracker&)(*this)).crack((const FIX42::Message&) message, sessionID);
@@ -68,8 +89,10 @@ void Application::fromAdmin(const FIX::Message& message, const FIX::SessionID& s
 void Application::fromApp(const FIX::Message& message, const FIX::SessionID& sessionID )
 throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::UnsupportedMessageType )
 {
-	if (_config.printDebug) { 
-		std::cout << "===>fromApp(" << message << ")" << "\n";
+	if (_config.print_debug) { 
+#ifdef LOG
+        pan::log_DEBUG("fromApp: ", message.toString().c_str()); 	
+#endif
 	}
 	else { 
         _appMsgCount++;
@@ -93,8 +116,10 @@ throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX:
 void Application::toApp(FIX::Message& message, const FIX::SessionID& sessionID )
 throw(FIX::DoNotSend )
 {
-    if (_config.printDebug) {
-	    std::cout << "toApp(" << "Message: " << message << " Session: " << sessionID << ")" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("toApp: ", message.toString().c_str()); 	
+#endif
     }
 	try {
 		// Don't send potenially duplicate requests for market data
@@ -113,375 +138,164 @@ throw(FIX::DoNotSend )
 
 }
 
-void Application::onMessage(const FIX44::SecurityStatus& message, const FIX::SessionID& sessionID) 
+template <typename T> 
+void 
+Application::trading_session_status_template(const T& message, const FIX::SessionID& sessionID)  
 {
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX44::SecurityStatus& message, const FIX::SessionID& sessionID)" << "\n";		
-    }
-}
+	FIX::TradingSessionID tradingSessionID;
+	FIX::TradSesStatus tradSesStatus;
+	if (message.isSetField(tradingSessionID)) {
+		message.getField(tradingSessionID);
+	}
+	if (message.isSetField(tradSesStatus)) { 
+		message.getField(tradSesStatus);
+		if (tradSesStatus.getValue() == FIX::TradSesStatus_OPEN) {
+#ifdef LOG
+            pan::log_INFORMATIONAL("Trading sessions status is OPEN");
+#endif
+		}
+		if (tradSesStatus.getValue() == FIX::TradSesStatus_HALTED) {
+#ifdef LOG
+            pan::log_INFORMATIONAL("Trading sessions status is HALTED");
+#endif
+		}
+		if (tradSesStatus.getValue() == FIX::TradSesStatus_CLOSED) {
+#ifdef LOG
+            pan::log_INFORMATIONAL("Trading sessions status is CLOSED");
+#endif
+		}
+		if (tradSesStatus.getValue() == FIX::TradSesStatus_PREOPEN) {
+#ifdef LOG
+            pan::log_INFORMATIONAL("Trading sessions status is PREOPEN");
+#endif
+		}
+	}
 
-void Application::onMessage(const FIX43::SecurityStatus& message, const FIX::SessionID& sessionID) 
-{
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX43::SecurityStatus& message, const FIX::SessionID& sessionID)" << "\n";		
-    }
-}
-
-void Application::onMessage(const FIX42::SecurityStatus& message, const FIX::SessionID& sessionID) 
-{
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX42::SecurityStatus& message, const FIX::SessionID& sessionID)" << "\n";		
-    }
 }
 
 void Application::onMessage(const FIX44::TradingSessionStatus& message, const FIX::SessionID& sessionID) 
 {
 	
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX44::TradingSessionStatus& message, const FIX::SessionID& sessionID)" << "\n";		
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX44::TradingSessionStatus& message...)");
+#endif
     }
-	FIX::TradingSessionID tradingSessionID;
-	FIX::TradSesStatus tradSesStatus;
-	if (message.isSetField(tradingSessionID)) {
-		message.getField(tradingSessionID);
-	}
-	if (message.isSetField(tradSesStatus)) { 
-		message.getField(tradSesStatus);
-		if (tradSesStatus.getValue() == FIX::TradSesStatus_OPEN) {
-			std::cout << "Trading sessions status is OPEN" << "\n";
-		}
-		if (tradSesStatus.getValue() == FIX::TradSesStatus_HALTED) {
-			std::cout << "Trading sessions status is HALTED" << "\n";
-		}
-		if (tradSesStatus.getValue() == FIX::TradSesStatus_CLOSED) {
-			std::cout << "Trading sessions status is CLOSED" << "\n";
-		}
-		if (tradSesStatus.getValue() == FIX::TradSesStatus_PREOPEN) {
-			std::cout << "Trading sessions status is PREOPEN" << "\n";
-		}
-	}
+    trading_session_status_template<FIX44::TradingSessionStatus>(message, sessionID);
 }
 
 void Application::onMessage(const FIX43::TradingSessionStatus& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX43::TradingSessionStatus& message, const FIX::SessionID& sessionID)" << "\n";		
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX43::TradingSessionStatus& message...)");
+#endif
     }
-	FIX::TradingSessionID tradingSessionID;
-	FIX::TradSesStatus tradSesStatus;
-	if (message.isSetField(tradingSessionID)) {
-		message.getField(tradingSessionID);
-	}
-	if (message.isSetField(tradSesStatus)) { 
-		message.getField(tradSesStatus);
-		if (tradSesStatus.getValue() == FIX::TradSesStatus_OPEN) {
-			std::cout << "Trading sessions status is OPEN" << "\n";
-		}
-		if (tradSesStatus.getValue() == FIX::TradSesStatus_HALTED) {
-			std::cout << "Trading sessions status is HALTED" << "\n";
-		}
-		if (tradSesStatus.getValue() == FIX::TradSesStatus_CLOSED) {
-			std::cout << "Trading sessions status is CLOSED" << "\n";
-		}
-		if (tradSesStatus.getValue() == FIX::TradSesStatus_PREOPEN) {
-			std::cout << "Trading sessions status is PREOPEN" << "\n";
-		}
-	}
+    trading_session_status_template<FIX43::TradingSessionStatus>(message, sessionID);
 }
 
 void Application::onMessage(const FIX42::TradingSessionStatus& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX42::TradingSessionStatus& message, const FIX::SessionID& sessionID)" << "\n";		
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX42::TradingSessionStatus& message...)");
+#endif
     }
-	FIX::TradingSessionID tradingSessionID;
-	FIX::TradSesStatus tradSesStatus;
-	if (message.isSetField(tradingSessionID)) {
-		message.getField(tradingSessionID);
-	}
-	if (message.isSetField(tradSesStatus)) { 
-		message.getField(tradSesStatus);
-		if (tradSesStatus.getValue() == FIX::TradSesStatus_OPEN) {
-			std::cout << "Trading sessions status is OPEN" << "\n";
-		}
-		if (tradSesStatus.getValue() == FIX::TradSesStatus_HALTED) {
-			std::cout << "Trading sessions status is HALTED" << "\n";
-		}
-		if (tradSesStatus.getValue() == FIX::TradSesStatus_CLOSED) {
-			std::cout << "Trading sessions status is CLOSED" << "\n";
-		}
-		if (tradSesStatus.getValue() == FIX::TradSesStatus_PREOPEN) {
-			std::cout << "Trading sessions status is PREOPEN" << "\n";
-		}
-	}
-}
-
-void Application::onMessage(const FIX44::TestRequest& message, const FIX::SessionID& sessionID) 
-{
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX44::TestRequest& message, const FIX::SessionID& sessionID)" << "\n";		
-    }
-}
-
-void Application::onMessage(const FIX43::TestRequest& message, const FIX::SessionID& sessionID) 
-{
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX43::TestRequest& message, const FIX::SessionID& sessionID)" << "\n";		
-    }
-}
-
-void Application::onMessage(const FIX42::TestRequest& message, const FIX::SessionID& sessionID) 
-{
-    if (_config.printDebug) {
-	    std::cout << " Application::onMessage(const FIX42::TestRequest& message, const FIX::SessionID& sessionID)" << "\n";		
-    }
+    trading_session_status_template<FIX42::TradingSessionStatus>(message, sessionID);
 }
 
 void Application::onMessage(const FIX44::Heartbeat& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX44::Heartbeat& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX44::Heartbeat& message, ...)");
+#endif
     }
 }
 
 void Application::onMessage(const FIX43::Heartbeat& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX43::Heartbeat& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX43::Heartbeat& message, ...)");
+#endif
     }
 }
 
 void Application::onMessage(const FIX42::Heartbeat& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX42::Heartbeat& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX42::Heartbeat& message, ...)");
+#endif
     }
 }
 
 void Application::onMessage(const FIX44::Logout& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Logout44(" << message.toString() << ")" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX44::Logout& message, ...)");
+#endif
     }
 }
 
 void Application::onMessage(const FIX43::Logout& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Logout43(" << message.toString() << ")" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX43::Logout& message, ...)");
+#endif
     }
 }
 
 void Application::onMessage(const FIX42::Logout& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Logout42(" << message.toString() << ")" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX42::Logout& message, ...)");
+#endif
     }
 }
 
 void Application::onMessage(const FIX44::Logon& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Logon44(" << message.toString() << ")" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX44::Logon& message, ...)");
+#endif
     }
 }
 
 void Application::onMessage(const FIX43::Logon& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Logon43(" << message.toString() << ")" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX43::Logon& message, ...)");
+#endif
     }
 }
 
 void Application::onMessage(const FIX42::Logon& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Logon42(" << message.toString() << ")" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX42::Logon& message, ...)");
+#endif
     }
 }
 
-void Application::onMessage(const FIX44::MarketDataRequest& message, const FIX::SessionID& sessionID) 
-{
-    if (_config.printDebug) {
-	    std::cout << "MarketDataRequest44(" << message.toString() << ")" << "\n";
-    }
-}
-
-void Application::onMessage(const FIX43::MarketDataRequest& message, const FIX::SessionID& sessionID) 
-{
-    if (_config.printDebug) {
-	    std::cout << "MarketDataRequest43(" << message.toString() << ")" << "\n";
-    }
-}
-
-void Application::onMessage(const FIX42::MarketDataRequest& message, const FIX::SessionID& sessionID) 
-{
-    if (_config.printDebug) {
-	    std::cout << "MarketDataRequst42(" << message.toString() << ")" << "\n";
-    }
-}
-
-void Application::onMessage(const FIX::Message& message, const FIX::SessionID& sessionID) 
-{
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX::Message& message, const FIX::SessionID& sessionID)" << message.toString() << ")" << "\n";
-    }
-}
-/*
+/**
  * Full refresh of order book - all existing orders at all levels 
  * 35=W
  */
 void 
 Application::onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID)" << "\n"; //(" << message.toString() << ")" << "\n";
+    if (_config.print_debug) {
+	    std::cout << "Application::onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID)" << "\n";
     }
     this->full_refresh_template<FIX44::MarketDataIncrementalRefresh>(message,sessionID); 
-/*
-    std::ostream* pLog = NULL;
-	FIX::MsgType msgType;
-	message.getHeader().getField(msgType);
-	FIX::SendingTime sendingTime;
-	message.getHeader().getField(sendingTime);
-	FIX::NoMDEntries noMDEntries;
-	FIX::MDEntryType mdEntryType;
-	FIX::MDEntryID mdEntryID;
-
-	FIX::MDEntryPx mdEntryPx;
-	FIX::MDEntrySize mdEntrySize;
-	FIX::QuoteType quoteType;
-	FIX::MDEntryOriginator mdEntryOriginator;
-	FIX::MinQty minQty;
-	FIX::MDEntryPositionNo mdEntryPositionNo;
-	FIX::MDReqID mdReqID;
-	FIX::ExecInst execInst;
-	FIX::QuoteEntryID quoteEntryID;
-	FIX::MaturityMonthYear maturityMonthYear;
-	FIX::Symbol symbol;
-	FIX::SecurityType securityType;
-	int nEntries = 0;
-
-	message.getField(mdReqID);
-	message.getField(symbol);
-	if (message.isSetField(noMDEntries)) {
-		try {
-			message.getField(noMDEntries); 
-			nEntries = noMDEntries.getValue();
-            if (_config.printDebug) {
-			    std::cout << "==> NoMDEntries: " << nEntries << "\n";
-            }
-		}
-		catch (std::exception& e) {
-			std::cerr << e.what() << "\n";
-		}
-		FIX44::MarketDataSnapshotFullRefresh::NoMDEntries mdEntries;
-		
-		// Group indexed on 1 not 0
-		for (int i = 0; i< nEntries; i++) {
-			message.getGroup(i+1, mdEntries);
-			if (mdEntries.isSetField(mdEntryType)) {
-				mdEntries.getField(mdEntryType);
-			}
-			if (mdEntries.isSetField(mdEntryID)) {
-				mdEntries.getField(mdEntryID);
-			}
-			if (mdEntries.isSetField(mdEntryPx)) {
-				mdEntries.getField(mdEntryPx);
-//				std::cout << "====================>mdEntryPx: " << mdEntryPx << "\n"
-			}
-			else {
-				std::cerr << "NO MDEntryPrice SET IN FIX44 SNAPSHOT" << "\n";	
-			}
-			if (mdEntries.isSetField(mdEntrySize)) {
-				mdEntries.getField(mdEntrySize);	
-//				std::cout << "====================>mdEntrySize: " << mdEntrySize << "\n";
-			}
-			else {
-				std::cerr << "NO MDEntrySize SET IN FIX44 SNAPSHOT" << "\n";	
-			}
-			if (mdEntries.isSetField(quoteType)) {
-				mdEntries.getField(quoteType);	
-                if (_config.printDebug) {
-				    std::cout << "QuoteType: " << quoteType.getValue() << "\n"; 
-                }
-			}
-			if (mdEntries.isSetField(mdEntryOriginator)) {
-				mdEntries.getField(mdEntryOriginator);	
-                if (_config.printDebug) {
-				    std::cout << "MDEntryOriginator: " << mdEntryOriginator.getValue() << "\n"; 
-                }
-			}
-			if (mdEntries.isSetField(minQty)) {
-				mdEntries.getField(minQty);	
-                if (_config.printDebug) {
-				    std::cout << "MinQty: " << minQty.getValue() << "\n"; 
-                }
-			}
-			if (mdEntries.isSetField(mdEntryPositionNo)) {
-				mdEntries.getField(mdEntryPositionNo);	
-                if (_config.printDebug) {
-				    std::cout << "MDEntryPositionNo: " << mdEntryPositionNo.getValue() << "\n"; 
-                }
-			}
-			if (mdEntries.isSetField(execInst)) {
-				mdEntries.getField(execInst);	
-			}
-			if (mdEntries.isSetField(quoteEntryID)) {
-				mdEntries.getField(quoteEntryID);	
-			}
-			//if (message.isSetField(securityType)) {
-				//message.getField(securityType);
-			//}
-			//if (message.isSetField(maturityMonthYear)) {
-				//message.getField(maturityMonthYear);
-			//}
-            capk::KBook* pBook;
-			if (NULL != (pBook = getBook(symbol.getValue())))  {
-				FIX::UtcTimeStamp time = FIX::UtcTimeStamp(sendingTime); 
-				char side = mdEntryType.getValue(); 
-                capk::Side_t nside = char2side_t(side);
-
-                std::string id = mdEntryID.getValue(); 
-                int nid = hashlittle(id.c_str(), id.size(), 0);
-
-                // since we sometimes don't get entry IDs in snapshots, 
-                //   try using the quote entry ID instead 
-                if (id.length() == 0) {
-                    id = quoteEntryID.getValue(); 
-                    nid = hashlittle(id.c_str(), id.size(), 0);
-                }				
-                else {
-                    std::cerr << "mdEntryID not set - AND quoteEntryID not set " << "\n";
-                }
-                double price = mdEntryPx.getValue(); 
-				unsigned int size = mdEntrySize.getValue(); 
-				//capitalk::PriceDepthEntry* entry = 
-					//new capitalk::PriceDepthEntry(time, time, side, id, price, size); 
-				
-                //pBook->add(entry); 
-                timespec evtTime, sndTime;
-                clock_gettime(CLOCK_MONOTONIC, &evtTime);
-                FIXConvertors::UTCTimeStampToTimespec(time, &sndTime);
-                pBook->add(nid, nside, size, price, evtTime, sndTime);
-                if (_config.printDebug) {
-                    std::cout << "[FIX 4.4: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n"; 
-                }
-// KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
-				pLog = getStream(symbol.getValue());
-				if (pLog == NULL) {
-					std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
-				} else {
-					*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
-					*pLog << *pBook;
-				}
-			}
-            else {
-                std::cerr << "[FIX 4.4: Full Refresh] Orderbook is null - nothing to add to" << "\n";
-            }
-		}
-	}
-    */
 }
 
 /*
@@ -491,155 +305,10 @@ Application::onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, cons
 void 
 Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) {
-	    std::cout << "Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID)" << "\n"; //(" << message.toString() << ")" << "\n";
+    if (_config.print_debug) {
+	    std::cout << "Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID)" << "\n";
     }
     this->full_refresh_template<FIX43::MarketDataIncrementalRefresh>(message,sessionID); 
-/*
-    std::ostream* pLog = NULL;
-	FIX::MsgType msgType;
-	message.getHeader().getField(msgType);
-	FIX::SendingTime sendingTime;
-	message.getHeader().getField(sendingTime);
-	FIX::NoMDEntries noMDEntries;
-	FIX::MDEntryType mdEntryType;
-	FIX::MDEntryID mdEntryID;
-
-	FIX::MDEntryPx mdEntryPx;
-	FIX::MDEntrySize mdEntrySize;
-	FIX::QuoteType quoteType;
-	FIX::MDEntryOriginator mdEntryOriginator;
-	FIX::MinQty minQty;
-	FIX::MDEntryPositionNo mdEntryPositionNo;
-	FIX::MDReqID mdReqID;
-	FIX::ExecInst execInst;
-	FIX::QuoteEntryID quoteEntryID;
-	FIX::MaturityMonthYear maturityMonthYear;
-	FIX::Symbol symbol;
-	FIX::SecurityType securityType;
-	int nEntries = 0;
-
-	message.getField(mdReqID);
-	message.getField(symbol);
-	if (message.isSetField(noMDEntries)) {
-		try {
-			message.getField(noMDEntries); 
-			nEntries = noMDEntries.getValue();
-            if (_config.printDebug) {
-			    std::cout << "==> NoMDEntries: " << nEntries << "\n";
-            }
-		}
-		catch (std::exception& e) {
-			std::cerr << e.what() << "\n";
-		}
-		FIX43::MarketDataSnapshotFullRefresh::NoMDEntries mdEntries;
-		
-		// Group indexed on 1 not 0
-		for (int i = 0; i< nEntries; i++) {
-			message.getGroup(i+1, mdEntries);
-			if (mdEntries.isSetField(mdEntryType)) {
-				mdEntries.getField(mdEntryType);
-			}
-			if (mdEntries.isSetField(mdEntryID)) {
-				mdEntries.getField(mdEntryID);
-			}
-			if (mdEntries.isSetField(mdEntryPx)) {
-				mdEntries.getField(mdEntryPx);
-//				std::cout << "====================>mdEntryPx: " << mdEntryPx << "\n"
-			}
-			else {
-				std::cerr << "NO MDEntryPrice SET IN FIX43 SNAPSHOT" << "\n";	
-			}
-			if (mdEntries.isSetField(mdEntrySize)) {
-				mdEntries.getField(mdEntrySize);	
-//				std::cout << "====================>mdEntrySize: " << mdEntrySize << "\n";
-			}
-			else {
-				std::cerr << "NO MDEntrySize SET IN FIX43 SNAPSHOT" << "\n";	
-			}
-			if (mdEntries.isSetField(quoteType)) {
-				mdEntries.getField(quoteType);	
-                if (_config.printDebug) {
-				    std::cout << "QuoteType: " << quoteType.getValue() << "\n"; 
-                }
-			}
-			if (mdEntries.isSetField(mdEntryOriginator)) {
-				mdEntries.getField(mdEntryOriginator);	
-                if (_config.printDebug) {
-				    std::cout << "MDEntryOriginator: " << mdEntryOriginator.getValue() << "\n"; 
-                }
-			}
-			if (mdEntries.isSetField(minQty)) {
-				mdEntries.getField(minQty);	
-                if (_config.printDebug) {
-				    std::cout << "MinQty: " << minQty.getValue() << "\n"; 
-                }
-			}
-			if (mdEntries.isSetField(mdEntryPositionNo)) {
-				mdEntries.getField(mdEntryPositionNo);	
-                if (_config.printDebug) {
-				    std::cout << "MDEntryPositionNo: " << mdEntryPositionNo.getValue() << "\n"; 
-                }
-			}
-			if (mdEntries.isSetField(execInst)) {
-				mdEntries.getField(execInst);	
-			}
-			if (mdEntries.isSetField(quoteEntryID)) {
-				mdEntries.getField(quoteEntryID);	
-			}
-			//if (message.isSetField(securityType)) {
-				//message.getField(securityType);
-			//}
-			//if (message.isSetField(maturityMonthYear)) {
-				//message.getField(maturityMonthYear);
-			//}
-            capk::KBook* pBook;
-			if (NULL != (pBook = getBook(symbol.getValue())))  {
-				FIX::UtcTimeStamp time = FIX::UtcTimeStamp(sendingTime); 
-				char side = mdEntryType.getValue(); 
-                capk::Side_t nside = char2side_t(side);
-
-                std::string id = mdEntryID.getValue(); 
-                int nid = hashlittle(id.c_str(), id.size(), 0);
-
-                // since we sometimes don't get entry IDs in snapshots, 
-                // try using the quote entry ID instead 
-                if (id.length() == 0) {
-                    id = quoteEntryID.getValue(); 
-                    nid = hashlittle(id.c_str(), id.size(), 0);
-                }				
-                else {
-                    std::cerr << "mdEntryID not set - AND quoteEntryID not set " << "\n";
-                }
-                double price = mdEntryPx.getValue(); 
-				unsigned int size = mdEntrySize.getValue(); 
-				//capitalk::PriceDepthEntry* entry = 
-					//new capitalk::PriceDepthEntry(time, time, side, id, price, size); 
-				
-                //pBook->add(entry); 
-                timespec evtTime, sndTime;
-                clock_gettime(CLOCK_MONOTONIC, &evtTime);
-                FIXConvertors::UTCTimeStampToTimespec(time, &sndTime);
-                pBook->add(nid, nside, size, price, evtTime, sndTime);
-                if (_config.printDebug) {
-                    std::cout << "[FIX 4.3: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n"; 
-                }
-// KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
-				pLog = getStream(symbol.getValue());
-				if (pLog == NULL) {
-					std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
-				} else {
-					*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
-					*pLog << *pBook;
-				}
-                 
-			}
-            else {
-                std::cerr << "[FIX 4.3: Full Refresh] Orderbook is null - nothing to add to" << "\n";
-            }
-		}
-	}
-    */
 }
 
 /*
@@ -649,162 +318,17 @@ Application::onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, cons
 void 
 Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID) 
 {
-	if (_config.printDebug) { 
+	if (_config.print_debug) { 
 	    std::cout << "Application::onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
     }
     this->full_refresh_template<FIX42::MarketDataIncrementalRefresh>(message,sessionID); 
-/*
-    std::ostream* pLog = NULL;
-	FIX::MsgType msgType;
-	message.getHeader().getField(msgType);
-	FIX::SendingTime sendingTime;
-	message.getHeader().getField(sendingTime);
-	FIX::NoMDEntries noMDEntries;
-	FIX::MDReqID mdReqID;
-	FIX::MDEntryType mdEntryType;
-	FIX::QuoteType quoteType;
-	FIX::MDEntryID mdEntryID;
-	FIX::MDEntryPx mdEntryPx;
-	FIX::MDEntrySize mdEntrySize;
-	FIX::ExecInst execInst;
-	FIX::QuoteEntryID quoteEntryID;
-	FIX::MDEntryOriginator mdEntryOriginator;
-	FIX::MinQty minQty;
-	FIX::MDEntryPositionNo mdEntryPositionNo;
-	FIX::MaturityMonthYear maturityMonthYear;
-	FIX::Symbol symbol;
-	FIX::SecurityType securityType;
-	int nEntries = 0;
-
-	if (message.isSetField(symbol)) {
-		message.getField(symbol);	
-	}
-	if (message.isSetField(mdReqID)) {
-		message.getField(mdReqID);	
-	}
-	if (message.isSetField(noMDEntries)) {
-		try {
-			message.getField(noMDEntries); 
-			nEntries = noMDEntries.getValue();
-		}
-		catch (std::exception& e) {
-			std::cerr << e.what() << "\n";
-		}
-		FIX42::MarketDataSnapshotFullRefresh::NoMDEntries mdEntries;
-		
-		// Group indexed on 1 not 0
-		for (int i = 0; i< nEntries; i++) {
-			message.getGroup(i+1, mdEntries);
-	        if (mdEntries.isSetField(symbol)) {
-		        mdEntries.getField(symbol);	
-	        }
-			if (mdEntries.isSetField(mdEntryType)) {
-				mdEntries.getField(mdEntryType);
-			}
-			if (mdEntries.isSetField(mdEntryID)) {
-				mdEntries.getField(mdEntryID);
-			}
-            else {
-				std::cerr << "NO MDEntryID SET IN FIX42 SNAPSHOT" << "\n";	
-            }
-			if (mdEntries.isSetField(mdEntryPx)) {
-				mdEntries.getField(mdEntryPx);
-			}
-			else {
-				std::cerr << "NO MDEntryPrice SET IN FIX42 SNAPSHOT" << "\n";	
-			}
-			if (mdEntries.isSetField(mdEntrySize)) {
-				mdEntries.getField(mdEntrySize);	
-			}
-			else {
-				std::cerr << "NO MDEntrySize SET IN FIX42 SNAPSHOT" << "\n";	
-			}
-			if (mdEntries.isSetField(quoteType)) {
-				mdEntries.getField(quoteType);	
-                if (_config.printDebug) {
-				    std::cout << "QuoteType: " << quoteType.getValue() << "\n"; 
-                }
-			}
-			if (mdEntries.isSetField(mdEntryOriginator)) {
-				mdEntries.getField(mdEntryOriginator);	
-                if (_config.printDebug) {
-				    std::cerr << "MDEntryOriginator: " << mdEntryOriginator.getValue() << "\n"; 
-                }
-			}
-			if (mdEntries.isSetField(minQty)) {
-				mdEntries.getField(minQty);	
-                if (_config.printDebug) {
-				    std::cout << "MinQty: " << minQty.getValue() << "\n"; 
-                }
-			}
-			if (mdEntries.isSetField(mdEntryPositionNo)) {
-				mdEntries.getField(mdEntryPositionNo);	
-                if (_config.printDebug) {
-				    std::cout << "MDEntryPositionNo: " << mdEntryPositionNo.getValue() << "\n"; 
-                }
-			}
-			if (mdEntries.isSetField(execInst)) {
-				mdEntries.getField(execInst);	
-			}
-			if (mdEntries.isSetField(quoteEntryID)) {
-				mdEntries.getField(quoteEntryID);	
-			}
-			//if (message.isSetField(securityType)) {
-				//message.getField(securityType);
-			//}
-			//if (message.isSetField(maturityMonthYear)) {
-				//message.getField(maturityMonthYear);
-			//}
-
-            capk::KBook* pBook;
-			if (NULL != (pBook = getBook(symbol.getValue())))  {
-				FIX::UtcTimeStamp time = FIX::UtcTimeStamp(sendingTime); 
-				char side = mdEntryType.getValue(); 
-                capk::Side_t nside = char2side_t(side);
-				std::string id = mdEntryID.getValue(); 
-                int nid = hashlittle(id.c_str(), id.size(), 0);
-
-                // since we sometimes don't get entry IDs in snapshots, 
-                // try using the quote entry ID instead 
-                if (id.length() == 0) {
-                    id = quoteEntryID.getValue(); 
-                    nid = hashlittle(id.c_str(), id.size(), 0);
-                }
-				double price = mdEntryPx.getValue(); 
-				unsigned int size = mdEntrySize.getValue(); 
-				//capitalk::PriceDepthEntry* entry = 
-				//	new capitalk::PriceDepthEntry(time, time, side, id, price, size); 
-				
-                //pBook->add(entry); 
-                timespec evtTime, sndTime;
-                clock_gettime(CLOCK_MONOTONIC, &evtTime);
-                FIXConvertors::UTCTimeStampToTimespec(time, &sndTime);
-                pBook->add(nid, nside, size, price, evtTime, sndTime);
-                if (_config.printDebug) {
-                    std::cout << "[FIX4.2: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n";   
-                }
-// KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
-				pLog = getStream(symbol.getValue());
-				if (pLog == NULL) {
-					std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
-				} else {
-					*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
-					*pLog << *pBook;
-				}
-			}
-            else {
-                std::cerr << "{FIX 4.2: Full Refresh] Orderbook is null - nothing to add to" << "\n";
-            }
-		}
-    }
-    */
 }
 
 template <typename T> 
 void 
 Application::full_refresh_template(const T& message, const FIX::SessionID& sessionID) 
 {
-    if (_config.printDebug) { 
+    if (_config.print_debug) { 
 	    std::cout << "Application::full_refresh_template()" 
             << message.toString() 
             << "\n";
@@ -866,11 +390,6 @@ Application::full_refresh_template(const T& message, const FIX::SessionID& sessi
 			if (mdEntries.isSetField(mdEntryID)) {
 				mdEntries.getField(mdEntryID);
 			}
-            // KTK Removed 24 Sep 2012 - don't necessarily need 
-            // md_entry_id set here - we can continue without it. 
-            //else {
-				//std::cerr << "NO MDEntryID SET IN SNAPSHOT" << "\n";	
-            //}
 			if (mdEntries.isSetField(mdEntryPx)) {
 				mdEntries.getField(mdEntryPx);
 			}
@@ -885,25 +404,25 @@ Application::full_refresh_template(const T& message, const FIX::SessionID& sessi
 			}
 			if (mdEntries.isSetField(quoteType)) {
 				mdEntries.getField(quoteType);	
-                if (_config.printDebug) {
+                if (_config.print_debug) {
 				    std::cout << "QuoteType: " << quoteType.getValue() << "\n"; 
                 }
 			}
 			if (mdEntries.isSetField(mdEntryOriginator)) {
 				mdEntries.getField(mdEntryOriginator);	
-                if (_config.printDebug) {
+                if (_config.print_debug) {
 				    std::cerr << "MDEntryOriginator: " << mdEntryOriginator.getValue() << "\n"; 
                 }
 			}
 			if (mdEntries.isSetField(minQty)) {
 				mdEntries.getField(minQty);	
-                if (_config.printDebug) {
+                if (_config.print_debug) {
 				    std::cout << "MinQty: " << minQty.getValue() << "\n"; 
                 }
 			}
 			if (mdEntries.isSetField(mdEntryPositionNo)) {
 				mdEntries.getField(mdEntryPositionNo);	
-                if (_config.printDebug) {
+                if (_config.print_debug) {
 				    std::cout << "MDEntryPositionNo: " << mdEntryPositionNo.getValue() << "\n"; 
                 }
 			}
@@ -945,7 +464,7 @@ Application::full_refresh_template(const T& message, const FIX::SessionID& sessi
                 clock_gettime(CLOCK_MONOTONIC, &evtTime);
                 FIXConvertors::UTCTimeStampToTimespec(time, &sndTime);
                 pBook->add(nid, nside, size, price, evtTime, sndTime);
-                if (_config.printDebug) {
+                if (_config.print_debug) {
                     std::cout << "[TEMPLATE: Full Refresh] Adding ID=" << id << " price=" << price <<  " size=" << size << "\n";   
                 }
 			///}
@@ -979,7 +498,7 @@ Application::full_refresh_template(const T& message, const FIX::SessionID& sessi
 		    std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
         } 
 #endif
-        if (_isLogging && pLog != NULL) {
+        if (_config.is_logging && pLog != NULL) {
             *pLog << "OB," 
                 << pBook->getName() 
                 << "," 
@@ -1009,7 +528,7 @@ Application::broadcast_bbo_book(void* bcast_socket, const char* symbol, const do
     zmq_msg_t msg;        
     char msgbuf[256];
     capkproto::instrument_bbo bbo;
-    if (_isPublishing) {
+    if (_config.is_publishing) {
         bbo.set_symbol(symbol);
         bbo.set_bid_price(best_bid);
         bbo.set_ask_price(best_ask);
@@ -1027,7 +546,7 @@ Application::broadcast_bbo_book(void* bcast_socket, const char* symbol, const do
 
         zmq_msg_init_size(&msg, msgsize);
         memcpy(zmq_msg_data(&msg), msgbuf, msgsize);
-        if (_config.printDebug) {
+        if (_config.print_debug) {
             std::cerr << "Sending "  << msgsize << " bytes\n";
             std::cerr << "Protobuf:\n" << bbo.DebugString().c_str() << "\n" << std::endl;
         }
@@ -1078,7 +597,9 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
         message.getField(symbol);
     }
     else {
-        //std::cerr << "*************************************** SYMBOL field not set BODY of  35=X" << std::endl;
+#ifdef LOG
+        pan::log_WARNING("SYMBOL field not set in BODY of MarketDataIncrementalRefresh msg (35=X)"); ;
+#endif
     }
 
 	if (message.isSetField(noMDEntries)) {
@@ -1096,16 +617,19 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
             }
 			if (mdEntries.isSetField(mdEntryID)) {
 			    mdEntries.getField(mdEntryID);
-                //std::cerr << "=======================> mdEntryID: " << mdEntryID << "\n";
             }
             else {
-                std::cerr << "*************************************** MDENTRYID field not set in 35=X" << std::endl;
+#ifdef LOG
+                pan::log_WARNING("MDENTRYID field not set in BODY of MarketDataIncrementalRefresh msg (35=X)"); ;
+#endif
             }
 			if (mdEntries.isSetField(symbol)) {
 				mdEntries.getField(symbol);
 			}
             else {
-                std::cerr << "*************************************** SYMBOL field not set in FIELD of 35=X" << std::endl;
+#ifdef LOG
+                pan::log_WARNING("SYMBOL field not set in FIELD of MarketDataIncrementalRefresh msg (35=X)"); ;
+#endif
             }
 			if (mdEntries.isSetField(securityType)) {
 				mdEntries.getField(securityType);
@@ -1115,10 +639,11 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 			}
 			if (mdEntries.isSetField(mdEntryPx)) {
 				mdEntries.getField(mdEntryPx);
-                //std::cerr << "=======================> mdEntryPx: " << mdEntryPx << "\n";
 			}
 			else {
-                //std::cerr << "*************************************** MDENTRYPX field not set in FIELD of 35=X (Action=" << mdUpdateAction << ")" << std::endl;
+#ifdef LOG
+                pan::log_WARNING("MDENTRYPX field not set in FIELD of MarketDataIncrementalRefresh msg (35=X)"); ;
+#endif
 			}
 			if (mdEntries.isSetField(mdEntrySize)) {
 				mdEntries.getField(mdEntrySize);
@@ -1159,31 +684,32 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 
            	    const std::string& id = mdEntryID.getValue();
                 uint32_t nid = hashlittle(id.c_str(), id.size(), 0);
-                if (_config.printDebug) {
+                if (_config.print_debug) {
                     std::cerr << "***** ORIG ID: " << id << ", HASH ID: " << nid << "\n";
                 }
 				int action = mdUpdateAction.getValue(); 
 				if (action == FIX::MDUpdateAction_NEW) { // new 
                     price = mdEntryPx.getValue();
-                    if (_config.printDebug) {
-                        std::cerr << "***** DEL BEFORE ADD: " << nid << "\n";
-                    }
-                    int removeOk = pBook->remove(nid, evtTime, sndTime);
-
-                    if (_config.printDebug) {
-                        if (removeOk == 0) {
-                           std::cerr << "Order: " << nid << " not found - so just add \n"; 
+                    if (_config.new_replaces) {
+                        if (_config.print_debug) {
+                            std::cerr << "***** DEL BEFORE ADD: " << nid << "\n";
                         }
-                        std::cerr << "***** ADD: " << nid << ", " << size  << "@" << price << "\n";
+                        int removeOk = pBook->remove(nid, evtTime, sndTime);
+                        if (_config.print_debug) {
+                            if (removeOk == 0) {
+                                std::cerr << "Order: " << nid << " not found - so just add \n"; 
+                            }
+                            std::cerr << "***** ADD: " << nid << ", " << size  << "@" << price << "\n";
+                        }
                     }
 
                     if (pBook->add(nid, nside, size, price, evtTime, sndTime) !=1) {
                         std::cerr << "Book add failed!!!!!!!!!!\n (" << nid << nside << "(" << side << ")" << size << price << evtTime << sndTime << "\n";
                     }
-                    if (_isLogging) {
+                    if (_config.is_logging) {
                         *pLog << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(5) << price << "," << evtTime << "\n"; 
                     }
-                    if (_config.printDebug) {
+                    if (_config.print_debug) {
                         std::cerr << "A," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(5) << price << "," << evtTime << "\n"; 
                         pBook->dbg();
                     }
@@ -1197,7 +723,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 			        if (mdEntries.isSetField(mdEntryRefID)) {
 			    	    mdEntries.getField(mdEntryRefID);
                         const std::string& refId = mdEntryRefID.getValue(); 
-                        if (_config.printDebug) {
+                        if (_config.print_debug) {
                             std::cerr << "*********** Using (mdEntryRefID as mdEntryID) " << mdEntryRefID << ", " << mdEntryID << "\n";
                             if (mdEntryRefID.getValue() != mdEntryID.getValue()) {
                                 std::cerr << "********** MISMATCH ENTRY IDS" << "\n";
@@ -1206,23 +732,23 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                         
                         uint32_t nrefId = hashlittle(refId.c_str(), refId.size(), 0);
                     
-                        if (_config.printDebug) {
+                        if (_config.print_debug) {
                             //std::cerr << "Synthetic modify: " << nrefId << " and re-adding " << "(" << nid << ", " << nside << ", " << size << "@" << price << ")\n";
                             //std::cerr << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(7) << price << "," << evtTime << "\n"; 
                         }
-                        if (_isLogging) {
+                        if (_config.is_logging) {
                             *pLog << "M," << nside << "," << std::setiosflags(std::ios_base::fixed) << size << "," << std::setprecision(5) << price << "," << evtTime << "\n"; 
                         }
                         pBook->remove(nrefId, evtTime, sndTime);
                         pBook->add(nid, nside, size, price, evtTime, sndTime);
 			        } else { 
-                        if (_config.printDebug) {
+                        if (_config.print_debug) {
                             std::cerr << "***** MOD: " << nid << " to size " << size << "\n";
                         }
                         //std::cerr << "M," << pBook->getOrder(nid)->getSide() << "," << size << "," << std::setprecision(5) << pBook->getOrder(nid)->getPrice() << "," << evtTime << "\n"; 
                         capk::pKOrder pOrder = pBook->getOrder(nid);
                         if (pOrder) {
-                            if (_isLogging) {
+                            if (_config.is_logging) {
                             *pLog << 
                             "M," << 
                             pBook->getOrder(nid)->getSide() << 
@@ -1234,7 +760,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             evtTime << 
                             "\n"; 
                             }
-                            if (_config.printDebug) {
+                            if (_config.print_debug) {
                             std::cerr << 
                             "M," << 
                             pBook->getOrder(nid)->getSide() << 
@@ -1258,12 +784,12 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 					}
 				} else if (action == FIX::MDUpdateAction_DELETE) { // delete  
                     //modifiedBook = pBook->remove(id, time, true); 
-                    if (_config.printDebug) { 
+                    if (_config.print_debug) { 
                         std::cerr << "***** DEL: " << nid << "\n";
                     }
                     capk::pKOrder pOrder = pBook->getOrder(nid);
                     if (pOrder) {
-                        if (_isLogging) {
+                        if (_config.is_logging) {
                         *pLog << 
                             "D," << 
                             pBook->getOrder(nid)->getSide() << 
@@ -1276,7 +802,7 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                             evtTime << 
                             "\n"; 
                         }
-                        if (_config.printDebug) {
+                        if (_config.print_debug) {
                             std::cerr << 
                             "D," << 
                             pBook->getOrder(nid)->getSide() << 
@@ -1330,46 +856,13 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
                 bbsize, 
                 basize, 
                 _config.venue_id);
-/* 
-		zmq_msg_t msg;        
-		char msgbuf[256];
-        capkproto::instrument_bbo bbo;
-        if (_isPublishing) {
-            bbo.set_symbol(symbol.getValue());
-            bbo.set_bid_price(bbid);
-            bbo.set_ask_price(bask);
-            bbo.set_bid_size(bbsize);
-            bbo.set_ask_size(basize);
-            bbo.set_bid_venue_id(_config.venue_id);
-            bbo.set_ask_venue_id(_config.venue_id);
-            
-            size_t msgsize = bbo.ByteSize();
-			assert(msgsize < sizeof(msgbuf));
-            if (msgsize > sizeof(msgbuf)) {
-                std::cerr << "WARNING: buf too small for protobuf serialization!" << std::endl;
-            }
-            bbo.SerializeToArray(msgbuf, msgsize);
-
-            zmq_msg_init_size(&msg, msgsize);
-            memcpy(zmq_msg_data(&msg), msgbuf, msgsize);
-            std::cerr << "Sending "  << msgsize << " bytes\n";
-            zmq_send(_pzmq_socket, &msg, 0);
-
-            //if (msgbuf) {
-             //   delete[] msgbuf;
-            //}
-        }
-*/
-        //if(bbprice > baprice) {
-            //std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK (" << bbprice <<  ", " << baprice << ") XXXXXXXXXXXXXXXXX\n";
-        //}
 
 #ifdef DEBUG
 		if (pLog == NULL) {
 		    std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
         } 
 #endif
-        if (_isLogging && pLog != NULL) {
+        if (_config.is_logging && pLog != NULL) {
             // KTK MOVED TO MATCH CONFLUENCE 12/9/2011
             *pLog << "OB," 
                 << pBook->getName() 
@@ -1399,8 +892,10 @@ void
 Application::onMessage(const FIX44::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID) 
 {
 
-	if (_config.printDebug) { 
-		std::cout << "Application::onMessage(const FIX44::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+	if (_config.print_debug) { 
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX44::MarketDataIncrementalRefresh& message, ...)\n", message.toString(), "\n");
+#endif
 	}
     this->incremental_update_template<FIX44::MarketDataIncrementalRefresh>(message,sessionID); 
 }
@@ -1409,20 +904,22 @@ void
 Application::onMessage(const FIX43::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID) 
 {
 
-	if (_config.printDebug) { 
-		std::cout << "Application::onMessage(const FIX43::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+	if (_config.print_debug) { 
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX43::MarketDataIncrementalRefresh& message, ...)\n", message.toString(), "\n");
+#endif
 	}
     this->incremental_update_template<FIX43::MarketDataIncrementalRefresh>(message,sessionID); 
 }
-
-
 
 void 
 Application::onMessage(const FIX42::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID) 
 {
 
-	if (_config.printDebug) { 
-		std::cout << "Application::onMessage(const FIX42::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+	if (_config.print_debug) { 
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX42::MarketDataIncrementalRefresh& message, ...)\n", message.toString(), "\n");
+#endif
 	}
     this->incremental_update_template<FIX42::MarketDataIncrementalRefresh>(message,sessionID); 
 }
@@ -1431,24 +928,30 @@ Application::onMessage(const FIX42::MarketDataIncrementalRefresh& message, const
 void 
 Application::onMessage(const FIX44::MarketDataRequestReject& message, const FIX::SessionID& sessionID) 
 {
-	if (_config.printDebug) { 
-	    std::cout << "Application::onMessage(const FIX44::MarketDataRequestReject& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+	if (_config.print_debug) { 
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX44::MarketDataRequestReject& message, ...)\n", message.toString(), "\n");
+#endif
     }
 }
 
 void 
 Application::onMessage(const FIX43::MarketDataRequestReject& message, const FIX::SessionID& sessionID) 
 {
-	if (_config.printDebug) { 
-	    std::cout << "Application::onMessage(const FIX43::MarketDataRequestReject& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+	if (_config.print_debug) { 
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX43::MarketDataRequestReject& message, ...)\n", message.toString(), "\n");
+#endif
     }
 }
 
 void 
 Application::onMessage(const FIX42::MarketDataRequestReject& message, const FIX::SessionID& sessionID) 
 {
-	if (_config.printDebug) { 
-	    std::cout << "Application::onMessage(const FIX42::MarketDataRequestReject& message, const FIX::SessionID& sessionID)(" << message.toString() << ")" << "\n";
+	if (_config.print_debug) { 
+#ifdef LOG
+        pan::log_DEBUG("onMessage(const FIX42::MarketDataRequestReject& message, ...)\n", message.toString(), "\n");
+#endif
     }
 }
 
@@ -1459,17 +962,17 @@ Application::toAdmin(FIX::Message& message, const FIX::SessionID& sessionID)
 	FIX::MsgType msgType;
 	message.getHeader().getField(msgType);
 	if (msgType.getValue() == "1") { 
-		if (_config.printDebug) { 
+		if (_config.print_debug) { 
 			std::cerr << "Sending TestRequest" << "\n";
 		}
 	}	
 	if (msgType.getValue() == "2") {
-		if (_config.printDebug) {
+		if (_config.print_debug) {
 			std::cerr << "Sending ResendRequest" << "\n";
 		}
 	}
 	if (msgType.getValue() == "3") {
-		if (_config.printDebug) {
+		if (_config.print_debug) {
             std::cerr << "*******************************************************\n";
             std::cerr << "*******************************************************\n";
             std::cerr << "*******************************************************\n";
@@ -1479,12 +982,12 @@ Application::toAdmin(FIX::Message& message, const FIX::SessionID& sessionID)
 		}
     }
 	if (msgType.getValue() == "0") { 
-		if (_config.printDebug) { 
+		if (_config.print_debug) { 
 			std::cerr << "Sending Heartbeat" << "\n";
 		}
 	}	
 	if (msgType.getValue() == "4") {
-		if (_config.printDebug) { 
+		if (_config.print_debug) { 
 			std::cerr << "Sending SequenceReset" << "(" << message << ")" << "\n";
 		}
 	}
@@ -1508,37 +1011,14 @@ Application::toAdmin(FIX::Message& message, const FIX::SessionID& sessionID)
 			    header.setField(FIX::FIELD::Password, _config.password); 
             }
 		} 
-		if (_resetSequence) {
-			//_resetSequence = false;
-			std::cerr << "Resetting sequence numbers" << std::endl;
+		if (_config.reset_seq_nums) {
+			std::cerr << "Sending reset sequence number request (141=Y)" << std::endl;
             FIX::ResetSeqNumFlag flag = FIX::ResetSeqNumFlag_YES;
 			message.setField(FIX::FIELD::ResetSeqNumFlag, "Y");
 		}
-/*
-		if (_resetSequence) {
-			// reset flag
-			_resetSequence = false;
-			std::cerr << "Resetting sequence numbers" << "\n";
-			FIX::ResetSeqNumFlag resetSeqNumFlag;
-			std::cerr << "Checking to see if flag already exists...";
-			// KTK - how do you set an existing header field to a different one?
-			// or do you need to remove it and re-add it? 
-			if (message.isSetField(resetSeqNumFlag)) {
-				message.getHeader().getField(resetSeqNumFlag);
-				std::cerr << "yes. ResetSeqNumFlag is already set to (" << resetSeqNumFlag.getValue() << ")" << "\n";
-				message.getHeader().setField(FIX::ResetSeqNumFlag("1"), true);
-			}
-			else {
-				std::cerr << "no. Requesting sequence number reset" << "\n";
-				message.getHeader().setField(FIX::ResetSeqNumFlag("1"));
-			}
-		}
-		//message.getHeader().setField(FIX::EncryptMethod(0));
-		//message.getHeader().setField(FIX::HeartBtInt(30));
-*/
 	}
-	if (_config.printDebug) { 
-		std::cout << "toAdmin(" << "Message: " << message << ")" << "\n";
+	if (_config.print_debug) { 
+        pan::log_DEBUG("Sending: ", message.toString());
 	}
 }
 
@@ -1578,10 +1058,11 @@ Application::run()
     std::string dateToday;
     fs::path datePath;
 
-    if (_isLogging) {
+    if (_config.is_logging) {
         today = boost::gregorian::day_clock::universal_day();
         dateToday = date_to_string(today); 
         //	std::string dateToday =  to_iso_string(d); 
+	    _pathToLog = fs::path(_config.order_books_output_dir);
         datePath = _pathToLog / fs::path(dateToday); 
         if (!fs::exists(datePath)) { 
             fs::create_directory(datePath); 
@@ -1597,13 +1078,13 @@ Application::run()
         bool isRestart = false;
 		symbol = *it; 
 		//pBook = new capitalk::PriceDepthOrderBook(symbol, 5);	
-		pBook = new capk::KBook(symbol.c_str(), _config.marketDepth);	
+		pBook = new capk::KBook(symbol.c_str(), _config.market_depth);	
 		std::cerr << 
             "Created new order book: " 
             << symbol 
             << "(" << pBook->getDepth() << ")" 
             << "\n";
-        if (_isLogging) {
+        if (_config.is_logging) {
 		    logFileName = MIC_prefix + remove_bad_filename_chars(symbol) + "_" + dateToday;
 		    logFileName.append(".csv");
             fullPathToLog = datePath / fs::path(logFileName);
@@ -1614,7 +1095,7 @@ Application::run()
             if (isRestart) { 
                 timespec evtTime;
                 clock_gettime(CLOCK_MONOTONIC, &evtTime);
-                if (_isLogging) {
+                if (_config.is_logging) {
                     *pLog << "RESTART: " << evtTime << "\n";
                 }
 		            std::cout << "Appening to log for: " 
@@ -1634,7 +1115,7 @@ Application::run()
                     << "\n";
                 timespec evtTime;
                 clock_gettime(CLOCK_MONOTONIC, &evtTime);
-                ///if (_isLogging) {
+                ///if (_config.is_logging) {
                 *pLog << pBook->getOutputVersionString() << "," << pBook->getName() << "," << pBook->getDepth() << "," << evtTime << "\n"; 
                 ///}
             }
@@ -1665,7 +1146,7 @@ Application::run()
 void 
 Application::sendTestRequest()
 {
-	if (_config.printDebug) { 
+	if (_config.print_debug) { 
 		std::cout << "Application::sendTestRequest()" << "\n";
 	}
 
@@ -1686,11 +1167,10 @@ Application::sendTestRequest()
 FIX44::TestRequest 
 Application::sendTestRequest44() 
 {
-	if (_config.printDebug) { 
+	if (_config.print_debug) { 
 		std::cout << "Application::sendTestRequest44()" << "\n";
 	}
 	FIX44::TestRequest tr;
-	// KTK - change to timestamap at some point - better than static string to debug
 	FIX::TestReqID trid("TestRequest");
 	tr.setField(trid);
 	return tr;
@@ -1699,11 +1179,10 @@ Application::sendTestRequest44()
 FIX43::TestRequest 
 Application::sendTestRequest43() 
 {
-	if (_config.printDebug) { 
+	if (_config.print_debug) { 
 		std::cout << "Application::sendTestRequest43()" << "\n";
 	}
 	FIX43::TestRequest tr;
-	// KTK - change to timestamap at some point - better than static string to debug
 	FIX::TestReqID trid("TestRequest");
 	tr.setField(trid);
 	return tr;
@@ -1712,11 +1191,10 @@ Application::sendTestRequest43()
 FIX42::TestRequest 
 Application::sendTestRequest42() 
 {
-	if (_config.printDebug) { 
+	if (_config.print_debug) { 
 		std::cout << "Application::sendTestRequest42()" << "\n";
 	}
 	FIX42::TestRequest tr;
-	// KTK - change to timestamap at some point - better than static string to debug
 	FIX::TestReqID trid("TestRequest");
 	tr.setField(trid);
 	return tr;
@@ -1724,11 +1202,11 @@ Application::sendTestRequest42()
 
 void 
 Application::querySingleMarketDataRequest(const std::string& requestSymbol)
-throw(std::exception)
 {
-	//int version = queryVersion();
-	if (_config.printDebug) {
-	    std::cout << "Application::querySingleMarketDataRequest(const std::string& requestSymbol)" << "\n";
+	if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("querySingleMarketDataRequest(...)");
+#endif
     }
 	FIX::Message md;
 	switch(_config.version) {
@@ -1748,8 +1226,10 @@ FIX44::MarketDataRequest
 Application::querySingleMarketDataRequest44(const std::string& requestSymbol)
 {
 
-	if (_config.printDebug) {
-	    std::cout << "Application::querySingleMarketDataRequest44(const std::string& requestSymbol)(" << requestSymbol << ")" << "\n";
+	if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("querySingleMarketDataRequest44(", requestSymbol.c_str(), ")");
+#endif
     }
     std::string reqID("CAPK-");
     reqID += requestSymbol;
@@ -1757,11 +1237,11 @@ Application::querySingleMarketDataRequest44(const std::string& requestSymbol)
 
 	FIX::SubscriptionRequestType 
 	  subType(FIX::SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES);
-// KTK TODO - pull the depth into symbols file
-	FIX::MarketDepth marketDepth(_config.marketDepth);
+    // KTK TODO - pull the depth into symbols file
+	FIX::MarketDepth marketDepth(_config.market_depth);
 	FIX44::MarketDataRequest message(mdReqID, subType, marketDepth);
 	
-	if (_config.aggregatedBook) { 
+	if (_config.is_aggregated_book) { 
         message.set(FIX::AggregatedBook(true));
 	} 
     else {
@@ -1786,7 +1266,7 @@ Application::querySingleMarketDataRequest44(const std::string& requestSymbol)
 	symbolGroup.set(symbol);
 	message.addGroup(symbolGroup);
 
-	FIX::MDUpdateType updateType(_MDUpdateType);
+	FIX::MDUpdateType updateType(_config.update_type);
 	message.set(updateType);
 
 	message.getHeader().setField(_sessionID.getSenderCompID());
@@ -1799,8 +1279,10 @@ FIX43::MarketDataRequest
 Application::querySingleMarketDataRequest43(const std::string& requestSymbol)
 {
 
-	if (_config.printDebug) {
-	    std::cout << "Application::querySingleMarketDataRequest43(const std::string& requestSymbol)(" << requestSymbol << ")" << "\n";
+	if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("querySingleMarketDataRequest43(", requestSymbol.c_str(), ")");
+#endif
     }
     std::string reqID("CAPK-");
     reqID += requestSymbol;
@@ -1808,11 +1290,11 @@ Application::querySingleMarketDataRequest43(const std::string& requestSymbol)
 
 	FIX::SubscriptionRequestType 
 	  subType(FIX::SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES);
-// KTK TODO - pull the depth into symbols file
-	FIX::MarketDepth marketDepth(_config.marketDepth);
+    // KTK TODO - pull the depth into symbols file
+	FIX::MarketDepth marketDepth(_config.market_depth);
 	FIX43::MarketDataRequest message(mdReqID, subType, marketDepth);
 	
-	if (_config.aggregatedBook) { 
+	if (_config.is_aggregated_book) { 
         message.set(FIX::AggregatedBook(true));
 	} 
     else {
@@ -1837,7 +1319,7 @@ Application::querySingleMarketDataRequest43(const std::string& requestSymbol)
 	symbolGroup.set(symbol);
 	message.addGroup(symbolGroup);
 
-	FIX::MDUpdateType updateType(_MDUpdateType);
+	FIX::MDUpdateType updateType(_config.update_type);
 	message.set(updateType);
 
 	message.getHeader().setField(_sessionID.getSenderCompID());
@@ -1849,8 +1331,10 @@ Application::querySingleMarketDataRequest43(const std::string& requestSymbol)
 FIX42::MarketDataRequest 
 Application::querySingleMarketDataRequest42(const std::string& requestSymbol)
 {
-	if (_config.printDebug) {
-	    std::cerr << "Application::querySingleMarketDataRequest42(const std::string& requestSymbol)(" << requestSymbol << ")" << "\n";
+	if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("querySingleMarketDataRequest42(", requestSymbol.c_str(), ")");
+#endif
     }
     std::string reqID("CAPK-");
     reqID += requestSymbol;
@@ -1859,10 +1343,10 @@ Application::querySingleMarketDataRequest42(const std::string& requestSymbol)
 	FIX::SubscriptionRequestType 
 	  subType(FIX::SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES);
 // KTK TODO - pull the depth into symbols file
-	FIX::MarketDepth marketDepth(_config.marketDepth);
+	FIX::MarketDepth marketDepth(_config.market_depth);
 	FIX42::MarketDataRequest message(mdReqID, subType, marketDepth);
 
-	if (_config.aggregatedBook) { 
+	if (_config.is_aggregated_book) { 
           message.set(FIX::AggregatedBook(true));
 	} 
     else {
@@ -1887,17 +1371,8 @@ Application::querySingleMarketDataRequest42(const std::string& requestSymbol)
 	symbolGroup.set(symbol);
 	message.addGroup(symbolGroup);
 
-	FIX::MDUpdateType updateType(_MDUpdateType);
+	FIX::MDUpdateType updateType(_config.update_type);
 	message.set(updateType);
-
-/*
-    FIX::K_ReplayFile k_replayFile("FIX.4.2-pro5792test-CNX.messages.current.log");
-    message.setField(k_replayFile);
-    FIX::K_Volatility k_volatility(0.5);
-    message.setField(k_volatility);
-    FIX::K_ReplayTimeDiv k_replayTimeDiv(2.223);
-    message.setField(k_replayTimeDiv);
-*/
 
 	message.getHeader().setField(_sessionID.getSenderCompID());
 	message.getHeader().setField(_sessionID.getTargetCompID());
@@ -1909,8 +1384,7 @@ Application::querySingleMarketDataRequest42(const std::string& requestSymbol)
 void 
 Application::queryMarketDataRequest(const std::vector<std::string>& symbols)
 {
-	//int version = queryVersion();
-    if (_config.printDebug) {
+    if (_config.print_debug) {
 	    std::cout << "Application::queryMarketDataRequest(const std::vector<std::string>& symbols)" << "\n";
     }
 	FIX::Message md;
@@ -1934,20 +1408,19 @@ FIX44::MarketDataRequest
 Application::queryMarketDataRequest44(const std::vector<std::string>& symbols)
 {
 
-    if (_config.printDebug) {
-    	std::cout << "Application::queryMarketDataRequest44(const std::vector<std::string>& symbols)" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("queryMarketDataRequest44(", pan::integer(symbols.size()), " symbols)");
+#endif
     }
-	FIX::MDReqID mdReqID("MARKETDATAID");
+	FIX::MDReqID mdReqID("CAPK");
 
 	FIX::SubscriptionRequestType 
 	  subType(FIX::SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES);
-	FIX::MarketDepth marketDepth(_config.marketDepth);
+	FIX::MarketDepth marketDepth(_config.market_depth);
 	FIX44::MarketDataRequest message(mdReqID, subType, marketDepth);
 	
-	if (_config.aggregatedBook) { 
-          message.set(FIX::AggregatedBook(true));
-	} 
-
+    message.set(FIX::AggregatedBook(_config.is_aggregated_book));
 	
 	FIX44::MarketDataRequest::NoMDEntryTypes marketDataEntryGroup;
 	// Set bid request
@@ -1963,8 +1436,6 @@ Application::queryMarketDataRequest44(const std::vector<std::string>& symbols)
 	// Set symbols to subscribe to 
 	FIX44::MarketDataRequest::NoRelatedSym symbolGroup;
 	for (std::vector<std::string>::const_iterator it = symbols.begin(); it != symbols.end(); ++it) {
-		// this sucks - use a better check for empty symbols - or better a validator!
-		// but again - premature optimization is the root of all evil
 		if (*it != "") {
 			FIX::Symbol symbol(*it);
 			symbolGroup.set(symbol);	
@@ -1972,13 +1443,11 @@ Application::queryMarketDataRequest44(const std::vector<std::string>& symbols)
 		}
 	}
 
-	FIX::MDUpdateType updateType(_MDUpdateType);
+	FIX::MDUpdateType updateType(_config.update_type);
 	message.set(updateType);
 
-	//queryHeader(message.getHeader());
 	message.getHeader().setField(_sessionID.getSenderCompID());
 	message.getHeader().setField(_sessionID.getTargetCompID());
-
 
 	return message;
 }
@@ -1988,20 +1457,19 @@ FIX43::MarketDataRequest
 Application::queryMarketDataRequest43(const std::vector<std::string>& symbols)
 {
 
-    if (_config.printDebug) {
-    	std::cout << "Application::queryMarketDataRequest43(const std::vector<std::string>& symbols)" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("queryMarketDataRequest43(", pan::integer(symbols.size()), " symbols)");
+#endif
     }
-	FIX::MDReqID mdReqID("MARKETDATAID");
+	FIX::MDReqID mdReqID("CAPK");
 
 	FIX::SubscriptionRequestType 
 	  subType(FIX::SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES);
-	FIX::MarketDepth marketDepth(_config.marketDepth);
+	FIX::MarketDepth marketDepth(_config.market_depth);
 	FIX43::MarketDataRequest message(mdReqID, subType, marketDepth);
 	
-	if (_config.aggregatedBook) { 
-          message.set(FIX::AggregatedBook(true));
-	} 
-
+    message.set(FIX::AggregatedBook(_config.is_aggregated_book));
 	
 	FIX43::MarketDataRequest::NoMDEntryTypes marketDataEntryGroup;
 	// Set bid request
@@ -2017,8 +1485,6 @@ Application::queryMarketDataRequest43(const std::vector<std::string>& symbols)
 	// Set symbols to subscribe to 
 	FIX43::MarketDataRequest::NoRelatedSym symbolGroup;
 	for (std::vector<std::string>::const_iterator it = symbols.begin(); it != symbols.end(); ++it) {
-		// this sucks - use a better check for empty symbols - or better a validator!
-		// but again - premature optimization is the root of all evil
 		if (*it != "") {
 			FIX::Symbol symbol(*it);
 			symbolGroup.set(symbol);	
@@ -2026,13 +1492,11 @@ Application::queryMarketDataRequest43(const std::vector<std::string>& symbols)
 		}
 	}
 
-	FIX::MDUpdateType updateType(_MDUpdateType);
+	FIX::MDUpdateType updateType(_config.update_type);
 	message.set(updateType);
 
-	//queryHeader(message.getHeader());
 	message.getHeader().setField(_sessionID.getSenderCompID());
 	message.getHeader().setField(_sessionID.getTargetCompID());
-
 
 	return message;
 }
@@ -2041,20 +1505,19 @@ FIX42::MarketDataRequest
 Application::queryMarketDataRequest42(const std::vector<std::string>& symbols)
 {
 
-    if (_config.printDebug) {
-	    std::cerr << "Application::queryMarketDataRequest42(const std::vector<std::string>& symbols)" << "\n";
+    if (_config.print_debug) {
+#ifdef LOG
+        pan::log_DEBUG("queryMarketDataRequest42(", pan::integer(symbols.size()), " symbols)");
+#endif
     }
-	FIX::MDReqID mdReqID("MARKETDATAID");
+	FIX::MDReqID mdReqID("CAPK");
 
 	FIX::SubscriptionRequestType 
 	  subType(FIX::SubscriptionRequestType_SNAPSHOT_PLUS_UPDATES);
-	FIX::MarketDepth marketDepth(0);
+	FIX::MarketDepth marketDepth(_config.market_depth);
 	FIX42::MarketDataRequest message(mdReqID, subType, marketDepth);
 	
-	if (_config.aggregatedBook) { 
-          message.set(FIX::AggregatedBook(true));
-	} 
-
+    message.set(FIX::AggregatedBook(_config.is_aggregated_book));
 	
 	FIX42::MarketDataRequest::NoMDEntryTypes marketDataEntryGroup;
 	// Set bid request
@@ -2070,8 +1533,6 @@ Application::queryMarketDataRequest42(const std::vector<std::string>& symbols)
 	// Set symbols to subscribe to 
 	FIX42::MarketDataRequest::NoRelatedSym symbolGroup;
 	for (std::vector<std::string>::const_iterator it = symbols.begin(); it != symbols.end(); ++it) {
-		// this sucks - use a better check for empty symbols - or better a validator!
-		// but again - premature optimization is the root of all evil
 		if (*it != "") {
 			FIX::Symbol symbol(*it);
 			symbolGroup.set(symbol);	
@@ -2079,32 +1540,13 @@ Application::queryMarketDataRequest42(const std::vector<std::string>& symbols)
 		}
 	}
 
-	FIX::MDUpdateType updateType(_MDUpdateType);
+	FIX::MDUpdateType updateType(_config.update_type);
 	message.set(updateType);
 
-	//queryHeader(message.getHeader());
 	message.getHeader().setField(_sessionID.getSenderCompID());
 	message.getHeader().setField(_sessionID.getTargetCompID());
 
-
 	return message;
-}
-
-void 
-Application::setDataPath(const std::string& pathStr) 
-{
-	_pathToLog = fs::path(pathStr);
-}
-
-void 
-Application::setUpdateType(const long updateType) 
-{
-	if (updateType != -1) {
-		_MDUpdateType = updateType; 
-	}
-	else {
-		_MDUpdateType = FIX::MDUpdateType_INCREMENTAL_REFRESH;
-	}	
 }
 
 void 
@@ -2138,10 +1580,11 @@ Application::getStream(const std::string& symbol)
 }
 
 void 
-//Application::addBook(const std::string& symbol, capitalk::PriceDepthOrderBook* book) 
 Application::addBook(const std::string& symbol, capk::KBook* book) 
 {
-	std::cout << "Adding book for symbol: " << symbol << "\n";
+#ifdef LOG
+    pan::log_DEBUG("Adding book for symbol: ", symbol.c_str());
+#endif
 	_symbolToBook[symbol] = book;
 }
 
@@ -2160,8 +1603,10 @@ Application::getBook(const std::string& symbol)
 void 
 Application::flushLogs()
 {
-    if (_config.printDebug)  {
-        std::cerr << "Flushing streams\n";
+    if (_config.print_debug)  {
+#ifdef LOG
+        pan::log_DEBUG("Flushing streams");
+#endif
     }
 	symbolToLogStreamIterator streamIter = _symbolToLogStream.begin();
 	while(streamIter != _symbolToLogStream.end()) {
@@ -2177,8 +1622,10 @@ Application::flushLogs()
 void
 Application::deleteBooks()
 {
-    if (_config.printDebug)  {
-        std::cerr << "Deleting books\n";
+    if (_config.print_debug)  {
+#ifdef LOG
+        pan::log_DEBUG("Deleting books");
+#endif
     }
 	symbolToBookIterator books = _symbolToBook.begin();
 	while(books != _symbolToBook.end()) {

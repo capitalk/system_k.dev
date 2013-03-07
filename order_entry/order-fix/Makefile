@@ -30,7 +30,7 @@ LIBS= -L/usr/local/lib \
 # N.B. MAKE SURE YOU LINK WITH THE RIGHT LIBS (check the compiler gccXX)
 PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
         -l pantheios.1.core.gcc44.file64bit \
-        -l pantheios.1.fe.N.gcc44.file64bit.debug \
+        -l pantheios.1.fe.N.gcc44.file64bit \
         -l pantheios.1.util.gcc44.file64bit \
 		-l pantheios.1.be.N.gcc44.file64bit \
         -l pantheios.1.bec.file.gcc44.file64bit \
