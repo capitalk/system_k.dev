@@ -522,16 +522,6 @@ Application::full_refresh_template(const T& message, const FIX::SessionID& sessi
 }
 
 
-/* KTK - TODO - logging ob is broken when we just get full refreshes every time - the add doesn't do a delete first 
-				pLog = getStream(symbol.getValue());
-				if (pLog == NULL) {
-					std::cerr << __FILE__ <<  ":"  << __LINE__ << "Can't find log - log is null!" << "\n";
-				} else {
-					*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
-					*pLog << *pBook;
-				}
-*/                 
-
 void 
 Application::broadcast_bbo_book(void* bcast_socket, const char* symbol, const double best_bid, const double best_ask, const double bbsize, const double basize, const capk::venue_id_t venue_id)
 {
@@ -673,7 +663,6 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 			}	
 
 			unsigned int size; 
-            //bool modifiedBook = false; 
             timespec evtTime, sndTime;
             FIX::UtcTimeStamp time = FIX::UtcTimeStamp(sendingTime);
             FIXConvertors::UTCTimeStampToTimespec(time, &sndTime);
@@ -681,19 +670,15 @@ Application::incremental_update_template(const T& message, const FIX::SessionID&
 		    pLog = getStream(symbol.getValue());
 
 			if (NULL != (pBook = getBook(symbol.getValue())))  {
-                // KTK MOVED TO MATCH CONFLUENCE 12/9/2011
-                //*pLog << "OB," << pBook->getName() << "," << pBook->getEventTime() << "," << pBook->getExchangeSendTime() << "\n";
     		    char side = mdEntryType.getValue();
                 capk::Side_t nside = char2side_t(side);
-
-//		        double price = mdEntryPx.getValue();
-
                 double price = 0.0;
-
         		size = mdEntrySize.getValue();
 
            	    const std::string& id = mdEntryID.getValue();
+
                 uint32_t nid = hashlittle(id.c_str(), id.size(), 0);
+
                 if (_config.print_debug) {
                     std::cerr << "***** ORIG ID: " << id << ", HASH ID: " << nid << "\n";
                 }

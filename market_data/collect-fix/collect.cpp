@@ -44,7 +44,7 @@ const char* const DEFAULT_CONFIG_SERVER_ADDRESS = "tcp://127.0.0.1:11111";
 const char* const DEFAULT_TICK_FILE_DIR = ".";
 
 /**
- * Signal handler - for ZMQ clean exits
+ * Signal handler - needed for clean exits
  */
 void sighandler(int sig);
 
@@ -62,6 +62,8 @@ void *g_pub_socket = NULL;
 
 /**
  * Read symbol config file - one symbol per line 
+ * @param string filename of symbol config file
+ * @return std::vector of strings that contain symbol names
  */
 std::vector<std::string> 
 readSymbols(std::string symbol_file_name)
@@ -94,6 +96,10 @@ SetSignalHandlers()
     (void) signal(SIGHUP, sighandler);
 }
 
+/**
+ * Signal handler 
+ * @param Signal received
+ */
 void 
 sighandler(int sig) {  
     fprintf(stderr, "Received signal: %d\n", sig);
@@ -104,6 +110,11 @@ sighandler(int sig) {
     exit(sig); 
 }
 
+/** 
+ * Create the ZMQ context and set socket options 
+ * for the pub socket on which we'll broadcast market data
+ * @return 0 on success
+ */
 int
 InitializeZMQ() 
 {
@@ -124,10 +135,13 @@ InitializeZMQ()
 }
 
 /**
- * Write the file containing the process id to current directory
- * as prefix.suffix.pid
- * ppid is carried as junk for now
- * return 0 on success; -1 on failure
+ * Write a file containing the process id to current directory.
+ * File name is written as "prefix.suffix.pid"
+ * @parma prefix arbitrary string prefix (can be NULL) for filename
+ * @param suffix arbitrary string suffix (can be NULL) 
+ * @param pid the current process id
+ * @parma ppid the curren process parent id - NOT USED junk for now
+ * @return 0 on success
  */
 int
 WritePidFile(const char* prefix, const char* suffix, pid_t pid, pid_t ppid) 
@@ -147,10 +161,15 @@ WritePidFile(const char* prefix, const char* suffix, pid_t pid, pid_t ppid)
 
 
 /**
- * Set the ApplicationConfig structure from the FIX::Dictionary that is returned from 
+ * Read local configuration file. 
+ * Sets the ApplicationConfig structure (non-FIX) from the FIX::Dictionary that is returned from 
  * parsing the FIX configuration file. Non-standard config params are picked up into the 
  * dictionary when the file is parsed so we just capture them here and put them into 
  * the local ApplicationConfig structure. 
+ * The parsing of the file into the dict is part of QuickFix library
+ * @param applciation_config The config structure for this module
+ * @parma dict The FIX::Dictionary structure that holds parsed params
+ * @return 0 on success
  */
 int
 ReadLocalConfig(ApplicationConfig* application_config, const FIX::Dictionary& dict)
@@ -235,6 +254,16 @@ ReadLocalConfig(ApplicationConfig* application_config, const FIX::Dictionary& di
     return (err);
 }
 
+/**
+ * Read the configuration from the config server.
+ * Config is sent in a protobuf that details the network config and 
+ * other settings that may need to be discovered by other components. 
+ * Difference between this and local settings is that local file settings
+ * are more venue specific and this config is system specific. 
+ * @param application_config Pointer to application config strucutre 
+ * that stores settings read from remote config
+ * @return 0 on success
+ */
 int 
 ReadRemoteConfig(ApplicationConfig* application_config)
 {
@@ -282,6 +311,14 @@ ReadRemoteConfig(ApplicationConfig* application_config)
     return (0);
 }
 
+/**
+ * Controls run time settings.
+ * Change runtime behaviour of program. Settings that can be made 
+ * without requiring a recompile. 
+ * @param argc number of arguments to main()
+ * @param argv array of char* to string arguments to main
+ * @param application_config application configuration settings structure
+ */
 int
 ReadCommandLineParams(int argc, char** argv, ApplicationConfig* application_config)
 {
@@ -303,7 +340,7 @@ ReadCommandLineParams(int argc, char** argv, ApplicationConfig* application_conf
 		po::notify(vm);    
 
 		if (vm.count("help")) {
-			std::cout << desc << "\n";
+			std::cerr << desc << "\n";
 			return 1;
 		}
 
@@ -345,15 +382,6 @@ ReadCommandLineParams(int argc, char** argv, ApplicationConfig* application_conf
         }
         pan::log_INFORMATIONAL("Using config server: ", application_config->config_server_addr);
 			
-		/** moved passwords to cfg files 
-		if (vm.count("p")) {
-        pan::log_DEBUG("Pass: " << vm["p"].as<std::string>() << ".\n";
-			password = vm["p"].as<std::string>();
-		} else {
-        pan::log_DEBUG("Password was not set.\n";
-			err++;
-		}
-		*/ 
         return (err);
 	}
 	catch(std::exception& e) {
@@ -362,6 +390,9 @@ ReadCommandLineParams(int argc, char** argv, ApplicationConfig* application_conf
 	}
 }
 
+/**
+ * Entry point for program.
+ */
 int 
 main(int argc, char** argv )
 {
@@ -370,11 +401,6 @@ main(int argc, char** argv )
 	config.print_debug = false;
     config.is_logging = true;
 
-	//std::string root_output_dir; 
-	//std::string symbol_file_name;
-	//std::string config_file_name;
-	//std::string password;
-
     SetSignalHandlers();
 
     if (InitializeZMQ() != 0) {
@@ -382,6 +408,7 @@ main(int argc, char** argv )
         return (-1);
     }
 
+    // Must call this to use protobufs
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
 	
@@ -485,7 +512,7 @@ main(int argc, char** argv )
 				break;
 			}
 		}
-        pan::log_DEBUG("Stopping initiator...");
+        pan::log_DEBUG("Stopping initiator");
 		g_pinitiator->stop();
 		return 0;
 	}
