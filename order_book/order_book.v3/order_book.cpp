@@ -6,10 +6,9 @@
 //  Copyright (c) 2012 Timir Karia. All rights reserved.
 //
 
-#include "order_book.h"
+#include "order_book.hxx"
 #include <assert.h>
-
-
+#include <iostream>
 
 order_book::order_book(double init_price, double one_way_offset_pct, double min_tick_size):
 _init_price(init_price),

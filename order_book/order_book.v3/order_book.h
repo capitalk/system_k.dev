@@ -9,35 +9,81 @@
 #ifndef __OrderBook_v3__order_book__
 #define __OrderBook_v3__order_book__
 
-#include <iostream>
+#include <inttypes.h>
 
 const size_t MAX_ORDERS_PER_LEVEL = 10;
+const size_t MAX_ORDER_ID_LEN = 32;
 
-struct price_level
+
+struct _order
 {
-    price_level(double price):
-    _price(price),
-    _num_orders(0)
-    {};
-    
+    double quantity;
+    char order_id[MAX_ORDER_ID_LEN];
+};
+typedef struct _order order;
+
+struct _priceLevel
+{
+    double _aggregate_qty;
     int32_t _num_orders;
     double _price;
-    double orders[MAX_ORDERS_PER_LEVEL];
+    order orders[MAX_ORDERS_PER_LEVEL];
 };
+typedef struct _priceLevel priceLevel;
 
-class order_book
+struct orderBook
 {
-public:
-    order_book(double init_price, double one_way_offset_pct, double min_tick_size);
-    ~order_book();
-    
-private:
-    double _init_price;
-    double _min_tick_size;
-    double _one_way_offset_pct;
-    
-    double* data;
+    double init_price;
+    int32_t num_levels;
+    double one_way_offset_pct;
+    double min_tick_size;
+    double lower_price_bound;
+    double upper_price_bound;
+    priceLevel* levels;
+    priceLevel* best_bid;
+    priceLevel* best_ask;
     
 };
+typedef struct orderBook orderBook;
+
+int
+init_order_book(orderBook* order_book);
+
+orderBook*
+new_order_book(double init_price,
+               double one_way_offset_pct,
+               double min_tick_size);
+
+
+int
+addOrder(orderBook* ob,
+         double price,
+         double quantity,
+         const char* order_id);
+
+int
+delOrder(orderBook* ob,
+         double price,
+         double quantity,
+         const char* order_id);
+
+int
+modOrder(orderBook* ob,
+         double price,
+         double quantity,
+         const char* order_id);
+
+
+const priceLevel*
+bestBid(orderBook* ob) {
+    return NULL;
+}
+
+const priceLevel*
+bestOffer(orderBook* ob) {
+    return NULL;
+}
+
+
 
 #endif /* defined(__OrderBook_v3__order_book__) */
