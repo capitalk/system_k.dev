@@ -16,6 +16,7 @@ LIBS= -lquickfix \
 		-lboost_program_options \
 		-lboost_filesystem \
 		-lzmq \
+		-lrt \
 		-lprotobuf \
 
 CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
