@@ -1,5 +1,6 @@
+CAPK_ROOT=../..
 PROTOC=protoc
-PROTO=../../common/proto
+PROTO=$(CAPK_ROOT)/common/proto
 PROTO_OUT=./proto_objs
 
 all: protos
