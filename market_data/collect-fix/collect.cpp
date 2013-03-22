@@ -43,6 +43,10 @@ const char* const DEFAULT_SYMBOLS_FILE_NAME = "symbols.cfg";
 const char* const DEFAULT_CONFIG_SERVER_ADDRESS = "tcp://127.0.0.1:11111";
 const char* const DEFAULT_TICK_FILE_DIR = ".";
 
+const PAN_CHAR_T PANTHEIOS_FE_PROCESS_IDENTITY[] = "collect-fix";
+
+
+
 /**
  * Signal handler - needed for clean exits
  */
