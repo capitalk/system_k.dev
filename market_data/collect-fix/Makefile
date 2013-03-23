@@ -21,17 +21,17 @@ INCLUDE= -I $(PANTHEIOS_ROOT)/include \
 		-I $(COMMON)
 
 LIBS= -L$(ORDERBOOK_DIR)/ \
-	      	-lquickfix \
-		-lboost_date_time \
-		-lboost_program_options \
-		-lboost_system \
-		-lboost_filesystem \
+		-lquickfix \
 		-lorder_book2 \
 		-lrt \
 		-lzmq \
 		-lprotobuf \
-		-lgtest
-
+		-lgtest \
+		-lboost_date_time \
+		-lboost_program_options \
+		-lboost_system \
+		-lboost_filesystem
+	
 
 # N.B. MAKE SURE YOU LINK WITH THE RIGHT LIBS (check the compiler gccXX)
 PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
