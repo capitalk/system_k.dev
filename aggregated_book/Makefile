@@ -11,12 +11,14 @@ INCLUDE= -I$(UTILS) \
 		-I$(COMMON) 
 
 LIBS= -lquickfix \
+		-lzmq \
+		-lrt \
+		-lprotobuf \
 		-lboost_date_time \
 		-lboost_thread \
 		-lboost_program_options \
-		-lboost_filesystem \
-		-lzmq \
-		-lprotobuf \
+		-lboost_system \
+		-lboost_filesystem 
 
 CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
 

@@ -43,6 +43,10 @@ const char* const DEFAULT_SYMBOLS_FILE_NAME = "symbols.cfg";
 const char* const DEFAULT_CONFIG_SERVER_ADDRESS = "tcp://127.0.0.1:11111";
 const char* const DEFAULT_TICK_FILE_DIR = ".";
 
+const PAN_CHAR_T PANTHEIOS_FE_PROCESS_IDENTITY[] = "collect-fix";
+
+
+
 /**
  * Signal handler - needed for clean exits
  */
@@ -330,7 +334,7 @@ ReadCommandLineParams(int argc, char** argv, ApplicationConfig* application_conf
 			("c", po::value<std::string>(), "<config file>")
 			("s", po::value<std::string>(), "<symbol file>")
 			("o", po::value<std::string>(), "<orderbook output path>")
-			("config-server", po::value<std::string>(), "<config server address>")
+			//("config-server", po::value<std::string>(), "<config server address>")
 			("nolog", po::value<int>()->implicit_value(0), "disable logging (FIX and tick)")
 			("d", "debug info")
 		;
@@ -360,12 +364,17 @@ ReadCommandLineParams(int argc, char** argv, ApplicationConfig* application_conf
 		if (vm.count("s")) {
             application_config->symbol_file_name = vm["s"].as<std::string>();
 		} 
+		else {
+			pan::log_WARNING("Symbol file was not set.");
+			err++;
+		}
         pan::log_INFORMATIONAL("Symbol file: ", application_config->symbol_file_name.c_str());
 
 		if (vm.count("c")) {
 			application_config->config_file_name = vm["c"].as<std::string>();
+			pan::log_DEBUG(application_config->config_file_name.c_str());
 		} else {
-            pan::log_WARNING("Config file was not set.");
+           	pan::log_WARNING("Config file was not set.");
 			err++;
 		}
         pan::log_INFORMATIONAL("Config file: ", application_config->config_file_name.c_str()); 
@@ -377,11 +386,14 @@ ReadCommandLineParams(int argc, char** argv, ApplicationConfig* application_conf
         pan::log_INFORMATIONAL("Print debug: ", pan::boolean(application_config->print_debug));
 
         application_config->config_server_addr = DEFAULT_CONFIG_SERVER_ADDRESS;
+/*
         if (vm.count("config-server") > 0) {
             application_config->config_server_addr = vm["config-server"].as<std::string>();
         }
+*/
         pan::log_INFORMATIONAL("Using config server: ", application_config->config_server_addr);
 			
+	pan::log_DEBUG("ERRCODE: ", pan::integer(err));
         return (err);
 	}
 	catch(std::exception& e) {

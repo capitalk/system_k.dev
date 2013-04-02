@@ -1,31 +1,37 @@
 CC=g++
 
+CAPK_ROOT=~/capitalk
 COMMON=../../../common
 UTILS=$(COMMON)/src/c++
 UTILS_SRC=$(UTILS)/utils
 PROTO=$(COMMON)/proto
-PANTHEIOS_EXT=/home/timir/pantheios_be_zmq
 
 ORDERBOOK_DIR=../../order_book/order_book.v2
 ORDERBOOK_INC=../../order_book
 ORDERBOOK_LIB=$(ORDERBOOK_DIR)/liborder_book2.a
 
+PANTHEIOS_EXT=$(CAPK_ROOT)/pantheios_be_zmq
+
 INCLUDE= -I $(PANTHEIOS_ROOT)/include \
+		-I $(CAPK_ROOT) \
 		-I $(STLSOFT)/include \
 		-I $(ORDERBOOK_INC) \
+		-I $(PANTHEIOS_EXT) \
 		-I $(UTILS) \
 		-I $(COMMON)
 
 LIBS= -L$(ORDERBOOK_DIR)/ \
-      	-lquickfix \
-		-lboost_date_time \
-		-lboost_program_options \
-		-lboost_filesystem \
+		-lquickfix \
 		-lorder_book2 \
+		-lrt \
 		-lzmq \
 		-lprotobuf \
-		-lgtest
-
+		-lgtest \
+		-lboost_date_time \
+		-lboost_program_options \
+		-lboost_system \
+		-lboost_filesystem
+	
 
 # N.B. MAKE SURE YOU LINK WITH THE RIGHT LIBS (check the compiler gccXX)
 PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
