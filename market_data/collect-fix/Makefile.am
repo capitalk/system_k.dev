@@ -45,7 +45,7 @@ LIBS= 	-lquickfix \
 
 AM_CPPFLAGS =	$(CFLAGS) $(INCLUDES)
 AM_LDFLAGS =	$(LDFLAGS) $(LIBS) $(PANTHEIOS_LIBS)
-
+ACLOCAL_AMFLAGS = -I m4
 
 bin_PROGRAMS =	collect
 collect_SOURCES = \
@@ -75,3 +75,4 @@ clean:
 	rm -f *.o $(PROTO)/*.cc $(PROTO)/*.h $(PROTO)/*.py
 	rm -f  $(ORDER_BOOK_OBJS) liborder_book2.a 
 	rm -f $(UTIL_OBJS) libcommon_utils.a
+	rm -rf  ./configure Makefile.in aclocal.m4 ./autom4te.cache config.guess config.h.in config.sub depcomp install-sh ltmain.sh stamp-h1 libtool config.h.in~ config.h config.status config.log missing Makefile
