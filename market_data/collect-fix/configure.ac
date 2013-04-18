@@ -50,6 +50,18 @@ AC_PROG_RANLIB
 AC_LANG([C++])
 
 
+# check if and how the environment variable LD_LIBRARY_PATH is set
+# treat it as a precious variable
+
+AC_ARG_VAR([LD_LIBRARY_PATH],AS_HELP_STRING([LD_LIBRARY_PATH=<paths>],[set LD_LIBRARY_PATH env variable]))
+if test "${LD_LIBRARY_PATH+set}" = set; then
+   echo "Variable LD_LIBRARY_PATH is set to: $LD_LIBRARY_PATH"
+else
+   echo "Variable LD_LIBRARY_PATH is not set"
+fi
+
+
+
 # check for packages
 
 STLSOFT_PFX="/opt/stlsoft"
@@ -186,6 +198,7 @@ AC_SUBST(SHARECFLAGS)
 
 SHARELDFLAGS="-L/usr/local/lib -L${STLSOFT_PFX}/lib -L${PANTHEIOS_PFX}/lib -L${QUICKFIX_PFX}/lib"
 AC_SUBST(SHARELDFLAGS)
+
 
 
 # Checks for libraries.

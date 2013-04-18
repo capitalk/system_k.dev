@@ -665,6 +665,7 @@ SHARECFLAGS
 QUICKFIX_PFX
 PANTHEIOS_PFX
 STLSOFT_PFX
+LD_LIBRARY_PATH
 LEXLIB
 LEX_OUTPUT_ROOT
 LEX
@@ -807,7 +808,8 @@ CPP
 CXX
 CXXFLAGS
 CCC
-CXXCPP'
+CXXCPP
+LD_LIBRARY_PATH'
 
 
 # Initialize some variables set by options.
@@ -1469,6 +1471,8 @@ Some influential environment variables:
   CXX         C++ compiler command
   CXXFLAGS    C++ compiler flags
   CXXCPP      C++ preprocessor
+  LD_LIBRARY_PATH
+              LD_LIBRARY_PATH=<paths> set LD_LIBRARY_PATH env variable
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -9951,11 +9955,14 @@ fi
   # before this can be enabled.
   hardcode_into_libs=yes
 
+  # Add ABI-specific directories to the system library path.
+  sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /lib /usr/lib"
+
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;/^[	 ]*hwcap[	 ]/d;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;s/"//g;/^$/d' | tr '\n' ' '`
-    # Add ABI-specific directories to the system library path.
-    sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /lib /usr/lib $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="$sys_lib_dlsearch_path_spec $lt_ld_extra"
+
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -14673,11 +14680,14 @@ fi
   # before this can be enabled.
   hardcode_into_libs=yes
 
+  # Add ABI-specific directories to the system library path.
+  sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /lib /usr/lib"
+
   # Append ld.so.conf contents to the search path
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;/^[	 ]*hwcap[	 ]/d;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;s/"//g;/^$/d' | tr '\n' ' '`
-    # Add ABI-specific directories to the system library path.
-    sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /lib /usr/lib $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="$sys_lib_dlsearch_path_spec $lt_ld_extra"
+
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -16573,6 +16583,18 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 
+# check if and how the environment variable LD_LIBRARY_PATH is set
+# treat it as a precious variable
+
+
+if test "${LD_LIBRARY_PATH+set}" = set; then
+   echo "Variable LD_LIBRARY_PATH is set to: $LD_LIBRARY_PATH"
+else
+   echo "Variable LD_LIBRARY_PATH is not set"
+fi
+
+
+
 # check for packages
 
 STLSOFT_PFX="/opt/stlsoft"
@@ -16729,6 +16751,7 @@ SHARECFLAGS="-I/usr/local/include -I${STLSOFT_PFX}/include -I${PANTHEIOS_PFX}/in
 
 
 SHARELDFLAGS="-L/usr/local/lib -L${STLSOFT_PFX}/lib -L${PANTHEIOS_PFX}/lib -L${QUICKFIX_PFX}/lib"
+
 
 
 
