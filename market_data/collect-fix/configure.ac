@@ -4,10 +4,12 @@
 AC_PREREQ([2.63])
 AC_INIT([capitalk],[0.1.0])
 AM_INIT_AUTOMAKE([1.11 foreign no-define])
+
 AC_PROG_MAKE_SET
 AC_CONFIG_SRCDIR([Application.cpp])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
+
 LT_INIT([disable-static])
 
 # check if we compile with debugging options

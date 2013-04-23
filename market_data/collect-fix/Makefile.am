@@ -45,7 +45,7 @@ LIBS= 	-lquickfix \
 
 AM_CPPFLAGS =	$(CFLAGS) $(INCLUDES)
 AM_LDFLAGS =	$(LDFLAGS) $(LIBS) $(PANTHEIOS_LIBS)
-
+ACLOCAL_AMFLAGS = -I m4
 
 bin_PROGRAMS =	collect
 collect_SOURCES = \
@@ -75,3 +75,12 @@ clean:
 	rm -f *.o $(PROTO)/*.cc $(PROTO)/*.h $(PROTO)/*.py
 	rm -f  $(ORDER_BOOK_OBJS) liborder_book2.a 
 	rm -f $(UTIL_OBJS) libcommon_utils.a
+
+developer-clean: clean maintainer-clean-am
+	rm -f $(am__CONFIG_DISTCLEAN_FILES)
+	rm -rf $(top_srcdir)/autom4te.cache
+	rm -rf ./$(DEPDIR)
+	rm -rf ./configure m4 Makefile.in aclocal.m4 ./autom4te.cache
+	rm -rf config.guess config.h.in* config.h config.status config.log config.sub
+	rm -rf depcomp install-sh ltmain.sh stamp-h1 libtool missing msg
+	rm -f Makefile
