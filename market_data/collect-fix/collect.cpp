@@ -110,7 +110,7 @@ sighandler(int sig) {
     assert(g_pinitiator);
 	g_pinitiator->stop();
     g_papplication->deleteBooks();
-    g_papplication->flushLogs();
+    g_papplication->deleteLogs();
     exit(sig); 
 }
 
@@ -166,13 +166,14 @@ WritePidFile(const char* prefix, const char* suffix, pid_t pid, pid_t ppid)
 
 /**
  * Read local configuration file. 
- * Sets the ApplicationConfig structure (non-FIX) from the FIX::Dictionary that is returned from 
- * parsing the FIX configuration file. Non-standard config params are picked up into the 
+ * Sets the ApplicationConfig structure (non-FIX) from the FIX::Dictionary 
+ * that is returned from parsing the FIX configuration file. 
+ * Non-standard config params are picked up into the 
  * dictionary when the file is parsed so we just capture them here and put them into 
  * the local ApplicationConfig structure. 
  * The parsing of the file into the dict is part of QuickFix library
  * @param applciation_config The config structure for this module
- * @parma dict The FIX::Dictionary structure that holds parsed params
+ * @param dict The FIX::Dictionary structure that holds parsed params
  * @return 0 on success
  */
 int
@@ -209,9 +210,9 @@ ReadLocalConfig(ApplicationConfig* application_config, const FIX::Dictionary& di
         DEFAULT_TICK_FILE_DIR;
 
     // Should use aggregated book?  
-    application_config->is_aggregated_book = 
+    application_config->want_aggregated_book = 
         dict.has("AggregatedBook") && dict.getBool("AggregatedBook");
-    pan::log_DEBUG("Aggregated book: ", pan::boolean(application_config->is_aggregated_book));
+    pan::log_DEBUG("Aggregated book: ", pan::boolean(application_config->want_aggregated_book));
 
     // Should we reset sequence numbers? 
     bool reset = dict.has("ResetSeqNo") && dict.getBool("ResetSeqNo");  
@@ -228,8 +229,14 @@ ReadLocalConfig(ApplicationConfig* application_config, const FIX::Dictionary& di
     pan::log_DEBUG("New orders replace existing orders with same id: ", pan::boolean(application_config->new_replaces));
 
     // Fix Version string
-    application_config->version = dict.has("FIXVersion") ? (FIXVersion)atoi(dict.getString("FIXVersion").c_str()) : FIX_42;
-    pan::log_DEBUG("Using FIX version: ", pan::integer(application_config->version));
+    application_config->version = dict.has("FIXVersion") ? (FIXVersion)atoi(dict.getString("FIXVersion").c_str()) : BAD_FIX_VERSION;
+    if (application_config->version == 0) {
+        pan::log_WARNING("Invalid or no FIXVersion specified");
+        err++;
+    }
+    else {
+        pan::log_DEBUG("Using FIX version: ", pan::integer(application_config->version));
+    }
 
     // Market depth 
     std::string depth = dict.has("MarketDepth") ? dict.getString("MarketDepth") : ""; 
@@ -352,7 +359,7 @@ ReadCommandLineParams(int argc, char** argv, ApplicationConfig* application_conf
 		if (vm.count("nolog")) {
             application_config->is_logging = false;
 		}
-        pan::log_INFORMATIONAL("Logging:", pan::boolean(application_config->is_logging));
+        pan::log_INFORMATIONAL("Logging: ", pan::boolean(application_config->is_logging));
 
         application_config->root_output_dir = DEFAULT_TICK_FILE_DIR;
 	    if (vm.count("o")) {
@@ -386,14 +393,12 @@ ReadCommandLineParams(int argc, char** argv, ApplicationConfig* application_conf
         pan::log_INFORMATIONAL("Print debug: ", pan::boolean(application_config->print_debug));
 
         application_config->config_server_addr = DEFAULT_CONFIG_SERVER_ADDRESS;
-/*
         if (vm.count("config-server") > 0) {
             application_config->config_server_addr = vm["config-server"].as<std::string>();
         }
-*/
         pan::log_INFORMATIONAL("Using config server: ", application_config->config_server_addr);
 			
-	pan::log_DEBUG("ERRCODE: ", pan::integer(err));
+	    pan::log_DEBUG("ERRCODE: ", pan::integer(err));
         return (err);
 	}
 	catch(std::exception& e) {
