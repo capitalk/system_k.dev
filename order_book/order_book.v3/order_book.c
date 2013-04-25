@@ -20,11 +20,17 @@ new_order_book(double init_price,
     // TODO make sure that init_price conforms to tick or round it 
     double abs_price_range = init_price * one_way_offset_pct;
     
-    size_t one_way_levels = ((init_price + abs_price_range)/min_tick_size);
-    size_t levels_size = one_way_levels * sizeof(priceLevel);
+    size_t one_way_levels = 
+        ((init_price + abs_price_range)/min_tick_size);
+
+    size_t levels_size = 
+        one_way_levels * sizeof(priceLevel);
     
-    double lower_price_bound = init_price - (one_way_levels * min_tick_size);
-    double upper_price_bound = init_price + (one_way_levels * min_tick_size);
+    double lower_price_bound = 
+        init_price - (one_way_levels * min_tick_size);
+
+    double upper_price_bound = 
+        init_price + (one_way_levels * min_tick_size);
     
     priceLevel* levels = (priceLevel*)malloc(levels_size);
     orderBook* book = (orderBook*)malloc(sizeof(orderBook));

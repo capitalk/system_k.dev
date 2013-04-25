@@ -78,6 +78,24 @@
 #include "quickfix/fix44/SecurityDefinition.h"
 #include "quickfix/fix44/SecurityDefinitionRequest.h"
 
+#include "quickfix/fix50sp2/ExecutionReport.h"
+#include "quickfix/fix50sp2/MarketDataIncrementalRefresh.h"
+#include "quickfix/fix50sp2/MarketDataRequest.h"
+#include "quickfix/fix50sp2/MarketDataRequestReject.h"
+#include "quickfix/fix50sp2/MarketDataSnapshotFullRefresh.h"
+#include "quickfix/fix50sp2/MarketDataRequest.h"
+#include "quickfix/fixt11/Logout.h"
+#include "quickfix/fixt11/Logon.h"
+#include "quickfix/fixt11/Heartbeat.h"
+#include "quickfix/fixt11/SequenceReset.h"
+#include "quickfix/fixt11/ResendRequest.h"
+#include "quickfix/fixt11/TestRequest.h"
+#include "quickfix/fix50sp2/TradingSessionStatus.h"
+#include "quickfix/fix50sp2/SecurityStatus.h"
+#include "quickfix/fix50sp2/SecurityDefinition.h"
+#include "quickfix/fix50sp2/SecurityDefinitionRequest.h"
+
+
 #include <string>
 #include <queue>
 #include <boost/iostreams/device/file.hpp>
@@ -93,10 +111,13 @@
 #include "utils/time_utils.h"
 
 enum FIXVersion {
+    BAD_FIX_VERSION = 0,
 	FIX_42 = 42,
 	FIX_43 = 43,
 	FIX_44 = 44,
-	FIX_50 = 50
+	FIX_50 = 50,
+    FIX_50SP1 = 51,
+    FIX_50SP2 = 52
 };
 
 struct ApplicationConfig { 
@@ -120,7 +141,7 @@ struct ApplicationConfig {
     std::string publishing_addr;
     std::string config_server_addr;
     bool is_logging;
-	bool is_aggregated_book;  /** FIX AggregatedBook (266) */
+	bool want_aggregated_book;  /** FIX AggregatedBook (266) */
     long update_type; /**< FIX MDUpdateType (265) */
     bool reset_seq_nums; /**< FIX ResetSeqNumFlag (141) */
     bool new_replaces; /**< Replace entirely existing orders with same id in orderbook? */
@@ -136,107 +157,118 @@ public:
 	~Application(); 
 	void run();
 
-	void addBook(const std::string& symbol, capk::KBook* book);
-    capk::KBook*  getBook(const std::string& symbol);
-
-	void addStream(const std::string& symbol, std::ostream* log);
-	std::ostream*  getStream(const std::string& symbol);
-
-	void addSymbols(const std::vector<std::string>& symbols);
-	const std::vector<std::string>& getSymbols();
-	
-	void setUpdateType(const long updateType);
-    void deleteBooks();
-    void flushLogs();
-
-    void setZMQContext(void* c) { this->_pzmq_context = c;}
+	void setZMQContext(void* c) { this->_pzmq_context = c;}
     void setZMQSocket(void* s) { this->_pzmq_socket = s;}
     void* getZMQSocket() { return this->_pzmq_socket;}
     void* getZMQContext() { return this->_pzmq_context;}
 
+    void deleteBooks();
+    void deleteLogs();
+
+	void addSymbols(const std::vector<std::string>& symbols);
+	const std::vector<std::string>& getSymbols();
+
 private:
-    void broadcast_bbo_book(void* bcast_socket, const char* symbol, const double best_bid, const double best_ask, const double bbsize, const double basize, const capk::venue_id_t venue_id);
-        
+    void addBook(const std::string& symbol, capk::KBook* book);
+    capk::KBook*  getBook(const std::string& symbol);
+
+	void addStream(const std::string& symbol, std::ostream* log);
+	std::ostream*  getStream(const std::string& symbol);
+	
+	void setUpdateType(const long updateType);
+
+    void broadcast_bbo_book(void* bcast_socket, 
+            const char* symbol, 
+            const double best_bid, 
+            const double best_ask, 
+            const double bbsize, 
+            const double basize, 
+            const capk::venue_id_t venue_id);
 
     template <typename T> 
-    void full_refresh_template(const T& message, const FIX::SessionID& sessionID); 
+    void full_refresh_template(const T& message, 
+            const FIX::SessionID& sessionID); 
 
     template <typename T> 
-    void incremental_update_template(const T& message, const FIX::SessionID& sessionID); 
+    void incremental_update_template(const T& message, 
+            const FIX::SessionID& sessionID); 
 
     template <typename T> 
-    void trading_session_status_template(const T& message, const FIX::SessionID& sessionID); 
+    void trading_session_status_template(const T& message, 
+            const FIX::SessionID& sessionID); 
 
 	void onCreate(const FIX::SessionID&); 
+    
 	void onLogon(const FIX::SessionID& sessionID);
+
 	void onLogout(const FIX::SessionID& sessionID);
+
 	void toAdmin(FIX::Message&, const FIX::SessionID&); 
+
 	void toApp(FIX::Message&, const FIX::SessionID& )
-	throw(FIX::DoNotSend);
+	    throw(FIX::DoNotSend);
+
 	void fromAdmin(const FIX::Message&, const FIX::SessionID& )
-	throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::RejectLogon);
+	    throw(FIX::FieldNotFound, 
+                FIX::IncorrectDataFormat, 
+                FIX::IncorrectTagValue, 
+                FIX::RejectLogon);
+
 	void fromApp(const FIX::Message& message, const FIX::SessionID& sessionID )
-	throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::UnsupportedMessageType);
+	    throw(FIX::FieldNotFound, 
+                FIX::IncorrectDataFormat, 
+                FIX::IncorrectTagValue, 
+                FIX::UnsupportedMessageType);
 
 	void onMessage(const FIX42::TradingSessionStatus&, const FIX::SessionID&);
-	//void onMessage(const FIX42::SecurityStatus&, const FIX::SessionID&);
-	//void onMessage(const FIX42::TestRequest&, const FIX::SessionID&);
-	void onMessage(const FIX42::Heartbeat& message, const FIX::SessionID& sessionID);
-	//void onMessage(const FIX42::ResendRequest&, const FIX::SessionID&);
-	void onMessage(const FIX42::Logout&, const FIX::SessionID&);
 	void onMessage(const FIX42::Logon&, const FIX::SessionID&);
-	//void onMessage(const FIX42::MarketDataRequest&, const FIX::SessionID&);
-	void onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID);
-	void onMessage(const FIX42::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID);
-	void onMessage(const FIX42::MarketDataRequestReject& message, const FIX::SessionID& sessionID);
+	void onMessage(const FIX42::MarketDataSnapshotFullRefresh& message, 
+            const FIX::SessionID& sessionID);
+	void onMessage(const FIX42::MarketDataIncrementalRefresh& message, 
+            const FIX::SessionID& sessionID);
+	void onMessage(const FIX42::MarketDataRequestReject& message, 
+            const FIX::SessionID& sessionID);
 
 	void onMessage(const FIX43::TradingSessionStatus&, const FIX::SessionID&);
-	//void onMessage(const FIX43::SecurityStatus&, const FIX::SessionID&);
-	//void onMessage(const FIX43::TestRequest&, const FIX::SessionID&);
-	void onMessage(const FIX43::Heartbeat& message, const FIX::SessionID& sessionID);
-	//void onMessage(const FIX43::ResendRequest&, const FIX::SessionID&);
-	void onMessage(const FIX43::Logout&, const FIX::SessionID&);
 	void onMessage(const FIX43::Logon&, const FIX::SessionID&);
-	//void onMessage(const FIX43::MarketDataRequest&, const FIX::SessionID&);
-	void onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID);
-	void onMessage(const FIX43::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID);
-	void onMessage(const FIX43::MarketDataRequestReject& message, const FIX::SessionID& sessionID);
+	void onMessage(const FIX43::MarketDataSnapshotFullRefresh& message, 
+            const FIX::SessionID& sessionID);
+	void onMessage(const FIX43::MarketDataIncrementalRefresh& message, 
+            const FIX::SessionID& sessionID);
+	void onMessage(const FIX43::MarketDataRequestReject& message, 
+            const FIX::SessionID& sessionID);
 	
 	void onMessage(const FIX44::TradingSessionStatus&, const FIX::SessionID&);
-	//void onMessage(const FIX44::SecurityStatus&, const FIX::SessionID&);
-	//void onMessage(const FIX44::TestRequest&, const FIX::SessionID&);
-	void onMessage(const FIX44::Heartbeat& message, const FIX::SessionID& sessionID);
-	//void onMessage(const FIX44::ResendRequest&, const FIX::SessionID&);
-	void onMessage(const FIX44::Logout&, const FIX::SessionID&);
 	void onMessage(const FIX44::Logon&, const FIX::SessionID&);
-	//void onMessage(const FIX44::MarketDataRequest&, const FIX::SessionID&);
-	void onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, const FIX::SessionID& sessionID);
-	void onMessage(const FIX44::MarketDataIncrementalRefresh& message, const FIX::SessionID& sessionID);
-	void onMessage(const FIX44::MarketDataRequestReject& message, const FIX::SessionID& sessionID);
+	void onMessage(const FIX44::MarketDataSnapshotFullRefresh& message, 
+            const FIX::SessionID& sessionID);
+	void onMessage(const FIX44::MarketDataIncrementalRefresh& message, 
+            const FIX::SessionID& sessionID);
+	void onMessage(const FIX44::MarketDataRequestReject& message, 
+            const FIX::SessionID& sessionID);
 
 	void sendTestRequest();
 	FIX42::TestRequest sendTestRequest42();
 	FIX43::TestRequest sendTestRequest43();
 	FIX44::TestRequest sendTestRequest44();
+	FIXT11::TestRequest sendTestRequest50();
 
 	void querySingleMarketDataRequest(const std::string& symbols);
 	FIX42::MarketDataRequest querySingleMarketDataRequest42(const std::string& symbol);
 	FIX43::MarketDataRequest querySingleMarketDataRequest43(const std::string& symbol);
 	FIX44::MarketDataRequest querySingleMarketDataRequest44(const std::string& symbol);
+	FIX50SP2::MarketDataRequest querySingleMarketDataRequest50(const std::string& symbol);
 
-	void queryMarketDataRequest(const std::vector<std::string>& symbols);
-	FIX42::MarketDataRequest queryMarketDataRequest42(const std::vector<std::string>& symbols);
+	void queryMarketDataRequest(const std::vector<std::string>& symbols); 
+    FIX42::MarketDataRequest queryMarketDataRequest42(const std::vector<std::string>& symbols);
 	FIX43::MarketDataRequest queryMarketDataRequest43(const std::vector<std::string>& symbols);
 	FIX44::MarketDataRequest queryMarketDataRequest44(const std::vector<std::string>& symbols);
+	FIX50SP2::MarketDataRequest queryMarketDataRequest50(const std::vector<std::string>& symbols);
 
 	FIX::SessionID _sessionID;
-
-
 	std::vector<std::string> _symbols;	
     boost::filesystem::path _pathToLog;
 
-	bool _loggedIn;
-	bool _loggedOut;
 	unsigned int _loginCount;
     unsigned int _appMsgCount;
 	bool _resetSequence;
