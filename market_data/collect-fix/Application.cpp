@@ -872,10 +872,12 @@ void Application::incremental_update_template(const T& message,
             }
           }
         } else if (action == FIX::MDUpdateAction_DELETE) {
+#ifdef LOG
           if (_config.print_debug) {
             pan::log_DEBUG("Delete: ",
                            pan::integer(nid));
           }
+#endif
           capk::pKOrder pOrder = pBook->getOrder(nid);
           if (pOrder) {
             if (_config.is_logging) {
