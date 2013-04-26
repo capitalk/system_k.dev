@@ -44,6 +44,35 @@ std::string remove_bad_filename_chars(const std::string& str) {
     return s;
 }
 
+void printCrossedBookNotification(const char* book_name,
+  double bbsize, double bbid, double basize, double bask) {
+#ifdef DEBUG
+  if (_config.print_debug) {
+    pan::log_INFORMATIONAL("Crossed Book: ",
+    pBook->getName(),
+    " (" ,
+    pan::real(bbid),
+    ", "
+    pan::real(bask),
+    ")\n");
+  }
+#endif
+
+  std::cout << "Crossed book: "
+    << book_name
+    << " ("
+    << static_cast<double>(bbsize)
+    << "-"
+    << static_cast<double>(bbid)
+    <<  "@"
+    << static_cast<double>(basize)
+    << "-"
+    << static_cast<double>(bask)
+    << ")"
+    << std::endl;
+}
+
+
 
 Application::Application(const ApplicationConfig& config)
            :_loginCount(0),
@@ -375,9 +404,8 @@ void Application::full_refresh_template(const T& message,
             if (mdEntries.isSetField(mdEntryType)) {
                 mdEntries.getField(mdEntryType);
             }
-            /**
-             * Below is required for some ECNs
-             */
+
+            // Quote condition is required for some ECNs
 #ifdef USE_QUOTE_CONDITION
             FIX::QuoteCondition condition;
             if (mdEntries.isSetField(condition)) {
@@ -418,10 +446,10 @@ void Application::full_refresh_template(const T& message,
             std::string id = mdEntryID.getValue();
             int nid = hashlittle(id.c_str(), id.size(), 0);
 
-            /**
-             * Since we sometimes don't get entry IDs in snapshots,
-             * try using the quote entry ID instead
-             */
+
+            // Since we sometimes don't get entry IDs in snapshots,
+            // try using the quote entry ID instead
+
             if (id.length() == 0) {
                 id = quoteEntryID.getValue();
                 nid = hashlittle(id.c_str(), id.size(), 0);
@@ -453,18 +481,11 @@ void Application::full_refresh_template(const T& message,
         double bbsize = pBook->bestPriceVolume(capk::BID);
         double basize = pBook->bestPriceVolume(capk::ASK);
         if (bbid > bask) {
-            std::cout << "Crossed book: "
-                << pBook->getName()
-                << " ("
-                << static_cast<double>(bbsize)
-                << "-"
-                << static_cast<double>(bbid)
-                <<  "@"
-                << static_cast<double>(basize)
-                << "-"
-                << static_cast<double>(bask)
-                << ")"
-                << std::endl;
+          printCrossedBookNotification(book->getName(),
+            bbsize,
+            bbid,
+            basize,
+            bask);
         }
 
         ptime time_start(microsec_clock::local_time());
@@ -628,7 +649,7 @@ void Application::incremental_update_template(const T& message,
                 mdEntries.getField(mdEntryPx);
             } else {
 #ifdef DEBUG
-                pan::log_WARNING("MDENTRYPX field not set in FIELD of "
+                pan::log_WARNING("MdEntryPx field not set in FIELD of "
                         "MarketDataIncrementalRefresh msg (35=X)");
 #endif
             }
@@ -668,7 +689,7 @@ void Application::incremental_update_template(const T& message,
 #ifdef DEBUG
                 if (_config.print_debug) {
                     pan::log_DEBUG("Original MDEntryID: ",
-                            id.c_str(), 
+                            id.c_str(),
                             " => HASH ID: ",
                             pan::integer(nid));
                 }
@@ -680,7 +701,7 @@ void Application::incremental_update_template(const T& message,
 #ifdef DEBUG
                         if (_config.print_debug) {
                             pan::log_DEBUG("Deleting old: ",
-                                pan::integer(nid), 
+                                pan::integer(nid),
                                 " before adding new "
                                 "(new_replaces enabled in conifg)");
                         }
@@ -704,7 +725,12 @@ void Application::incremental_update_template(const T& message,
 #endif
                     }
 
-                    if (pBook->add(nid, nside, size, price, evtTime, sndTime) !=1) {
+                    if (pBook->add(nid,
+                                  nside,
+                                  size,
+                                  price,
+                                  evtTime,
+                                  sndTime) !=1) {
 #ifdef DEBUG
                         pan::log_WARNING("Book add failed",
                                 pan::integer(nid),
@@ -715,28 +741,28 @@ void Application::incremental_update_template(const T& message,
                                 " ",
                                 pan::real(price));
 #endif
-                        std::cerr << "WARNING: Book add failed\n (" 
+                        std::cerr << "WARNING: Book add failed\n ("
                             << nid << " "
-                            << nside << " " 
-                            << side << " " 
-                            << size << " " 
+                            << nside << " "
+                            << side << " "
+                            << size << " "
                             << price << " "
                             << evtTime << " "
                             << sndTime << " "
                             << "\n";
                     }
                     if (_config.is_logging) {
-                        *pLog << "A," 
-                            << nside << "," 
-                            << std::setiosflags(std::ios_base::fixed) 
-                            << size << "," 
-                            << std::setprecision(5) 
-                            << price << "," 
+                        *pLog << "A,"
+                            << nside << ","
+                            << std::setiosflags(std::ios_base::fixed)
+                            << size << ","
+                            << std::setprecision(5)
+                            << price << ","
                             << evtTime << "\n";
                     }
 #ifdef DEBUG
                     if (_config.print_debug) {
-                        pan::log_DEBUG("Add ", 
+                        pan::log_DEBUG("Add ",
                                 pan::integer(nside), ",",
                                 pan::integer(size), ",",
                                 pan::real(price), ",", "\n");
@@ -749,14 +775,14 @@ void Application::incremental_update_template(const T& message,
 
                      // If the message contains a MDEntryRefID
                      // then we're renaming an existing entity so we delete
-                     // the old one (with MDEntryRefID and re-add with mdEntryID)
+                     // the old one (with MDEntryRefID and
+                     // re-add with mdEntryID)
 
                     if (mdEntries.isSetField(mdEntryRefID)) {
                         mdEntries.getField(mdEntryRefID);
                         const std::string& refId = mdEntryRefID.getValue();
                         if (_config.print_debug) {
-                            pan::log_WARNING(
-                                    "Using mdEntryRefID: ",
+                            pan::log_WARNING("Using mdEntryRefID: ",
                                      mdEntryRefID.getString().c_str(),
                                      " AS mdEntryID: ",
                                      mdEntryID.getString().c_str());
@@ -769,11 +795,11 @@ void Application::incremental_update_template(const T& message,
                         uint32_t nrefId = hashlittle(refId.c_str(), refId.size(), 0);
 
                         if (_config.is_logging) {
-                            *pLog << "M," 
-                                << nside << "," 
-                                << std::setiosflags(std::ios_base::fixed) 
-                                << size << "," << std::setprecision(5) 
-                                << price << "," 
+                            *pLog << "M,"
+                                << nside << ","
+                                << std::setiosflags(std::ios_base::fixed)
+                                << size << "," << std::setprecision(5)
+                                << price << ","
                                 << evtTime << "\n";
                         }
                         pBook->remove(nrefId, evtTime, sndTime);
@@ -800,7 +826,7 @@ void Application::incremental_update_template(const T& message,
                             }
 #ifdef DEBUG
                             if (_config.print_debug) {
-                                pan::log_DEBUG("Modify ", 
+                                pan::log_DEBUG("Modify ",
                                 pan::integer(nside), ",",
                                 pan::integer(size), ",",
                                 pan::real(price), ",", "\n");
@@ -846,14 +872,14 @@ void Application::incremental_update_template(const T& message,
                               << pBook->getOrder(nid)->getSide() << ","
                               << std::setprecision(0)
                               << std::setiosflags(std::ios_base::fixed)
-                              << pBook->getOrder(nid)->getSize() << "," 
+                              << pBook->getOrder(nid)->getSize() << ","
                               << std::setprecision(5)
                               << pBook->getOrder(nid)->getPrice() << ","
                               << evtTime << "\n";
                         }
 #ifdef DEBUG
                       if (_config.print_debug) {
-                        pan::log_DEBUG("Delete ", 
+                        pan::log_DEBUG("Delete ",
                         pan::integer(nside), ",",
                         pan::integer(size), ",",
                         pan::real(price), ",", "\n");
@@ -861,12 +887,12 @@ void Application::incremental_update_template(const T& message,
 #endif
                       int removeOk = pBook->remove(nid, evtTime, sndTime);
                       if (removeOk != 1) {
-                        std::cerr << "Delete failed. MdEntryID: " 
-                            << nid 
+                        std::cerr << "Delete failed. MdEntryID: "
+                            << nid
                             << " does not exist in book\n";
 #ifdef DEBUG
-                        pan::log_ERROR("Delete failed. MdEntryID: ", 
-                                pan::integer(nid), 
+                        pan::log_ERROR("Delete failed. MdEntryID: ",
+                                pan::integer(nid),
                                 " does not exist in book");
 #endif
                       }
@@ -902,13 +928,16 @@ void Application::incremental_update_template(const T& message,
         // Broadcast and log orderbook
         double bbid = pBook->bestPrice(capk::BID);
         double bask = pBook->bestPrice(capk::ASK);
-        if (bbid > bask) {
-            std::cerr << "XXXXXXXXXXXXXXXX CROSSED BOOK " << pBook->getName() << " (" << (double) bbid <<  ", " << (double) bask << ") XXXXXXXXXXXXXXXXX\n";
-            // assert(false);
-        }
-
         double bbsize = pBook->bestPriceVolume(capk::BID);
         double basize = pBook->bestPriceVolume(capk::ASK);
+
+        if (bbid > bask) {
+          printCrossedBookNotification(pBook->getName().c_str(),
+                                bbsize,
+                                bbid,
+                                basize,
+                                bask);
+
 
         ptime time_start(microsec_clock::local_time());
         if (_config.is_publishing) {
@@ -1105,7 +1134,7 @@ void Application::run() {
     std::string logFileName;
     std::ofstream* pLog;
     capk::KBook* pBook = NULL;
-    std::string MIC_prefix = 
+    std::string MIC_prefix =
         _config.mic_string.length() > 0 ? _config.mic_string + "_" : "";
     std::string symbol;
     fs::path fullPathToLog;
@@ -1139,13 +1168,19 @@ void Application::run() {
             "depth   : ", pan::integer(pBook->getDepth()));
 #endif
         if (_config.is_logging) {
-            logFileName = MIC_prefix + remove_bad_filename_chars(symbol) + "_" + dateToday;
+            logFileName = MIC_prefix
+                          + remove_bad_filename_chars(symbol)
+                          + "_"
+                          + dateToday;
             logFileName.append(".csv");
             fullPathToLog = datePath / fs::path(logFileName);
             if (fs::exists(fullPathToLog)) {
                 isRestart = true;
             }
-            pLog =  new std::ofstream(fullPathToLog.string(), std::ios::app | std::ios::out);
+
+            pLog =  new std::ofstream(fullPathToLog.string(),
+                                      std::ios::app | std::ios::out);
+
             if (isRestart) {
                 timespec evtTime;
                 clock_gettime(CLOCK_MONOTONIC, &evtTime);
@@ -1178,16 +1213,17 @@ void Application::run() {
         addBook(symbol, pBook);
         it++;
     }
-     std::cerr << "Total books created: " << _symbolToBook.size() << "\n";
-     std::cerr << "Total tick logs created: " << _symbolToLogStream.size() << "\n";
+    std::cerr << "Total books created: "
+              << _symbolToBook.size() << "\n";
+    std::cerr << "Total tick logs created: "
+              << _symbolToLogStream.size() << "\n";
 
 
-    /**
-     * Some venues require each market data subscription to be sent
-     * in a different message - i.e. when we send 35=V we are ONLY
-     * allowed to send 146(NoRelatedSymbols)=1 so we send multiple
-     * 35=V requests
-     */
+
+     // Some venues require each market data subscription to be sent
+     // in a different message - i.e. when we send 35=V we are ONLY
+     // allowed to send 146(NoRelatedSymbols)=1 so we send multiple
+     // 35=V requests
 
     if (_config.sendIndividualMarketDataRequests) {
         for (std::vector<std::string>::const_iterator it = _symbols.begin();
@@ -1283,7 +1319,8 @@ FIX42::TestRequest Application::sendTestRequest42() {
     return tr;
 }
 
-void Application::querySingleMarketDataRequest(const std::string& requestSymbol) {
+void Application::querySingleMarketDataRequest(
+                const std::string& requestSymbol) {
 #ifdef DEBUG
     if (_config.print_debug) {
         pan::log_DEBUG("querySingleMarketDataRequest(...)");
@@ -1312,12 +1349,13 @@ void Application::querySingleMarketDataRequest(const std::string& requestSymbol)
     FIX::Session::sendToTarget(md);
 }
 
-FIX50SP2::MarketDataRequest
-Application::querySingleMarketDataRequest50(const std::string& requestSymbol) {
-
+FIX50SP2::MarketDataRequest Application::querySingleMarketDataRequest50(
+                const std::string& requestSymbol) {
 #ifdef DEBUG
     if (_config.print_debug) {
-        pan::log_DEBUG("querySingleMarketDataRequest50(", requestSymbol.c_str(), ")");
+        pan::log_DEBUG("querySingleMarketDataRequest50(",
+                        requestSymbol.c_str(),
+                       ")");
     }
 #endif
     std::string reqID("CAPK-");
@@ -1362,12 +1400,13 @@ Application::querySingleMarketDataRequest50(const std::string& requestSymbol) {
 }
 
 
-FIX44::MarketDataRequest
-Application::querySingleMarketDataRequest44(const std::string& requestSymbol) {
-
+FIX44::MarketDataRequest Application::querySingleMarketDataRequest44(
+                const std::string& requestSymbol) {
 #ifdef DEBUG
     if (_config.print_debug) {
-        pan::log_DEBUG("querySingleMarketDataRequest44(", requestSymbol.c_str(), ")");
+        pan::log_DEBUG("querySingleMarketDataRequest44(",
+              requestSymbol.c_str(),
+              ")");
     }
 #endif
 
@@ -1412,12 +1451,13 @@ Application::querySingleMarketDataRequest44(const std::string& requestSymbol) {
     return message;
 }
 
-FIX43::MarketDataRequest
-Application::querySingleMarketDataRequest43(const std::string& requestSymbol) {
-
+FIX43::MarketDataRequest Application::querySingleMarketDataRequest43(
+      const std::string& requestSymbol) {
 #ifdef DEBUG
     if (_config.print_debug) {
-        pan::log_DEBUG("querySingleMarketDataRequest43(", requestSymbol.c_str(), ")");
+        pan::log_DEBUG("querySingleMarketDataRequest43(",
+              requestSymbol.c_str(),
+              ")");
     }
 #endif
 
@@ -1462,11 +1502,13 @@ Application::querySingleMarketDataRequest43(const std::string& requestSymbol) {
     return message;
 }
 
-FIX42::MarketDataRequest
-Application::querySingleMarketDataRequest42(const std::string& requestSymbol) {
+FIX42::MarketDataRequest Application::querySingleMarketDataRequest42(
+    const std::string& requestSymbol) {
 #ifdef DEBUG
     if (_config.print_debug) {
-        pan::log_DEBUG("querySingleMarketDataRequest42(", requestSymbol.c_str(), ")");
+        pan::log_DEBUG("querySingleMarketDataRequest42(",
+             requestSymbol.c_str(),
+             ")");
     }
 #endif
 
@@ -1512,7 +1554,8 @@ Application::querySingleMarketDataRequest42(const std::string& requestSymbol) {
 }
 
 
-void Application::queryMarketDataRequest(const std::vector<std::string>& symbols) {
+void Application::queryMarketDataRequest(
+    const std::vector<std::string>& symbols) {
 #ifdef DEBUG
     if (_config.print_debug) {
         pan::log_DEBUG("Application::queryMarketDataRequest(...)");
@@ -1540,8 +1583,8 @@ void Application::queryMarketDataRequest(const std::vector<std::string>& symbols
     FIX::Session::sendToTarget(md);
 }
 
-FIX50SP2::MarketDataRequest
-Application::queryMarketDataRequest50(const std::vector<std::string>& symbols) {
+FIX50SP2::MarketDataRequest Application::queryMarketDataRequest50(
+    const std::vector<std::string>& symbols) {
 #ifdef DEBUG
     if (_config.print_debug) {
         pan::log_DEBUG("queryMarketDataRequest50(...)");
@@ -1572,7 +1615,9 @@ Application::queryMarketDataRequest50(const std::vector<std::string>& symbols) {
 
     // Set symbols to subscribe to
     FIX50SP2::MarketDataRequest::NoRelatedSym symbolGroup;
-    for (std::vector<std::string>::const_iterator it = symbols.begin(); it != symbols.end(); ++it) {
+    for (std::vector<std::string>::const_iterator it = symbols.begin();
+            it != symbols.end();
+            ++it) {
         if (*it != "") {
             FIX::Symbol symbol(*it);
             symbolGroup.set(symbol);
@@ -1590,8 +1635,8 @@ Application::queryMarketDataRequest50(const std::vector<std::string>& symbols) {
 }
 
 
-FIX44::MarketDataRequest
-Application::queryMarketDataRequest44(const std::vector<std::string>& symbols) {
+FIX44::MarketDataRequest Application::queryMarketDataRequest44(
+    const std::vector<std::string>& symbols) {
 #ifdef DEBUG
     if (_config.print_debug) {
         pan::log_DEBUG("queryMarketDataRequest44(...)");
@@ -1622,7 +1667,9 @@ Application::queryMarketDataRequest44(const std::vector<std::string>& symbols) {
 
     // Set symbols to subscribe to
     FIX44::MarketDataRequest::NoRelatedSym symbolGroup;
-    for (std::vector<std::string>::const_iterator it = symbols.begin(); it != symbols.end(); ++it) {
+    for (std::vector<std::string>::const_iterator it = symbols.begin();
+          it != symbols.end();
+          ++it) {
         if (*it != "") {
             FIX::Symbol symbol(*it);
             symbolGroup.set(symbol);
@@ -1640,8 +1687,8 @@ Application::queryMarketDataRequest44(const std::vector<std::string>& symbols) {
 }
 
 
-FIX43::MarketDataRequest
-Application::queryMarketDataRequest43(const std::vector<std::string>& symbols) {
+FIX43::MarketDataRequest Application::queryMarketDataRequest43(
+    const std::vector<std::string>& symbols) {
 #ifdef DEBUG
     if (_config.print_debug) {
         pan::log_DEBUG("queryMarketDataRequest43(...)");
@@ -1672,7 +1719,9 @@ Application::queryMarketDataRequest43(const std::vector<std::string>& symbols) {
 
     // Set symbols to subscribe to
     FIX43::MarketDataRequest::NoRelatedSym symbolGroup;
-    for (std::vector<std::string>::const_iterator it = symbols.begin(); it != symbols.end(); ++it) {
+    for (std::vector<std::string>::const_iterator it = symbols.begin();
+          it != symbols.end();
+          ++it) {
         if (*it != "") {
             FIX::Symbol symbol(*it);
             symbolGroup.set(symbol);
@@ -1689,8 +1738,8 @@ Application::queryMarketDataRequest43(const std::vector<std::string>& symbols) {
     return message;
 }
 
-FIX42::MarketDataRequest
-Application::queryMarketDataRequest42(const std::vector<std::string>& symbols) {
+FIX42::MarketDataRequest Application::queryMarketDataRequest42(
+    const std::vector<std::string>& symbols) {
 #ifdef DEBUG
     if (_config.print_debug) {
         pan::log_DEBUG("queryMarketDataRequest42(...)");
@@ -1721,7 +1770,9 @@ Application::queryMarketDataRequest42(const std::vector<std::string>& symbols) {
 
     // Set symbols to subscribe to
     FIX42::MarketDataRequest::NoRelatedSym symbolGroup;
-    for (std::vector<std::string>::const_iterator it = symbols.begin(); it != symbols.end(); ++it) {
+    for (std::vector<std::string>::const_iterator it = symbols.begin();
+        it != symbols.end();
+        ++it) {
         if (*it != "") {
             FIX::Symbol symbol(*it);
             symbolGroup.set(symbol);
@@ -1796,9 +1847,8 @@ void Application::deleteBooks() {
         pan::log_DEBUG("Deleting books");
     }
 #endif
-
     symbolToBookIterator books = _symbolToBook.begin();
-    while(books != _symbolToBook.end()) {
+    while (books != _symbolToBook.end()) {
         if (books->second) {
             delete books->second;
         }
