@@ -469,6 +469,7 @@ void Application::full_refresh_template(const T& message,
       // Add to orderbook
       pBook->add(nid, nside, size, price, evtTime, sndTime);
 
+#ifdef LOG
       if (_config.print_debug) {
         pan::log_DEBUG("Adding ID=",
                        id.c_str(),
@@ -477,6 +478,7 @@ void Application::full_refresh_template(const T& message,
                        " size=",
                        pan::integer(size));
       }
+#endif
     }
 
     // At this point all entries in the message are processed
