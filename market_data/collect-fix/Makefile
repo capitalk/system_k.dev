@@ -55,8 +55,13 @@ all: protos collect
 
 include $(PROTO)/Makefile.inc
 
+ifeq (LOG,1)
 collect : pantheios_be_zmq.o logging.o jenkins_hash.o config_server.o time_utils.o collect.o Application.o  liborder_book2.a $(PROTOBUF_OBJS)
 	$(CC) $(CFLAGS) pantheios_be_zmq.o logging.o jenkins_hash.o config_server.o time_utils.o collect.o Application.o  $(PROTOBUF_OBJS) $(ORDERBOOK_DIR)/liborder_book2.a $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+else
+collect :  jenkins_hash.o config_server.o time_utils.o collect.o Application.o  liborder_book2.a $(PROTOBUF_OBJS)
+	$(CC) $(CFLAGS) jenkins_hash.o config_server.o time_utils.o collect.o Application.o  $(PROTOBUF_OBJS) $(ORDERBOOK_DIR)/liborder_book2.a $(LIBS) -o $@ 
+endif
 
 pantheios_be_zmq.o: $(PANTHEIOS_EXT)/pantheios_be_zmq.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
