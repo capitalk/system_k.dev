@@ -791,7 +791,7 @@ void Application::incremental_update_template(const T& message,
           if (mdEntries.isSetField(mdEntryRefID)) {
             mdEntries.getField(mdEntryRefID);
             const std::string& refId = mdEntryRefID.getValue();
-#ifdef DEBUG
+#ifdef LOG
             if (_config.print_debug) {
               pan::log_WARNING("Using mdEntryRefID: ",
                                mdEntryRefID.getString().c_str(),
