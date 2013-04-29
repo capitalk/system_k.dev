@@ -82,13 +82,13 @@ readSymbols(std::string symbol_file_name)
   std::string line;
   std::vector<std::string> symbols;
   std::ifstream symbols_stream(symbol_file_name);
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("Reading symbol file: ", symbol_file_name);
 #endif
   if (symbols_stream.is_open()) {
     while (symbols_stream.good()) {
       std::getline(symbols_stream, line);
-#ifdef DEBUG
+#ifdef LOG
       pan::log_DEBUG("Symbol: ",  line.c_str());
 #endif
       symbols.push_back(line);
@@ -194,14 +194,14 @@ ReadLocalConfig(ApplicationConfig* application_config,
   }
   int err = 0;
 
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("BEGIN - file based configuration");
 #endif
 
   // MIC code
   application_config->mic_string =
       dict.has("MIC") ? dict.getString("MIC") : "";
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("MIC: ", application_config->mic_string.c_str());
 #endif
 
@@ -230,7 +230,7 @@ ReadLocalConfig(ApplicationConfig* application_config,
   // Should use aggregated book?
   application_config->want_aggregated_book =
     dict.has("AggregatedBook") && dict.getBool("AggregatedBook");
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("Aggregated book: ",
                  pan::boolean(application_config->want_aggregated_book));
 #endif
@@ -238,7 +238,7 @@ ReadLocalConfig(ApplicationConfig* application_config,
   // Should we reset sequence numbers?
   bool reset = dict.has("ResetSeqNo") && dict.getBool("ResetSeqNo");
   application_config->reset_seq_nums = reset;
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("Resetting sequence numbers: ", pan::boolean(reset));
 #endif
 
@@ -246,7 +246,7 @@ ReadLocalConfig(ApplicationConfig* application_config,
   application_config->sendIndividualMarketDataRequests =
       dict.has("SendIndividualMarketDataRequests") &&
       dict.getBool("SendIndividualMarketDataRequests");
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("Send individual market data requests: ",
                  pan::boolean(application_config->sendIndividualMarketDataRequests));
 #endif
@@ -254,7 +254,7 @@ ReadLocalConfig(ApplicationConfig* application_config,
   // New orders delete existing orders with same ID before adding?
   application_config->new_replaces =
       dict.has("new_replaces") ? dict.getBool("new_replaces") : false;
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("New orders replace existing orders with same id: ",
                  pan::boolean(application_config->new_replaces));
 #endif
@@ -265,12 +265,12 @@ ReadLocalConfig(ApplicationConfig* application_config,
       (FIXVersion)atoi(dict.getString("FIXVersion").c_str()) : BAD_FIX_VERSION;
 
   if (application_config->version == BAD_FIX_VERSION) {
-#ifdef DEBUG
+#ifdef LOG
     pan::log_WARNING("Invalid or no FIXVersion specified");
 #endif
     err++;
   } else {
-#ifdef DEBUG
+#ifdef LOG
     pan::log_DEBUG("Using FIX version: ",
                    pan::integer(application_config->version));
 #endif
@@ -281,13 +281,13 @@ ReadLocalConfig(ApplicationConfig* application_config,
       dict.has("MarketDepth") ? dict.getString("MarketDepth") : "";
   application_config->market_depth = atoi(depth.c_str());
   if (application_config->market_depth < 0) {
-#ifdef DEBUG
+#ifdef LOG
     pan::log_WARNING("MarketDepth has invalid value: ",
                      pan::integer(application_config->market_depth));
 #endif
     err++;
   }
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("Setting market depth: ",
                  pan::integer(application_config->market_depth));
 #endif
@@ -296,14 +296,14 @@ ReadLocalConfig(ApplicationConfig* application_config,
   int32_t update_type =
       dict.has("MDUpdateType") ? dict.getLong("MDUpdateType") : -1;
   if (update_type < 0) {
-#ifdef DEBUG
+#ifdef LOG
     pan::log_WARNING("MDUpdateType has invalid value: ",
                      pan::integer(update_type));
 #endif
     err++;
   }
   application_config->update_type = update_type;
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("Setting update type: ", pan::integer(update_type));
 #endif
 
@@ -313,7 +313,7 @@ ReadLocalConfig(ApplicationConfig* application_config,
       dict.getBool("should_publish_prices");
   application_config->is_publishing = is_publishing;
 
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("END - file based configuration");
 #endif
 
@@ -333,7 +333,7 @@ ReadLocalConfig(ApplicationConfig* application_config,
 int
 ReadRemoteConfig(ApplicationConfig* application_config)
 {
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("BEGIN - remote configuration");
 #endif
 
@@ -347,24 +347,24 @@ ReadRemoteConfig(ApplicationConfig* application_config)
   capkproto::venue_configuration my_config =
       capk::get_venue_config(&all_venue_config,
                              application_config->mic_string.c_str());
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("My config:\n", my_config.DebugString().c_str(), "\n");
 #endif
 
   if (my_config.venue_id() <= 0) {
-#ifdef DEBUG
+#ifdef LOG
     pan::log_CRITICAL("venue_id is not set or set to 0");
 #endif
     return (-1);
   } else {
     application_config->venue_id = my_config.venue_id();
     if (application_config->venue_id == 0) {
-#ifdef DEBUG
+#ifdef LOG
       pan::log_CRITICAL("venue_id received from config server is 0");
 #endif
       return (-1);
    }
-#ifdef DEBUG
+#ifdef LOG
     pan::log_DEBUG("My venue_id: ", pan::integer(application_config->venue_id));
 #endif
   }
@@ -375,22 +375,22 @@ ReadRemoteConfig(ApplicationConfig* application_config)
     std::string addr = my_config.market_data_broadcast_addr();
     if (addr.length() > 0) {
       application_config->publishing_addr = addr;
-#ifdef DEBUG
+#ifdef LOG
       pan::log_DEBUG("Publishing to: ",
                      my_config.market_data_broadcast_addr().c_str());
 #endif
     } else {
-#ifdef DEBUG
+#ifdef LOG
       pan::log_WARNING("Publishing is set but no address configured");
 #endif
     }
   } else {
-#ifdef DEBUG
+#ifdef LOG
     pan::log_DEBUG("Not publishing");
 #endif
   }
 
-#ifdef DEBUG
+#ifdef LOG
   pan::log_DEBUG("END - remote configuration");
 #endif
 
@@ -435,7 +435,7 @@ ReadCommandLineParams(int argc,
     if (vm.count("nolog")) {
       application_config->is_logging = false;
     }
-#ifdef DEBUG
+#ifdef LOG
     pan::log_INFORMATIONAL("Logging: ",
                            pan::boolean(application_config->is_logging));
 #endif
@@ -444,7 +444,7 @@ ReadCommandLineParams(int argc,
     if (vm.count("o")) {
       application_config->root_output_dir = vm["o"].as<std::string>();
     }
-#ifdef DEBUG
+#ifdef LOG
     pan::log_INFORMATIONAL("Root log dir: ",
                            application_config->root_output_dir.c_str());
 #endif
@@ -453,28 +453,28 @@ ReadCommandLineParams(int argc,
     if (vm.count("s")) {
       application_config->symbol_file_name = vm["s"].as<std::string>();
     } else {
-#ifdef DEBUG
+#ifdef LOG
       pan::log_WARNING("Symbol file was not set.");
 #endif
       err++;
     }
-#ifdef DEBUG
+#ifdef LOG
     pan::log_INFORMATIONAL("Symbol file: ",
                            application_config->symbol_file_name.c_str());
 #endif
 
     if (vm.count("c")) {
       application_config->config_file_name = vm["c"].as<std::string>();
-#ifdef DEBUG
+#ifdef LOG
       pan::log_DEBUG(application_config->config_file_name.c_str());
 #endif
     } else {
-#ifdef DEBUG
+#ifdef LOG
       pan::log_WARNING("Config file was not set.");
 #endif
       err++;
     }
-#ifdef DEBUG
+#ifdef LOG
     pan::log_INFORMATIONAL("Config file: ",
                            application_config->config_file_name.c_str());
 #endif
@@ -483,7 +483,7 @@ ReadCommandLineParams(int argc,
     if (vm.count("d")) {
       application_config->print_debug = true;
     }
-#ifdef DEBUG
+#ifdef LOG
     pan::log_INFORMATIONAL("Print debug: ",
                            pan::boolean(application_config->print_debug));
 #endif
@@ -493,12 +493,12 @@ ReadCommandLineParams(int argc,
       application_config->config_server_addr =
           vm["config-server"].as<std::string>();
     }
-#ifdef DEBUG
+#ifdef LOG
     pan::log_INFORMATIONAL("Using config server: ",
                            application_config->config_server_addr);
 #endif
 
-#ifdef DEBUG
+#ifdef LOG
     pan::log_DEBUG("ERRCODE: ", pan::integer(err));
 #endif
     return (err);
@@ -522,7 +522,7 @@ main(int argc, char** argv )
   SetSignalHandlers();
 
   if (InitializeZMQ() != 0) {
-#ifdef DEBUG
+#ifdef LOG
     pan::log_CRITICAL("Can't init ZMQ - exiting");
 #endif
     return (-1);
@@ -533,7 +533,7 @@ main(int argc, char** argv )
 
 
   if (ReadCommandLineParams(argc, argv, &config) != 0) {
-#ifdef DEBUG
+#ifdef LOG
     pan::log_CRITICAL("Aborting due to missing parameters.");
 #endif
     return (-1);
@@ -541,7 +541,7 @@ main(int argc, char** argv )
 
   std::vector<std::string> symbols = readSymbols(config.symbol_file_name);
   if (symbols.size() <= 0) {
-#ifdef DEBUG
+#ifdef LOG
     pan::log_CRITICAL("No symbols set in:", config.symbol_file_name.c_str());
 #endif
     return (-1);
@@ -599,11 +599,11 @@ main(int argc, char** argv )
     pid_t pid = getpid();
     pid_t ppid = getppid();
 
-#ifdef DEBUG
+#ifdef LOG
     pan::log_DEBUG("pid: ", pan::integer(pid), " ppid: ", pan::integer(ppid));
 #endif
     if (WritePidFile(argv[0], config.mic_string.c_str(), pid, ppid) != 0) {
-#ifdef DEBUG
+#ifdef LOG
       pan::log_CRITICAL("Can't write pid file - exiting");
 #endif
       return (-1);
@@ -618,7 +618,7 @@ main(int argc, char** argv )
 
 
     if (config.is_logging) {
-#ifdef DEBUG
+#ifdef LOG
       pan::log_DEBUG("Logging with FileStoreFactory");
 #endif
       FIX::FileStoreFactory fileStoreFactory(config.fix_store_output_dir);
@@ -629,7 +629,7 @@ main(int argc, char** argv )
                                               logFactory);
       assert(g_pinitiator);
     } else {
-#ifdef DEBUG
+#ifdef LOG
       pan::log_DEBUG("Logging with NullStoreFactory");
 #endif
       FIX::NullStoreFactory nullStoreFactory;
@@ -639,7 +639,7 @@ main(int argc, char** argv )
       assert(g_pinitiator);
     }
 
-#ifdef DEBUG
+#ifdef LOG
     pan::log_DEBUG("Starting initiator");
 #endif
     g_pinitiator->start();
@@ -650,7 +650,7 @@ main(int argc, char** argv )
         break;
       }
     }
-#ifdef DEBUG
+#ifdef LOG
     pan::log_DEBUG("Stopping initiator");
 #endif
     g_pinitiator->stop();

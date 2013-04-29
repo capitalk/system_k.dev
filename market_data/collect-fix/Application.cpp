@@ -21,7 +21,9 @@
 #include "utils/types.h"
 #include "utils/fix_convertors.h"
 #include "utils/jenkins_hash.h"
+#ifdef LOG
 #include "utils/logging.h"
+#endif
 
 
 
@@ -53,15 +55,13 @@ void printCrossedBookNotification(const char* book_name,
                                   double basize,
                                   double bask) {
 #ifdef LOG
-  if (_config.print_debug) {
     pan::log_INFORMATIONAL("Crossed Book: ",
-        pBook->getName(),
+        book_name,
         " (" ,
         pan::real(bbid),
-        ", "
+        ", ",
         pan::real(bask),
         ")\n");
-  }
 #endif
 
   std::cout << "Crossed book: "

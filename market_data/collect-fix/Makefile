@@ -1,18 +1,18 @@
-CC=g++
+CC = g++
 
-CAPK_ROOT=~/capitalk
-COMMON=../../../common
-UTILS=$(COMMON)/src/c++
-UTILS_SRC=$(UTILS)/utils
-PROTO=$(COMMON)/proto
+CAPK_ROOT = ~/capitalk
+COMMON = ../../../common
+UTILS = $(COMMON)/src/c++
+UTILS_SRC = $(UTILS)/utils
+PROTO = $(COMMON)/proto
 
-ORDERBOOK_DIR=../../order_book/order_book.v2
-ORDERBOOK_INC=../../order_book
-ORDERBOOK_LIB=$(ORDERBOOK_DIR)/liborder_book2.a
+ORDERBOOK_DIR = ../../order_book/order_book.v2
+ORDERBOOK_INC = ../../order_book
+ORDERBOOK_LIB = $(ORDERBOOK_DIR)/liborder_book2.a
 
-PANTHEIOS_EXT=$(CAPK_ROOT)/pantheios_be_zmq
+PANTHEIOS_EXT = $(CAPK_ROOT)/pantheios_be_zmq
 
-INCLUDE= -I $(PANTHEIOS_ROOT)/include \
+INCLUDE = -I $(PANTHEIOS_ROOT)/include \
 		-I $(CAPK_ROOT) \
 		-I $(STLSOFT)/include \
 		-I $(ORDERBOOK_INC) \
@@ -20,7 +20,7 @@ INCLUDE= -I $(PANTHEIOS_ROOT)/include \
 		-I $(UTILS) \
 		-I $(COMMON)
 
-LIBS= -L$(ORDERBOOK_DIR)/ \
+LIBS = -L$(ORDERBOOK_DIR)/ \
 		-lquickfix \
 		-lorder_book2 \
 		-lrt \
@@ -34,33 +34,63 @@ LIBS= -L$(ORDERBOOK_DIR)/ \
 	
 
 # N.B. MAKE SURE YOU LINK WITH THE RIGHT LIBS (check the compiler gccXX)
-PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
-        -l pantheios.1.core.gcc44.file64bit \
-        -l pantheios.1.fe.N.gcc44.file64bit \
-        -l pantheios.1.util.gcc44.file64bit \
-        -l pantheios.1.be.N.gcc44.file64bit \
-        -l pantheios.1.bec.file.gcc44.file64bit \
-        -l pantheios.1.bec.fprintf.gcc44.file64bit \
-        -l pantheios.1.util.gcc44.file64bit \
-        -l pantheios.1.core.gcc44.file64bit
+PANTHEIOS_LIBS = -L $(PANTHEIOS_ROOT)/lib \
+        -l pantheios.1.core.gcc44.file64bit.mt \
+        -l pantheios.1.fe.N.gcc44.file64bit.mt \
+        -l pantheios.1.util.gcc44.file64bit.mt \
+        -l pantheios.1.be.N.gcc44.file64bit.mt \
+        -l pantheios.1.bec.file.gcc44.file64bit.mt \
+        -l pantheios.1.bec.fprintf.gcc44.file64bit.mt \
+        -l pantheios.1.util.gcc44.file64bit.mt \
+        -l pantheios.1.core.gcc44.file64bit.mt
 
 
-CFLAGS=-Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
 
 ifeq ($(dbg),1)
-        CFLAGS = -Wall -std=c++0x -pthread -DDEBUG -ggdb -g -DLOG# -DDEBUG_BOOK
+CFLAGS = -Wall -std=c++0x -pthread -g3 -DLOG -DDEBUG -ggdb  # -DDEBUG_BOOK
+LOG=1
+else
+CFLAGS = -Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
 endif
 
 all: protos collect
 
+OBJS = jenkins_hash.o \
+      config_server.o \
+      time_utils.o \
+      collect.o \
+      Application.o
+
+LOG_OBJS = pantheios_be_zmq.o \
+           logging.o
+
 include $(PROTO)/Makefile.inc
 
-ifeq (LOG,1)
-collect : pantheios_be_zmq.o logging.o jenkins_hash.o config_server.o time_utils.o collect.o Application.o  liborder_book2.a $(PROTOBUF_OBJS)
-	$(CC) $(CFLAGS) pantheios_be_zmq.o logging.o jenkins_hash.o config_server.o time_utils.o collect.o Application.o  $(PROTOBUF_OBJS) $(ORDERBOOK_DIR)/liborder_book2.a $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+ifdef LOG
+collect : \
+    $(LOG_OBJS) \
+    $(OBJS) \
+    $(ORDERBOOK_LIB) \
+    $(PROTOBUF_OBJS)
+	@echo Building with -DLOG \(logging on\)
+	$(CC) $(CFLAGS) \
+      $(LOG_OBJS) \
+      $(OBJS) \
+      $(PROTOBUF_OBJS) \
+      $(ORDERBOOK_LIB) \
+      $(LIBS) \
+      $(PANTHEIOS_LIBS) -o $@ 
 else
-collect :  jenkins_hash.o config_server.o time_utils.o collect.o Application.o  liborder_book2.a $(PROTOBUF_OBJS)
-	$(CC) $(CFLAGS) jenkins_hash.o config_server.o time_utils.o collect.o Application.o  $(PROTOBUF_OBJS) $(ORDERBOOK_DIR)/liborder_book2.a $(LIBS) -o $@ 
+collect : \
+    $(OBJS) \
+    $(ORDERBOOK_LIB) \
+    $(PROTOBUF_OBJS)
+	@echo Building with -ULOG \(logging off\)
+	$(CC) $(CFLAGS) \
+      $(OBJS) \
+      $(PROTOBUF_OBJS) \
+      $(ORDERBOOK_LIB) \
+      $(LIBS) -o $@ 
 endif
 
 pantheios_be_zmq.o: $(PANTHEIOS_EXT)/pantheios_be_zmq.cpp
@@ -85,7 +115,7 @@ Application.o: Application.cpp
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $<  
 
 
-liborder_book2.a:
+$(ORDERBOOK_LIB):
 	cd $(ORDERBOOK_DIR) && make 
 
 protos: 
