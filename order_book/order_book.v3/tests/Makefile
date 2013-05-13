@@ -1,56 +1,42 @@
-COMPILER=G++
+CC=g++
 
-# todo: object files into output path, processing c / c++ files in the same time (?), nested directories for source files (?)
-C = cpp
-OUTPUT_PATH = out/production/order_book.v3/
-SOURCE_PATH = src/
-EXE = $(OUTPUT_PATH)order_book.v3
+CAPK_ROOT = ~/capitalk
+COMMON=$(CAPK_ROOT)/common
+UTILS=$(COMMON)/src/c++
+UTILS_SRC=$(UTILS)/utils
 
-ifeq ($(COMPILER), G++)
-  ifeq ($(OS),Windows_NT)
-    OBJ = obj
-  else
-    OBJ = o
-  endif
-  COPT = -O2
-  CCMD = g++
-  OBJFLAG = -o
-  EXEFLAG = -o
-# INCLUDES = -I../.includes
-  INCLUDES =
-# LIBS = -lgc
-  LIBS =
-# LIBPATH = -L../gc/.libs
-  LIBPATH =
-  CPPFLAGS = $(COPT) -g $(INCLUDES)
-  LDFLAGS = $(LIBPATH) -g $(LIBS)
-  DEP = dep
-else
-  OBJ = obj
-  COPT = /O2
-  CCMD = cl
-  OBJFLAG = /Fo
-  EXEFLAG = /Fe
-# INCLUDES = /I..\\.includes
-  INCLUDES =
-# LIBS = ..\\.libs\\libgc.lib
-  LIBS =
-  CPPFLAGS = $(COPT) /DEBUG $(INCLUDES)
-  LDFLAGS = /DEBUG
-endif
+SRC=../
 
-OBJS := $(patsubst %.$(C),%.$(OBJ),$(wildcard $(SOURCE_PATH)*.$(C)))
+INCLUDE= -I$(SRC) \
+         -I$(COMMON) \
+         -I$(UTILS)
 
-%.$(OBJ):%.$(C)
-	@echo Compiling $(basename $<)...
-	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $< $(OBJFLAG)$@
+LIBS= -L$(UTILS) \
+      -L$(SRC) \
+      -lgtest \
+      -lorder_book3 \
+      -lpthread
 
-all: $(OBJS)
-	@echo Linking...
-	$(CCMD) $(LDFLAGS) $^ $(LIBS) $(EXEFLAG) $(EXE)
+CFLAGS=-Wall  -std=c++0x -O3 # -g -D DEBUG
 
-clean:
-	rm -rf $(SOURCE_PATH)*.$(OBJ) $(EXE)
+#%.o: %.cpp
+	#$(CC) $(CFLAGS) $(INCLUDE) -c $(input) -o $(output)
 
-rebuild: clean all
-#rebuild is not entirely correct
+
+all: liborder_book3.a gtest_add # gtest_del gtest_mod gtest_oob
+
+liborder_book3.a: 
+	cd .. && make 
+
+
+
+# Other tests
+gtest_add: gtest_add.cpp
+	$(CC) $(CFLAGS) gtest_add.cpp  $(INCLUDE) -L $(LIBS) -o $@
+
+clean :
+	rm -f  *.o 
+
+.PHONY: clean 
+
+

@@ -1,56 +1,50 @@
-COMPILER=G++
+CC = g++
 
-# todo: object files into output path, processing c / c++ files in the same time (?), nested directories for source files (?)
-C = cpp
-OUTPUT_PATH = out/production/order_book.v3/
-SOURCE_PATH = src/
-EXE = $(OUTPUT_PATH)order_book.v3
+CAPK_ROOT = ~/capitalk
+COMMON = $(CAPK_ROOT)/common
+UTILS = $(COMMON)/src/c++
+UTILS_SRC = $(UTILS)/utils
+PROTO = $(COMMON)/proto
 
-ifeq ($(COMPILER), G++)
-  ifeq ($(OS),Windows_NT)
-    OBJ = obj
-  else
-    OBJ = o
-  endif
-  COPT = -O2
-  CCMD = g++
-  OBJFLAG = -o
-  EXEFLAG = -o
-# INCLUDES = -I../.includes
-  INCLUDES =
-# LIBS = -lgc
-  LIBS =
-# LIBPATH = -L../gc/.libs
-  LIBPATH =
-  CPPFLAGS = $(COPT) -g $(INCLUDES)
-  LDFLAGS = $(LIBPATH) -g $(LIBS)
-  DEP = dep
+
+INCLUDE = -I..\
+          -I. \
+          -I$(COMMON)\
+          -I$(UTILS)
+
+LIBS = -lgtest 
+
+ifeq ($(dbg), 1)
+CFLAGS = -Wall  -std=c++0x -g3 -DDEBUG -ggdb
 else
-  OBJ = obj
-  COPT = /O2
-  CCMD = cl
-  OBJFLAG = /Fo
-  EXEFLAG = /Fe
-# INCLUDES = /I..\\.includes
-  INCLUDES =
-# LIBS = ..\\.libs\\libgc.lib
-  LIBS =
-  CPPFLAGS = $(COPT) /DEBUG $(INCLUDES)
-  LDFLAGS = /DEBUG
+CFLAGS = -Wall -std=c++0x -O3 -DNDEBUG
 endif
 
-OBJS := $(patsubst %.$(C),%.$(OBJ),$(wildcard $(SOURCE_PATH)*.$(C)))
+%.o: %.cpp
+	$(CC) $(CFLAGS) $(INCLUDE) -c $(input) -o $(output)
 
-%.$(OBJ):%.$(C)
-	@echo Compiling $(basename $<)...
-	$(CCMD) -c $(CPPFLAGS) $(CXXFLAGS) $< $(OBJFLAG)$@
 
-all: $(OBJS)
-	@echo Linking...
-	$(CCMD) $(LDFLAGS) $^ $(LIBS) $(EXEFLAG) $(EXE)
+all: liborder_book2.a
 
-clean:
-	rm -rf $(SOURCE_PATH)*.$(OBJ) $(EXE)
+liborder_book2.a: order_book.o 
+	ar rcs liborder_book3.a $+
 
-rebuild: clean all
-#rebuild is not entirely correct
+order_book.o: order_book.cpp order_book.hxx
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+#order_book.o: order_book.cpp 
+	#$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+#limit.o: limit.cpp
+	#$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+#time_utils.o: $(UTILS_SRC)/time_utils.cpp
+	#$(CC) -c $(INCLUDE) $(CFLAGS) $(UTILS_SRC)/time_utils.cpp
+
+
+clean :
+	rm -f  *.o liborder_book3.a 
+
+
+
+

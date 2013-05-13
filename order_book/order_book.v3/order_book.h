@@ -9,7 +9,10 @@
 #ifndef __OrderBook_v3__order_book__
 #define __OrderBook_v3__order_book__
 
+extern "C" {
+
 #include <inttypes.h>
+#include <stddef.h>
 
 const uint32_t MAX_ORDERS_PER_LEVEL = 10;
 const uint32_t MAX_ORDER_ID_LEN = 32;
@@ -75,5 +78,5 @@ const priceLevel* bestOffer(orderBook* ob) {
 }
 
 
-
+} // extern "C"
 #endif /* defined(__OrderBook_v3__order_book__) */

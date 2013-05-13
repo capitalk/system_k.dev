@@ -9,6 +9,8 @@
 #ifndef OrderBook_v3_order_book_hxx
 #define OrderBook_v3_order_book_hxx
 
+#include "order_book.h"
+
 #include <string>
 
 class order_book
@@ -22,11 +24,13 @@ public:
     int addAsk(double, double, std::string) {return 1;};
     
 private:
+    struct orderBook* _ob;
     double _init_price;
-    double _min_tick_size;
     double _one_way_offset_pct;
+    double _min_tick_size;
     
-    double* data;
+
+
     
 };
 

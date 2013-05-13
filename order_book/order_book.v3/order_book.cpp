@@ -7,21 +7,29 @@
 //
 
 #include "order_book.hxx"
+#include "order_book.h"
 #include <assert.h>
 #include <iostream>
 
-order_book::order_book(double init_price, double one_way_offset_pct, double min_tick_size):
+order_book::order_book(double init_price,
+                       double one_way_offset_pct,
+                       double min_tick_size):
 _init_price(init_price),
 _one_way_offset_pct(one_way_offset_pct),
 _min_tick_size(min_tick_size)
 {
     assert(init_price >= 0);
     assert(one_way_offset_pct);
+    /*
     double bound = init_price * one_way_offset_pct;
     double upper_bound = init_price + bound;
     double lower_bound = init_price - bound;
     double range = upper_bound - lower_bound;
     int32_t buckets = range / _min_tick_size;
+    */
+
+    _ob = new_order_book(init_price, one_way_offset_pct, min_tick_size);
+
 #ifdef DEBUG
     std::cerr << "Initializing order book with: " \
     << "init_price: " << _init_price << "\n" \
@@ -34,6 +42,7 @@ _min_tick_size(min_tick_size)
     << "buckets: " << buckets << "\n" \
     << std::endl;
 #endif
+
 };
 
 order_book::~order_book()
