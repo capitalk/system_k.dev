@@ -11,6 +11,8 @@
 #include <assert.h>
 #include <iostream>
 
+namespace capk {
+
 order_book::order_book(double init_price,
                        double one_way_offset_pct,
                        double min_tick_size):
@@ -49,3 +51,5 @@ order_book::~order_book()
 {
     
 }
+
+} // namespace capk

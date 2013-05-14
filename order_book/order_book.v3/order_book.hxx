@@ -13,6 +13,8 @@
 
 #include <string>
 
+namespace capk {
+
 class order_book
 {
 public:
@@ -34,5 +36,6 @@ private:
     
 };
 
+} // namespace capk
 
 #endif

@@ -25,9 +25,9 @@ struct _order {
 typedef struct _order order;
 
 struct _priceLevel {
-    double _aggregate_qty;
-    uint32_t _num_orders;
-    double _price;
+    double aggregate_qty;
+    uint32_t num_orders;
+    double price;
     order orders[MAX_ORDERS_PER_LEVEL];
 };
 typedef struct _priceLevel priceLevel;
@@ -39,10 +39,10 @@ struct orderBook {
     double min_tick_size;
     double lower_price_bound;
     double upper_price_bound;
-    priceLevel* levels;
+    priceLevel* bid_levels;
+    priceLevel* ask_levels;
     priceLevel* best_bid;
     priceLevel* best_ask;
-    
 };
 typedef struct orderBook orderBook;
 
@@ -54,26 +54,29 @@ orderBook* new_order_book(double init_price,
 
 
 int addOrder(orderBook* ob,
-         const char* order_id,
-         double price,
-         double quantity);
+             const capk::side_t side,
+             const char* order_id,
+             const double price,
+             const double quantity); 
 
 int delOrder(orderBook* ob,
-         const char* order_id,
-         double price,
-         double quantity);
+             const capk::side_t side,
+             const char* order_id,
+             const double price,
+             const double quantity);
 
 int modOrder(orderBook* ob,
-         const char* order_id,
-         double new_price,
-         double new_quantity);
+             const capk::side_t side,
+             const char* order_id,
+             const double new_price,
+             const double new_quantity);
 
 
-const priceLevel* bestBid(orderBook* ob) {
+const priceLevel* best_bid(orderBook* ob) {
     return NULL;
 }
 
-const priceLevel* bestOffer(orderBook* ob) {
+const priceLevel* best_ask(orderBook* ob) {
     return NULL;
 }
 
