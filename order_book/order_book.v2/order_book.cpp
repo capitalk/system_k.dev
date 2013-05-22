@@ -21,6 +21,7 @@ operator<<(std::ostream& out, const capk::KBook& b)
             << (*bit)->getUpdateTime() << "," 
             << capk::BID << ","
             << i << ","
+            << std::setiosflags(std::ios_base::fixed) 
             << std::setprecision(5) 
             << (*bit)->getPrice() << ","
             << std::setprecision(0) 
@@ -51,6 +52,7 @@ operator<<(std::ostream& out, const capk::KBook& b)
             << (*ait)->getUpdateTime() << "," 
             << capk::ASK << ","
             << i << ","
+            << std::setiosflags(std::ios_base::fixed) 
             << std::setprecision(5) 
             << (*ait)->getPrice() << ","
             << std::setprecision(0)  
