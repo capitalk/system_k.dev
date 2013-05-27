@@ -117,7 +117,7 @@ sighandler(int sig)
   assert(g_pinitiator);
   g_pinitiator->stop();
   g_papplication->deleteBooks();
-  g_papplication->deleteLogs();
+  /* g_papplication->deleteLogs(); */
   exit(sig);
 }
 

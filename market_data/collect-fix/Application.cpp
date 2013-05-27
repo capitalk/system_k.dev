@@ -353,7 +353,8 @@ void Application::full_refresh_template(const T& message,
                    message.toString().c_str());
   }
 #endif
-  std::ostream* pLog = NULL;
+  
+/*  std::ostream* pLog = NULL; */
   FIX::MsgType msgType;
   message.getHeader().getField(msgType);
   FIX::SendingTime sendingTime;
@@ -505,8 +506,8 @@ void Application::full_refresh_template(const T& message,
                        basize,
                        _config.venue_id);
 
+    /*
     pLog = getStream(symbol.getValue());
-
     if (pLog == NULL) {
       std::cerr << __FILE__
                 <<  ":"
@@ -524,6 +525,7 @@ void Application::full_refresh_template(const T& message,
             << "\n"
             << *pBook;
     }
+    */
   }
 }
 
@@ -601,7 +603,7 @@ void Application::incremental_update_template(const T& message,
   FIX::SecurityExchange securityExchange;
   int nEntries = 0;
   capk::KBook* pBook = NULL;
-  std::ostream* pLog = NULL;
+/* std::ostream* pLog = NULL; */
 
   static double dbar, dcount, dsum;
 
@@ -683,7 +685,7 @@ void Application::incremental_update_template(const T& message,
       FIX::UtcTimeStamp time = FIX::UtcTimeStamp(sendingTime);
       FIXConvertors::UTCTimeStampToTimespec(time, &sndTime);
       clock_gettime(CLOCK_MONOTONIC, &evtTime);
-      pLog = getStream(symbol.getValue());
+/*      pLog = getStream(symbol.getValue()); */
 
       if (NULL != (pBook = getBook(symbol.getValue())))  {
         char side = mdEntryType.getValue();
@@ -763,6 +765,7 @@ void Application::incremental_update_template(const T& message,
                       << sndTime << " "
                       << "\n";
           }
+/*
           if (_config.is_logging) {
             *pLog << "A,"
                   << nside << ","
@@ -772,6 +775,7 @@ void Application::incremental_update_template(const T& message,
                   << price << ","
                   << evtTime << "\n";
           }
+*/
 #ifdef LOG
           if (_config.print_debug) {
             pan::log_DEBUG("Add ",
@@ -806,7 +810,7 @@ void Application::incremental_update_template(const T& message,
             }
 #endif
             uint32_t nrefId = hashlittle(refId.c_str(), refId.size(), 0);
-
+/*
             if (_config.is_logging) {
               *pLog << "M,"
                     << nside << ","
@@ -815,6 +819,7 @@ void Application::incremental_update_template(const T& message,
                     << price << ","
                     << evtTime << "\n";
             }
+*/
             pBook->remove(nrefId, evtTime, sndTime);
             pBook->add(nid, nside, size, price, evtTime, sndTime);
           } else {
@@ -828,6 +833,7 @@ void Application::incremental_update_template(const T& message,
 #endif
             capk::pKOrder pOrder = pBook->getOrder(nid);
             if (pOrder) {
+/*
               if (_config.is_logging) {
                 *pLog << "M,"
                       << pBook->getOrder(nid)->getSide() << ","
@@ -837,6 +843,7 @@ void Application::incremental_update_template(const T& message,
                       << pBook->getOrder(nid)->getPrice() << ","
                       << evtTime << "\n";
               }
+*/
 #ifdef LOG
               if (_config.print_debug) {
                 pan::log_DEBUG("Modify ",
@@ -882,6 +889,7 @@ void Application::incremental_update_template(const T& message,
 #endif
           capk::pKOrder pOrder = pBook->getOrder(nid);
           if (pOrder) {
+/*
             if (_config.is_logging) {
               *pLog << "D,"
                     << pBook->getOrder(nid)->getSide() << ","
@@ -892,6 +900,7 @@ void Application::incremental_update_template(const T& message,
                     << pBook->getOrder(nid)->getPrice() << ","
                     << evtTime << "\n";
             }
+*/
 #ifdef LOG
             if (_config.print_debug) {
               pan::log_DEBUG("Delete ",
@@ -964,7 +973,7 @@ void Application::incremental_update_template(const T& message,
                            basize,
                            _config.venue_id);
       }
-
+/*
       if (pLog == NULL && _config.is_logging) {
         std::cerr << __FILE__
             <<  ":"
@@ -978,7 +987,9 @@ void Application::incremental_update_template(const T& message,
             "Can't find log - pLog is NULL");
 #endif
       }
+*/
 
+/*
       if (pLog != NULL && _config.is_logging) {
         *pLog << "OB,"
               << pBook->getName()
@@ -989,7 +1000,7 @@ void Application::incremental_update_template(const T& message,
               << "\n";
         *pLog << *pBook;
       }
-
+*/
       // Timing stats
       ptime time_end(microsec_clock::local_time());
       time_duration duration(time_end - time_start);
@@ -1163,7 +1174,7 @@ void Application::incremental_update_template(const T& message,
 
     std::vector<std::string>::const_iterator it = _symbols.begin();
     std::string logFileName;
-    std::ofstream* pLog;
+/*    std::ofstream* pLog; */
     capk::KBook* pBook = NULL;
     std::string MIC_prefix =
       _config.mic_string.length() > 0 ? _config.mic_string + "_" : "";
@@ -1173,6 +1184,7 @@ void Application::incremental_update_template(const T& message,
     std::string dateToday;
     fs::path datePath;
 
+/*
     if (_config.is_logging) {
       today = boost::gregorian::day_clock::universal_day();
       dateToday = date_to_string(today);
@@ -1183,6 +1195,7 @@ void Application::incremental_update_template(const T& message,
         fs::create_directory(datePath);
       }
     }
+*/
 
     /**
      * Create for each symbol:
@@ -1190,7 +1203,7 @@ void Application::incremental_update_template(const T& message,
      * 2) Log file
      */
     while (it != _symbols.end() && *it != "") {
-      bool isRestart = false;
+      //bool isRestart = false;
       symbol = *it;
       pBook = new capk::KBook(symbol.c_str(), _config.market_depth);
 #ifdef LOG
@@ -1198,6 +1211,7 @@ void Application::incremental_update_template(const T& message,
                      "symbol  : ", symbol.c_str(), "\n",
                      "depth   : ", pan::integer(pBook->getDepth()));
 #endif
+/*
       if (_config.is_logging) {
         logFileName = MIC_prefix
                       + remove_bad_filename_chars(symbol)
@@ -1209,12 +1223,13 @@ void Application::incremental_update_template(const T& message,
           isRestart = true;
         }
 
-        pLog =  new std::ofstream(fullPathToLog.string(),
-                                  std::ios::app | std::ios::out);
+        pLog =  new std::ofstream(fullPathToLog.string(), 
+                                  std::ios::app | std::ios::out); 
 
         if (isRestart) {
           timespec evtTime;
           clock_gettime(CLOCK_MONOTONIC, &evtTime);
+          
           if (_config.is_logging) {
             *pLog << "RESTART: " << evtTime << "\n";
           }
@@ -1241,13 +1256,14 @@ void Application::incremental_update_template(const T& message,
         }
         addStream(symbol, pLog);
       }
+*/
       addBook(symbol, pBook);
       it++;
     }
     std::cerr << "Total books created: "
               << _symbolToBook.size() << "\n";
-    std::cerr << "Total tick logs created: "
-              << _symbolToLogStream.size() << "\n";
+    //std::cerr << "Total tick logs created: "
+              //<< _symbolToLogStream.size() << "\n";
 
 
 
@@ -1828,10 +1844,13 @@ void Application::incremental_update_template(const T& message,
     return _symbols;
   }
 
+/*
   void Application::addStream(const std::string& symbol, std::ostream* log) {
     _symbolToLogStream[symbol] = log;
   }
+*/
 
+/*
   std::ostream* Application::getStream(const std::string& symbol) {
     symbolToLogStreamIterator it = _symbolToLogStream.find(symbol);
     if (it == _symbolToLogStream.end()) {
@@ -1840,7 +1859,7 @@ void Application::incremental_update_template(const T& message,
       return (it->second);
     }
   }
-
+*/
   void Application::addBook(const std::string& symbol, capk::KBook* book) {
     _symbolToBook[symbol] = book;
   }
@@ -1854,6 +1873,7 @@ void Application::incremental_update_template(const T& message,
     }
   }
 
+/*
   void Application::deleteLogs() {
 #ifdef LOG
     if (_config.print_debug)  {
@@ -1871,6 +1891,7 @@ void Application::incremental_update_template(const T& message,
       streamIter++;
     }
   }
+*/
 
   void Application::deleteBooks() {
 #ifdef LOG
@@ -1889,5 +1910,5 @@ void Application::incremental_update_template(const T& message,
 
   Application::~Application() {
     deleteBooks();
-    deleteLogs();
+/*    deleteLogs(); */
   }

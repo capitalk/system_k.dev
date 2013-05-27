@@ -164,7 +164,7 @@ class Application : public FIX::Application,
     void* getZMQContext() { return this->_pzmq_context;}
 
     void deleteBooks();
-    void deleteLogs();
+/*  void deleteLogs(); */
 
     void addSymbols(const std::vector<std::string>& symbols);
     const std::vector<std::string>& getSymbols();
@@ -173,8 +173,9 @@ class Application : public FIX::Application,
     void addBook(const std::string& symbol, capk::KBook* book);
     capk::KBook*  getBook(const std::string& symbol);
 
-    void addStream(const std::string& symbol, std::ostream* log);
+/*  void addStream(const std::string& symbol, std::ostream* log);
     std::ostream*  getStream(const std::string& symbol);
+*/
 
     void setUpdateType(const int32_t updateType);
 
