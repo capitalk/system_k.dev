@@ -431,9 +431,12 @@ ReadCommandLineParams(int argc,
       return 1;
     }
 
-    application_config->is_logging = true;
     if (vm.count("nolog")) {
       application_config->is_logging = false;
+    }
+    else {
+      application_config->is_logging = true;
+      logging_init(createTimestampedLogFilename("log").c_str());
     }
 #ifdef LOG
     pan::log_INFORMATIONAL("Logging: ",
