@@ -30,25 +30,6 @@
 namespace fs = boost::filesystem;
 namespace dt = boost::gregorian;
 
-// KTK TODO move to utils
-std::string date_to_string(const dt::date& d) {
-  dt::date_facet* facet = new dt::date_facet("%Y_%m_%d");
-  std::stringstream ss;
-  ss.imbue(std::locale(std::cout.getloc(), facet));
-  ss << d;
-  return ss.str();
-}
-
-bool is_bad_filename_char(char c) {
-  return c == '/' || c == '\\' || c == ' ';
-}
-
-std::string remove_bad_filename_chars(const std::string& str) {
-  std::string s(str.c_str());
-  s.erase(remove_if(s.begin(), s.end(), is_bad_filename_char), s.end());
-  return s;
-}
-
 void printCrossedBookNotification(const char* book_name,
                                   double bbsize,
                                   double bbid,
@@ -208,39 +189,6 @@ throw(FIX::DoNotSend) {
     pan::log_CRITICAL("Exception: ", e.what());
 #endif
     std::cerr << e.what() << std::endl;
-  }
-}
-
-template <typename T>
-void Application::trading_session_status_template(const T& message,
-    const FIX::SessionID& sessionID) {
-  FIX::TradingSessionID tradingSessionID;
-  FIX::TradSesStatus tradSesStatus;
-  if (message.isSetField(tradingSessionID)) {
-    message.getField(tradingSessionID);
-  }
-  if (message.isSetField(tradSesStatus)) {
-    message.getField(tradSesStatus);
-    if (tradSesStatus.getValue() == FIX::TradSesStatus_OPEN) {
-#ifdef LOG
-      pan::log_INFORMATIONAL("Trading sessions status is OPEN");
-#endif
-    }
-    if (tradSesStatus.getValue() == FIX::TradSesStatus_HALTED) {
-#ifdef LOG
-      pan::log_INFORMATIONAL("Trading sessions status is HALTED");
-#endif
-    }
-    if (tradSesStatus.getValue() == FIX::TradSesStatus_CLOSED) {
-#ifdef LOG
-      pan::log_INFORMATIONAL("Trading sessions status is CLOSED");
-#endif
-    }
-    if (tradSesStatus.getValue() == FIX::TradSesStatus_PREOPEN) {
-#ifdef LOG
-      pan::log_INFORMATIONAL("Trading sessions status is PREOPEN");
-#endif
-    }
   }
 }
 
