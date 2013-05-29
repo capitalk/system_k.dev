@@ -22,6 +22,12 @@
 #ifndef MARKET_DATA_COLLECT_FIX_APPLICATION_H_
 #define MARKET_DATA_COLLECT_FIX_APPLICATION_H_
 
+#define USE_FIX_42
+//#define USE_FIX_43
+//#define USE_FIX_44
+//#define USE_FIX_50
+//#define USE_FIX_50SP2
+
 #include <zmq.hpp>
 
 #include <boost/iostreams/device/file.hpp>
@@ -40,6 +46,7 @@
 #include "quickfix/Values.h"
 #include "quickfix/Mutex.h"
 
+#ifdef USE_FIX_42
 #include "quickfix/fix42/MarketDataIncrementalRefresh.h"
 #include "quickfix/fix42/MarketDataRequest.h"
 #include "quickfix/fix42/MarketDataRequestReject.h"
@@ -54,7 +61,9 @@
 #include "quickfix/fix42/SecurityStatus.h"
 #include "quickfix/fix42/SecurityDefinition.h"
 #include "quickfix/fix42/SecurityDefinitionRequest.h"
+#endif //  USE_FIX_42
 
+#ifdef USE_FIX_43
 #include "quickfix/fix43/MarketDataIncrementalRefresh.h"
 #include "quickfix/fix43/MarketDataRequest.h"
 #include "quickfix/fix43/MarketDataRequestReject.h"
@@ -69,7 +78,9 @@
 #include "quickfix/fix43/SecurityStatus.h"
 #include "quickfix/fix43/SecurityDefinition.h"
 #include "quickfix/fix43/SecurityDefinitionRequest.h"
+#endif //  USE_FIX_43
 
+#ifdef USE_FIX_44
 #include "quickfix/fix44/MarketDataIncrementalRefresh.h"
 #include "quickfix/fix44/MarketDataRequest.h"
 #include "quickfix/fix44/MarketDataRequestReject.h"
@@ -84,7 +95,9 @@
 #include "quickfix/fix44/SecurityStatus.h"
 #include "quickfix/fix44/SecurityDefinition.h"
 #include "quickfix/fix44/SecurityDefinitionRequest.h"
+#endif //  USE_FIX_44
 
+#ifdef USE_FIX_50
 #include "quickfix/fix50/MarketDataIncrementalRefresh.h"
 #include "quickfix/fix50/MarketDataRequest.h"
 #include "quickfix/fix50/MarketDataRequestReject.h"
@@ -93,7 +106,9 @@
 #include "quickfix/fix50/SecurityStatus.h"
 #include "quickfix/fix50/SecurityDefinition.h"
 #include "quickfix/fix50/SecurityDefinitionRequest.h"
+#endif //  USE_FIX_50
 
+#ifdef  USE_FIX_50SP2
 #include "quickfix/fix50sp2/MarketDataIncrementalRefresh.h"
 #include "quickfix/fix50sp2/MarketDataRequest.h"
 #include "quickfix/fix50sp2/MarketDataRequestReject.h"
@@ -102,10 +117,13 @@
 #include "quickfix/fix50sp2/SecurityStatus.h"
 #include "quickfix/fix50sp2/SecurityDefinition.h"
 #include "quickfix/fix50sp2/SecurityDefinitionRequest.h"
+#endif //  USE_FIX50SP2
 
+#if defined(USE_FIX_50) || defined(USE_FIX50SP2)
+#define USE_FIXT11
 #include "quickfix/fixt11/Logon.h"
 #include "quickfix/fixt11/TestRequest.h"
-
+#endif //  defined(USE_FIX_50) || defined(USE_FIX50SP2) 
 
 #include "order_book.v2/order_book.h"
 #include "order_book.v2/book_types.h"
@@ -121,12 +139,6 @@ enum FIXVersion {
     FIX_50SP1 = 51,
     FIX_50SP2 = 52
 };
-
-#define USE_FIX_42
-#define USE_FIX_43
-#define USE_FIX_44
-#define USE_FIX_50
-#define USE_FIX_50SP2
 
 struct ApplicationConfig {
     // The ISO MIC code for this market/ECN/etc.
@@ -245,6 +257,7 @@ class Application : public FIX::Application, public FIX::MessageCracker {
     /** 
      * FIX 4.2 
      */
+#ifdef USE_FIX_42
     FIX42::MarketDataRequest sendMarketDataRequest42(
         const std::vector<std::string>& symbols);
     FIX42::MarketDataRequest sendSingleMarketDataRequest42(
@@ -258,10 +271,12 @@ class Application : public FIX::Application, public FIX::MessageCracker {
     void onMessage(const FIX42::MarketDataRequestReject& message,
             const FIX::SessionID& sessionID);
     FIX42::TestRequest sendTestRequest42();
+#endif //  USE_FIX_42
 
     /** 
      * FIX 4.3 
      */
+#ifdef USE_FIX_43
     FIX43::MarketDataRequest sendMarketDataRequest43(
         const std::vector<std::string>& symbols);
     FIX43::MarketDataRequest sendSingleMarketDataRequest43(
@@ -275,10 +290,12 @@ class Application : public FIX::Application, public FIX::MessageCracker {
     void onMessage(const FIX43::MarketDataRequestReject& message,
             const FIX::SessionID& sessionID);
     FIX43::TestRequest sendTestRequest43();
+#endif //  USE_FIX_43
 
     /** 
      * FIX 4.4 
      */
+#ifdef USE_FIX_44
     FIX44::MarketDataRequest sendMarketDataRequest44(
         const std::vector<std::string>& symbols);
     FIX44::MarketDataRequest sendSingleMarketDataRequest44(
@@ -292,10 +309,12 @@ class Application : public FIX::Application, public FIX::MessageCracker {
     void onMessage(const FIX44::MarketDataRequestReject& message,
             const FIX::SessionID& sessionID);
     FIX44::TestRequest sendTestRequest44();
+#endif //  USE_FIX_44
 
     /** 
      * FIX 5.0 
      */
+#ifdef USE_FIX_50
     FIX50::MarketDataRequest sendMarketDataRequest50(
         const std::vector<std::string>& symbols);
     FIX50::MarketDataRequest sendSingleMarketDataRequest50(
@@ -304,10 +323,12 @@ class Application : public FIX::Application, public FIX::MessageCracker {
             const FIX::SessionID& sessionID);
     void onMessage(const FIX50::MarketDataIncrementalRefresh& message,
             const FIX::SessionID& sessionID);
+#endif //  USE_FIX_50
 
     /** 
      * FIX 5.0SP2 
      */
+#ifdef USE_FIX_50SP2
     FIX50SP2::MarketDataRequest sendMarketDataRequest50SP2(
         const std::vector<std::string>& symbols);
     FIX50SP2::MarketDataRequest sendSingleMarketDataRequest50SP2(
@@ -316,12 +337,15 @@ class Application : public FIX::Application, public FIX::MessageCracker {
             const FIX::SessionID& sessionID);
     void onMessage(const FIX50SP2::MarketDataIncrementalRefresh& message,
             const FIX::SessionID& sessionID);
+#endif //   USE_FIX_50SP2
 
     /**
      * FIXT 11
      */
+#ifdef USE_FIXT11 
     FIXT11::TestRequest sendTestRequestFIXT11();
     void onMessage(const FIXT11::Logon& logon, const FIX::SessionID& sessionID);
+#endif //  defined(USE_FIX_50) || defined(USE_FIX_50SP2) 
 
     /**
      * Class variables

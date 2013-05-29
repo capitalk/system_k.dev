@@ -245,21 +245,35 @@ void Application::sendTestRequest() {
 
   FIX::Message testRequestMessage;
   switch (_config.version) {
+#ifdef USE_FIX_42
   case FIX_42:
     testRequestMessage = sendTestRequest42();
     break;
+#endif //  USE_FIX_42
+
+#ifdef USE_FIX_43
   case FIX_43:
     testRequestMessage = sendTestRequest43();
     break;
+#endif //  USE_FIX_43
+
+#ifdef USE_FIX_44
   case FIX_44:
     testRequestMessage = sendTestRequest44();
     break;
+#endif //  USE_FIX_44
+
+#ifdef USE_FIX_50
   case FIX_50:
     testRequestMessage = sendTestRequestFIXT11();
     break;
+#endif //  USE_FIX_50
+
+#ifdef USE_FIX_50SP2
   case FIX_50SP2:
     testRequestMessage = sendTestRequestFIXT11();
     break;
+#endif //  USE_FIX_50SP2
   default:
     throw std::runtime_error("Unsupported FIX version");
   }
@@ -278,21 +292,35 @@ void Application::sendSingleMarketDataRequest(
 
   FIX::Message md;
   switch (_config.version) {
+#ifdef USE_FIX_42
   case FIX_42:
     md = sendSingleMarketDataRequest42(requestSymbol);
     break;
+#endif //  USE_FIX_42
+
+#ifdef USE_FIX_43
   case FIX_43:
     md = sendSingleMarketDataRequest43(requestSymbol);
     break;
+#endif //  USE_FIX_43
+
+#ifdef USE_FIX_44
   case FIX_44:
     md = sendSingleMarketDataRequest44(requestSymbol);
     break;
+#endif //  USE_FIX_44
+
+#ifdef USE_FIX_50
   case FIX_50:
     md = sendSingleMarketDataRequest50(requestSymbol);
     break;
+#endif //  USE_FIX_50
+
+#ifdef USE_FIX_50SP2
   case FIX_50SP2:
     md = sendSingleMarketDataRequest50SP2(requestSymbol);
     break;
+#endif //  USE_FIX_50PSP2
   default:
     throw std::runtime_error("Unsupported FIX version");
   }
@@ -308,21 +336,35 @@ void Application::sendMarketDataRequest(
 #endif
   FIX::Message md;
   switch (_config.version) {
+#ifdef USE_FIX_42
   case FIX_42:
     md = sendMarketDataRequest42(symbols);
     break;
+#endif //  USE_FIX_42
+
+#ifdef USE_FIX_43
   case FIX_43:
     md = sendMarketDataRequest43(symbols);
     break;
+#endif //  USE_FIX_43
+
+#ifdef USE_FIX_44
   case FIX_44:
     md = sendMarketDataRequest44(symbols);
     break;
+#endif // USE_FIX_44
+    
+#ifdef USE_FIX_50
   case FIX_50:
     md = sendMarketDataRequest50(symbols);
     break;
+#endif //  USE_FIX_50
+
+#ifdef USE_FIX_50SP2
   case FIX_50SP2:
     md = sendMarketDataRequest50SP2(symbols);
     break;
+#endif //  USE_FIX_50SP2
   default:
     throw std::runtime_error("Unsupported FIX version");
   }
@@ -1793,6 +1835,7 @@ void Application::onMessage(const FIX50SP2::MarketDataIncrementalRefresh& messag
 /******************************************************************************
  * FIXT 11 
  *****************************************************************************/
+#ifdef USE_FIXT11
 FIXT11::TestRequest Application::sendTestRequestFIXT11() {
 #ifdef LOG
   if (_config.print_debug) {
@@ -1812,5 +1855,6 @@ void Application::onMessage(const FIXT11::Logon&, const FIX::SessionID&) {
   }
 #endif
 }
+#endif 
 
 
