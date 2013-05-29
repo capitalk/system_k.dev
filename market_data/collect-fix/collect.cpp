@@ -1,8 +1,8 @@
 #ifdef _MSC_VER
 #pragma warning(disable : 4503 4355 4786)
-#else
-//#include "config.h"
 #endif
+
+#include "md_parser_qf.h"
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
@@ -34,7 +34,6 @@
 #include "utils/logging.h"
 #endif // LOG
 
-#include "Application.h"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -42,17 +41,15 @@ namespace dt = boost::gregorian;
 namespace qi = boost::spirit::qi;
 
 /**
- * Constants for defaults
+ * Defaults
  */
 const char* const DEFAULT_SYMBOLS_FILE_NAME = "symbols.cfg";
 const char* const DEFAULT_CONFIG_SERVER_ADDRESS = "tcp://127.0.0.1:11111";
-const char* const DEFAULT_TICK_FILE_DIR = ".";
+const char* const DEFAULT_ROOT_DIR = ".";
 
 #ifdef LOG
 const PAN_CHAR_T PANTHEIOS_FE_PROCESS_IDENTITY[] = "collect-fix";
 #endif // LOG
-
-
 
 /**
  * Signal handler - needed for clean exits
@@ -213,19 +210,15 @@ ReadLocalConfig(ApplicationConfig* application_config,
   application_config->sendPasswordInRawDataField =
     dict.has("SendPasswordInRawData") && dict.getBool("SendPasswordInRawData");
 
-  // If user specified an output dir, then put files into date-sorted
-  // subdirectories, otherwise put into the default dir
-  application_config->order_books_output_dir = DEFAULT_TICK_FILE_DIR;
-
   application_config->fix_log_output_dir =
     dict.has("FileLogPath") ?
     dict.getString("FileLogPath") :
-    DEFAULT_TICK_FILE_DIR;
+    DEFAULT_ROOT_DIR;
 
   application_config->fix_store_output_dir =
     dict.has("FileStorePath") ?
     dict.getString("FileStorePath") :
-    DEFAULT_TICK_FILE_DIR;
+    DEFAULT_ROOT_DIR;
 
   // Should use aggregated book?
   application_config->want_aggregated_book =
@@ -419,7 +412,7 @@ ReadCommandLineParams(int argc,
     ("s", po::value<std::string>(), "<symbol file>")
     ("o", po::value<std::string>(), "<orderbook output path>")
     ("config-server", po::value<std::string>(), "<config server address>")
-    ("nolog", po::value<int>()->implicit_value(0), "disable all logging (FIX and tick)")
+    ("nolog", po::value<int>()->implicit_value(0), "disable all FIX message logging")
     ("d", "debug info");
 
     po::variables_map vm;
@@ -436,14 +429,13 @@ ReadCommandLineParams(int argc,
     }
     else {
       application_config->is_logging = true;
-      logging_init(createTimestampedLogFilename("log").c_str());
     }
 #ifdef LOG
     pan::log_INFORMATIONAL("Logging: ",
                            pan::boolean(application_config->is_logging));
 #endif
 
-    application_config->root_output_dir = DEFAULT_TICK_FILE_DIR;
+    application_config->root_output_dir = DEFAULT_ROOT_DIR;
     if (vm.count("o")) {
       application_config->root_output_dir = vm["o"].as<std::string>();
     }
@@ -524,6 +516,10 @@ main(int argc, char** argv )
 
   SetSignalHandlers();
 
+#ifdef LOG
+      logging_init(createTimestampedLogFilename("log").c_str());
+#endif
+
   if (InitializeZMQ() != 0) {
 #ifdef LOG
     pan::log_CRITICAL("Can't init ZMQ - exiting");
@@ -584,7 +580,6 @@ main(int argc, char** argv )
       if (!fs::exists(argPath)) {
         fs::create_directories(argPath);
       }
-      config.order_books_output_dir = config.root_output_dir;
 
       fs::path fix_log_path = argPath / fs::path("log");
       if (!fs::exists(fix_log_path)) {

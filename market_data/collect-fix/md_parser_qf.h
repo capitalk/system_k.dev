@@ -40,7 +40,6 @@
 #include "quickfix/Values.h"
 #include "quickfix/Mutex.h"
 
-#include "quickfix/fix42/ExecutionReport.h"
 #include "quickfix/fix42/MarketDataIncrementalRefresh.h"
 #include "quickfix/fix42/MarketDataRequest.h"
 #include "quickfix/fix42/MarketDataRequestReject.h"
@@ -56,7 +55,6 @@
 #include "quickfix/fix42/SecurityDefinition.h"
 #include "quickfix/fix42/SecurityDefinitionRequest.h"
 
-#include "quickfix/fix43/ExecutionReport.h"
 #include "quickfix/fix43/MarketDataIncrementalRefresh.h"
 #include "quickfix/fix43/MarketDataRequest.h"
 #include "quickfix/fix43/MarketDataRequestReject.h"
@@ -72,7 +70,6 @@
 #include "quickfix/fix43/SecurityDefinition.h"
 #include "quickfix/fix43/SecurityDefinitionRequest.h"
 
-#include "quickfix/fix44/ExecutionReport.h"
 #include "quickfix/fix44/MarketDataIncrementalRefresh.h"
 #include "quickfix/fix44/MarketDataRequest.h"
 #include "quickfix/fix44/MarketDataRequestReject.h"
@@ -88,21 +85,27 @@
 #include "quickfix/fix44/SecurityDefinition.h"
 #include "quickfix/fix44/SecurityDefinitionRequest.h"
 
-#include "quickfix/fix50sp2/ExecutionReport.h"
+#include "quickfix/fix50/MarketDataIncrementalRefresh.h"
+#include "quickfix/fix50/MarketDataRequest.h"
+#include "quickfix/fix50/MarketDataRequestReject.h"
+#include "quickfix/fix50/MarketDataSnapshotFullRefresh.h"
+#include "quickfix/fix50/TradingSessionStatus.h"
+#include "quickfix/fix50/SecurityStatus.h"
+#include "quickfix/fix50/SecurityDefinition.h"
+#include "quickfix/fix50/SecurityDefinitionRequest.h"
+
 #include "quickfix/fix50sp2/MarketDataIncrementalRefresh.h"
 #include "quickfix/fix50sp2/MarketDataRequest.h"
 #include "quickfix/fix50sp2/MarketDataRequestReject.h"
 #include "quickfix/fix50sp2/MarketDataSnapshotFullRefresh.h"
-#include "quickfix/fixt11/Logout.h"
-#include "quickfix/fixt11/Logon.h"
-#include "quickfix/fixt11/Heartbeat.h"
-#include "quickfix/fixt11/SequenceReset.h"
-#include "quickfix/fixt11/ResendRequest.h"
-#include "quickfix/fixt11/TestRequest.h"
 #include "quickfix/fix50sp2/TradingSessionStatus.h"
 #include "quickfix/fix50sp2/SecurityStatus.h"
 #include "quickfix/fix50sp2/SecurityDefinition.h"
 #include "quickfix/fix50sp2/SecurityDefinitionRequest.h"
+
+#include "quickfix/fixt11/Logon.h"
+#include "quickfix/fixt11/TestRequest.h"
+
 
 #include "order_book.v2/order_book.h"
 #include "order_book.v2/book_types.h"
@@ -119,43 +122,66 @@ enum FIXVersion {
     FIX_50SP2 = 52
 };
 
+#define USE_FIX_42
+#define USE_FIX_43
+#define USE_FIX_44
+#define USE_FIX_50
+#define USE_FIX_50SP2
+
 struct ApplicationConfig {
+    // The ISO MIC code for this market/ECN/etc.
     std::string mic_string;
+    // Integer id of this venue
     int32_t venue_id;
     std::string username;
     std::string password;
+    // Should we send password in raw data? 
     bool sendPasswordInRawDataField;
+    // When subscribing to more than one symbol should we send one request for
+    // each symbol or all in one message
     bool sendIndividualMarketDataRequests;
     FIXVersion version;
+    // Should we print debug information - N.B. may only be used when 
+    // built with -D LOG
     bool print_debug;
-    int32_t market_depth;
-    std::string loggingBroadcastAddr;
-    std::string order_books_output_dir;
-    std::string fix_store_output_dir;
-    std::string fix_log_output_dir;
+    // Broadcast addr for logging
+    std::string logging_broadcast_addr;
+    // Top level directory of storage hierarchy - both store and fix messge 
+    // log are stored there. Directories created if they don't exist. 
     std::string root_output_dir;
+    // Where to store FIX logs and sequence info if saved in file relative to
+    // root_output_dir
+    std::string fix_log_output_dir;
+    std::string fix_store_output_dir;
+    // Path to file containing symbols we want to subscribe to
     std::string symbol_file_name;
+    // Name of configuration file
     std::string config_file_name;
+    // Are we publishing order book?
     bool is_publishing;
+    // Address to publish order book data
     std::string publishing_addr;
+    // Address of configuration server
     std::string config_server_addr;
+    // Write fix message to logging system?
     bool is_logging;
-    ///  FIX AggreagatedBook (266)
+    // Depth of book to subscribe to - FIX tag 264
+    int32_t market_depth;
+    //  FIX AggreagatedBook (266)
     bool want_aggregated_book;
-    ///  FIX MDUpdateType (265)
+    //  FIX MDUpdateType (265)
     int32_t update_type;
-    ///  FIX ResetSeqNumFlag (141)
+    //  FIX ResetSeqNumFlag (141)
     bool reset_seq_nums;
-    ///   Replace entirely existing orders with same id in orderbook?
+    //   Replace entirely existing orders with same id in orderbook?
     bool new_replaces;
 };
 
-class Application : public FIX::Application,
-    public FIX::MessageCracker {
-    public:
+class Application : public FIX::Application, public FIX::MessageCracker {
+  public:
     explicit Application(const ApplicationConfig& config);
-
     ~Application();
+
     void run();
 
     void setZMQContext(void* c) { this->_pzmq_context = c;}
@@ -164,28 +190,19 @@ class Application : public FIX::Application,
     void* getZMQContext() { return this->_pzmq_context;}
 
     void deleteBooks();
-/*  void deleteLogs(); */
 
     void addSymbols(const std::vector<std::string>& symbols);
     const std::vector<std::string>& getSymbols();
 
-    private:
+  private:
     void addBook(const std::string& symbol, capk::KBook* book);
     capk::KBook*  getBook(const std::string& symbol);
 
-/*  void addStream(const std::string& symbol, std::ostream* log);
-    std::ostream*  getStream(const std::string& symbol);
-*/
-
     void setUpdateType(const int32_t updateType);
 
-    void broadcast_bbo_book(void* bcast_socket,
-            const char* symbol,
-            const double best_bid,
-            const double best_ask,
-            const double bbsize,
-            const double basize,
-            const capk::venue_id_t venue_id);
+    void sendTestRequest();
+    void sendSingleMarketDataRequest(const std::string& symbols);
+    void sendMarketDataRequest(const std::vector<std::string>& symbols);
 
     template <typename T>
     void full_refresh_template(const T& message,
@@ -199,6 +216,9 @@ class Application : public FIX::Application,
     void trading_session_status_template(const T& message,
             const FIX::SessionID& sessionID);
 
+    /** 
+     * FIX admin message callbacks
+     */
     void onCreate(const FIX::SessionID&);
 
     void onLogon(const FIX::SessionID& sessionID);
@@ -222,6 +242,13 @@ class Application : public FIX::Application,
                 FIX::IncorrectTagValue,
                 FIX::UnsupportedMessageType);
 
+    /** 
+     * FIX 4.2 
+     */
+    FIX42::MarketDataRequest sendMarketDataRequest42(
+        const std::vector<std::string>& symbols);
+    FIX42::MarketDataRequest sendSingleMarketDataRequest42(
+        const std::string& symbol);
     void onMessage(const FIX42::TradingSessionStatus&, const FIX::SessionID&);
     void onMessage(const FIX42::Logon&, const FIX::SessionID&);
     void onMessage(const FIX42::MarketDataSnapshotFullRefresh& message,
@@ -230,7 +257,15 @@ class Application : public FIX::Application,
             const FIX::SessionID& sessionID);
     void onMessage(const FIX42::MarketDataRequestReject& message,
             const FIX::SessionID& sessionID);
+    FIX42::TestRequest sendTestRequest42();
 
+    /** 
+     * FIX 4.3 
+     */
+    FIX43::MarketDataRequest sendMarketDataRequest43(
+        const std::vector<std::string>& symbols);
+    FIX43::MarketDataRequest sendSingleMarketDataRequest43(
+        const std::string& symbol);
     void onMessage(const FIX43::TradingSessionStatus&, const FIX::SessionID&);
     void onMessage(const FIX43::Logon&, const FIX::SessionID&);
     void onMessage(const FIX43::MarketDataSnapshotFullRefresh& message,
@@ -239,7 +274,15 @@ class Application : public FIX::Application,
             const FIX::SessionID& sessionID);
     void onMessage(const FIX43::MarketDataRequestReject& message,
             const FIX::SessionID& sessionID);
+    FIX43::TestRequest sendTestRequest43();
 
+    /** 
+     * FIX 4.4 
+     */
+    FIX44::MarketDataRequest sendMarketDataRequest44(
+        const std::vector<std::string>& symbols);
+    FIX44::MarketDataRequest sendSingleMarketDataRequest44(
+        const std::string& symbol);
     void onMessage(const FIX44::TradingSessionStatus&, const FIX::SessionID&);
     void onMessage(const FIX44::Logon&, const FIX::SessionID&);
     void onMessage(const FIX44::MarketDataSnapshotFullRefresh& message,
@@ -248,33 +291,41 @@ class Application : public FIX::Application,
             const FIX::SessionID& sessionID);
     void onMessage(const FIX44::MarketDataRequestReject& message,
             const FIX::SessionID& sessionID);
-
-    void sendTestRequest();
-    FIX42::TestRequest sendTestRequest42();
-    FIX43::TestRequest sendTestRequest43();
     FIX44::TestRequest sendTestRequest44();
-    FIXT11::TestRequest sendTestRequest50();
 
-    void querySingleMarketDataRequest(const std::string& symbols);
-    FIX42::MarketDataRequest querySingleMarketDataRequest42(
+    /** 
+     * FIX 5.0 
+     */
+    FIX50::MarketDataRequest sendMarketDataRequest50(
+        const std::vector<std::string>& symbols);
+    FIX50::MarketDataRequest sendSingleMarketDataRequest50(
         const std::string& symbol);
-    FIX43::MarketDataRequest querySingleMarketDataRequest43(
-        const std::string& symbol);
-    FIX44::MarketDataRequest querySingleMarketDataRequest44(
-        const std::string& symbol);
-    FIX50SP2::MarketDataRequest querySingleMarketDataRequest50(
-        const std::string& symbol);
+    void onMessage(const FIX50::MarketDataSnapshotFullRefresh& message,
+            const FIX::SessionID& sessionID);
+    void onMessage(const FIX50::MarketDataIncrementalRefresh& message,
+            const FIX::SessionID& sessionID);
 
-    void queryMarketDataRequest(const std::vector<std::string>& symbols);
-    FIX42::MarketDataRequest queryMarketDataRequest42(
+    /** 
+     * FIX 5.0SP2 
+     */
+    FIX50SP2::MarketDataRequest sendMarketDataRequest50SP2(
         const std::vector<std::string>& symbols);
-    FIX43::MarketDataRequest queryMarketDataRequest43(
-        const std::vector<std::string>& symbols);
-    FIX44::MarketDataRequest queryMarketDataRequest44(
-        const std::vector<std::string>& symbols);
-    FIX50SP2::MarketDataRequest queryMarketDataRequest50(
-        const std::vector<std::string>& symbols);
+    FIX50SP2::MarketDataRequest sendSingleMarketDataRequest50SP2(
+        const std::string& symbol);
+    void onMessage(const FIX50SP2::MarketDataSnapshotFullRefresh& message,
+            const FIX::SessionID& sessionID);
+    void onMessage(const FIX50SP2::MarketDataIncrementalRefresh& message,
+            const FIX::SessionID& sessionID);
 
+    /**
+     * FIXT 11
+     */
+    FIXT11::TestRequest sendTestRequestFIXT11();
+    void onMessage(const FIXT11::Logon& logon, const FIX::SessionID& sessionID);
+
+    /**
+     * Class variables
+     */
     FIX::SessionID _sessionID;
     std::vector<std::string> _symbols;
     boost::filesystem::path _pathToLog;
@@ -286,10 +337,6 @@ class Application : public FIX::Application,
 
     void* _pzmq_socket;
     void* _pzmq_context;
-
-    std::map<std::string, std::ostream* > _symbolToLogStream;
-    typedef std::map<std::string, std::ostream* >::iterator
-        symbolToLogStreamIterator;
 
     std::map<std::string, capk::KBook* > _symbolToBook;
     typedef std::map<std::string, capk::KBook* >::iterator

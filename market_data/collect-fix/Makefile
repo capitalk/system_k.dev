@@ -59,7 +59,8 @@ OBJS = jenkins_hash.o \
       config_server.o \
       time_utils.o \
       collect.o \
-      Application.o
+      md_broadcast.o \
+      md_parser_qf.o
 
 LOG_OBJS = pantheios_be_zmq.o \
            logging.o
@@ -96,22 +97,25 @@ endif
 pantheios_be_zmq.o: $(PANTHEIOS_EXT)/pantheios_be_zmq.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
-logging.o: $(UTILS_SRC)/logging.cpp
+logging.o: $(UTILS_SRC)/logging.cpp $(UTILS_SRC)/logging.h
 	$(CC) -c $(INCLUDE) $(CFLAGS) -Dunix $<
 
-jenkins_hash.o: $(UTILS_SRC)/jenkins_hash.cpp
+jenkins_hash.o: $(UTILS_SRC)/jenkins_hash.cpp $(UTILS_SRC)/jenkins_hash.h
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-config_server.o: $(UTILS_SRC)/config_server.cpp
+config_server.o: $(UTILS_SRC)/config_server.cpp $(UTILS_SRC)/config_server.h
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-time_utils.o: $(UTILS_SRC)/time_utils.cpp
+time_utils.o: $(UTILS_SRC)/time_utils.cpp $(UTILS_SRC)/time_utils.h
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 collect.o: collect.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-Application.o: Application.cpp
+md_broadcast.o: md_broadcast.cpp md_broadcast.h
+	$(CC) -c $(INCLUDE) $(CFLAGS) $<
+
+md_parser_qf.o: md_parser_qf.cpp md_parser_qf.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $<  
 
 
