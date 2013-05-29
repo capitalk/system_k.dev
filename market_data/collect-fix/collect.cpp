@@ -114,7 +114,6 @@ sighandler(int sig)
   assert(g_pinitiator);
   g_pinitiator->stop();
   g_papplication->deleteBooks();
-  /* g_papplication->deleteLogs(); */
   exit(sig);
 }
 
@@ -517,7 +516,7 @@ main(int argc, char** argv )
   SetSignalHandlers();
 
 #ifdef LOG
-      logging_init(createTimestampedLogFilename("log").c_str());
+      logging_init(createTimestampedLogFilename(PANTHEIOS_FE_PROCESS_IDENTITY).c_str());
 #endif
 
   if (InitializeZMQ() != 0) {
