@@ -5,17 +5,17 @@ COMMON=$(CAPK_ROOT)/common
 UTILS=$(COMMON)/src/c++
 UTILS_SRC=$(UTILS)/utils
 
-SRC=../
+SRC=..
 
-INCLUDE= -I$(SRC) \
-         -I$(COMMON) \
-         -I$(UTILS)
+INCLUDE= -I $(SRC) \
+         -I $(COMMON) \
+         -I $(UTILS)
 
 LIBS= -L$(UTILS) \
       -L$(SRC) \
       -lgtest \
       -lorder_book3 \
-      -lpthread
+      -lpthread 
 
 CFLAGS=-Wall  -std=c++0x -O3 # -g -D DEBUG
 
@@ -23,19 +23,26 @@ CFLAGS=-Wall  -std=c++0x -O3 # -g -D DEBUG
 	#$(CC) $(CFLAGS) $(INCLUDE) -c $(input) -o $(output)
 
 
-all: liborder_book3.a gtest_add # gtest_del gtest_mod gtest_oob
+all: gtest_book # gtest_del gtest_mod gtest_oob
 
 liborder_book3.a: 
 	cd .. && make 
 
+ifeq ($(dbg), 1)
+  CFLAGS = -Wall  -std=c++0x  -DDEBUG -ggdb
+else
+  CFLAGS = -Wall -std=c++0x -O3 -DNDEBUG
+endif
 
 
 # Other tests
-gtest_add: gtest_add.cpp
-	$(CC) $(CFLAGS) gtest_add.cpp  $(INCLUDE) -L $(LIBS) -o $@
+gtest_book: gtest_book.cpp $(SRC)/order_book.cpp
+	$(CC) $(CFLAGS) gtest_book.cpp  $(SRC)/order_book.cpp $(INCLUDE) -L $(LIBS) -o $@
+
+
 
 clean :
-	rm -f  *.o 
+	rm -f  *.o gtest_book
 
 .PHONY: clean 
 

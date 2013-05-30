@@ -7,13 +7,15 @@
 //
 
 #include "order_book.hxx"
-#include "order_book.h"
 #include <assert.h>
 #include <iostream>
+#include <stdexcept>
 
 namespace capk {
 
-order_book::order_book(double init_price,
+order_book::order_book(const char* symbol,
+                       price_t init_price,
+                       uint32_t multiplier,
                        double one_way_offset_pct,
                        double min_tick_size):
 _init_price(init_price),
@@ -30,22 +32,24 @@ _min_tick_size(min_tick_size)
     int32_t buckets = range / _min_tick_size;
     */
 
-    _ob = new_order_book(init_price, one_way_offset_pct, min_tick_size);
-
-#ifdef DEBUG
-    std::cerr << "Initializing order book with: " \
-    << "init_price: " << _init_price << "\n" \
-    << "one_way_offset_pct: " << _one_way_offset_pct << "\n" \
-    << "min_tick_size: " << _min_tick_size << "\n" \
-    << "bound: " << bound << "\n" \
-    << "upper_bound: " << upper_bound << "\n" \
-    << "lower_bound: " << lower_bound << "\n" \
-    << "range: " << range << "\n" \
-    << "buckets: " << buckets << "\n" \
-    << std::endl;
-#endif
-
+    _ob = new_order_book(symbol,
+                         init_price,
+                         multiplier,
+                         one_way_offset_pct,
+                         min_tick_size);
+    if (!_ob) {
+      throw std::runtime_error("Can't initialize order book");
+    }
 };
+
+orderBook* order_book::getBook() {
+  return _ob;
+}
+
+void order_book::dump()
+{
+  ::dump(_ob);
+}
 
 order_book::~order_book()
 {

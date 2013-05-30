@@ -9,77 +9,99 @@
 #ifndef __OrderBook_v3__order_book__
 #define __OrderBook_v3__order_book__
 
-extern "C" {
-
+#ifdef _WIN32
+#include <stdint.h>
+#else
 #include <inttypes.h>
+#endif // _WIN32
 #include <stddef.h>
 
-const uint32_t MAX_ORDERS_PER_LEVEL = 10;
-const uint32_t MAX_ORDER_ID_LEN = 32;
+#ifdef __cplusplus
+extern "C" {
+#endif //  __cplusplus
 
+#define E_OUT_OF_BOUNDS -2
+#define E_PRICE_NOT_MULTIPLE_OF_TICK -3
+
+typedef uint32_t quantity_t;
+typedef double price_t;
+enum book_side {
+  BID = 0,
+  ASK = 1,
+  NO_SIDE = 99
+};
+typedef enum book_side b_side;
+
+const uint32_t MAX_ORDERS_PER_LEVEL = 100;
+const uint32_t MAX_ORDER_ID_LEN = 32;
+const char ORDER_ID_INIT_CHAR = 0xAA;
 
 struct _order {
-    double quantity;
+    quantity_t quantity;
     char order_id[MAX_ORDER_ID_LEN];
 };
 typedef struct _order order;
 
 struct _priceLevel {
-    double aggregate_qty;
+    price_t price;
+    quantity_t aggregate_qty;
     uint32_t num_orders;
-    double price;
-    order orders[MAX_ORDERS_PER_LEVEL];
+    order bids[MAX_ORDERS_PER_LEVEL];
+    order asks[MAX_ORDERS_PER_LEVEL];
 };
 typedef struct _priceLevel priceLevel;
 
-struct orderBook {
-    double init_price;
-    int32_t num_levels;
+struct _orderBook {
+    char* symbol;
+    price_t init_price;
+    uint32_t multiplier;
+    uint32_t num_levels;
     double one_way_offset_pct;
-    double min_tick_size;
-    double lower_price_bound;
-    double upper_price_bound;
-    priceLevel* bid_levels;
-    priceLevel* ask_levels;
+    double tick_size;
+    price_t lower_price_bound;
+    price_t upper_price_bound;
+    priceLevel* levels;
     priceLevel* best_bid;
     priceLevel* best_ask;
 };
-typedef struct orderBook orderBook;
+typedef struct _orderBook orderBook;
 
 int init_order_book(orderBook* order_book);
 
-orderBook* new_order_book(double init_price,
-               double one_way_offset_pct,
-               double min_tick_size);
+orderBook* new_order_book(const char* symbol, 
+                          price_t init_price, 
+                          uint32_t multiplier,
+                          double one_way_offset_pct, 
+                          double tick_size);
 
 
 int addOrder(orderBook* ob,
-             const capk::side_t side,
+             const b_side side,
              const char* order_id,
-             const double price,
-             const double quantity); 
+             const price_t price,
+             const quantity_t quantity); 
 
 int delOrder(orderBook* ob,
-             const capk::side_t side,
+             const b_side side,
              const char* order_id,
-             const double price,
-             const double quantity);
+             const price_t price,
+             const quantity_t quantity);
 
 int modOrder(orderBook* ob,
-             const capk::side_t side,
+             const b_side side,
              const char* order_id,
-             const double new_price,
-             const double new_quantity);
+             const price_t new_price,
+             const quantity_t new_quantity);
 
 
-const priceLevel* best_bid(orderBook* ob) {
-    return NULL;
-}
+const priceLevel* best_bid(orderBook* ob);
 
-const priceLevel* best_ask(orderBook* ob) {
-    return NULL;
-}
+int validate_init_price(orderBook* ob);
+const priceLevel* best_ask(orderBook* ob);
 
+void dump(orderBook* ob);
 
+#ifdef __cplusplus
 } // extern "C"
+#endif // __cplusplus__
 #endif /* defined(__OrderBook_v3__order_book__) */

@@ -1,8 +1,12 @@
-#ifndef CAPK_LIMIT
-#define CAPK_LIMIT
+#ifndef ORDER_BOOK_ORDER_BOOK_V2_LIMIT_H_
+#define ORDER_BOOK_ORDER_BOOK_V2_LIMIT_H_
 
 #include <time.h>
 #include <stdint.h>
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include <list>
 #include <set>
 #include <iostream>
@@ -12,100 +16,99 @@
 #include "order_book.h"
 #include "utils/types.h"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/shared_ptr.hpp>
-
-//std::ostream& operator<<(std::ostream& out, const capk::KBook& b);
-//std::ostream& operator<<(std::ostream& out, const capk::KOrder& b);
-//std::ostream& operator<<(std::ostream& out, const capk::KLimit& e);
-
-namespace capk 
-{
+namespace capk {
 
 class KBook;
 
-class KLimit
-{
-public:
+class KLimit {
+  public:
     KLimit(double price, uint32_t totalVolume = 0);
+
     virtual ~KLimit();
-    //KLimit* parent;
-    //KLimit* leftChild;
-    //KLimit* rightChild; 
-    //KOrder* headOrder;
-    //KOrder* tailOrder;
-    
+
     int addOrder(pKOrder order);
-    //int removeOrder(pKOrder order);
+
     int removeOrder(uint32_t orderId);
+
     int modifyOrder(uint32_t orderId, double size);
-    inline uint32_t getTotalVolume() const { return _totalVolume; } 
-    inline double getPrice() const { return _price; }
-    inline uint32_t getOrderCount() const { return _orders.size(); }
-    inline timespec getUpdateTime() const { return _timeUpdated; }
-    inline void setUpdateTime(const timespec updateTime) { _timeUpdated = updateTime; }
-    inline timespec getMsgSentTime() const { return _msgSentTime; }
-    inline void setMsgSentTime(const timespec sentTime) { _msgSentTime = sentTime; }
-    //inline FIX::UTCTimeStamp getFIXSentTime() const { return _FIXSentTime; }
-    //int setFIXSentTime(const FIX::UTCTimeStamp FIXUTCTimeStamp) { _FIXSentTime = FIXUTCTimeStamp;}
 
-    //void printAllOrders();
-
-    bool operator<(KLimit& rhs) const {
-        return (this->_price < rhs.getPrice());
+    inline uint32_t getTotalVolume() const {
+      return _totalVolume;
     }
 
-    bool operator>(KLimit& rhs) const {
-        return (this->_price > rhs.getPrice());
+    inline double getPrice() const {
+      return _price;
+    }
+
+    inline uint32_t getOrderCount() const {
+      return _orders.size();
+    }
+
+    inline timespec getUpdateTime() const {
+      return _timeUpdated;
+    }
+
+    inline void setUpdateTime(const timespec updateTime) {
+      _timeUpdated = updateTime;
+    }
+
+    inline timespec getMsgSentTime() const {
+      return _msgSentTime;
+    }
+
+    inline void setMsgSentTime(const timespec sentTime) {
+      _msgSentTime = sentTime;
+    }
+
+    bool operator<(const KLimit& rhs) const {
+      return (this->_price < rhs.getPrice());
+    }
+
+    bool operator>(const KLimit& rhs) const {
+      return (this->_price > rhs.getPrice());
     }
 
     friend std::ostream& operator<<(std::ostream& out, const capk::KLimit& e);
     friend std::ostream& operator<<(std::ostream& out, const capk::KBook& b);
 
-private:
+  private:
     Orders _orders;
     double _price;
     uint32_t _totalVolume;
-    timespec _timeUpdated;    
+    timespec _timeUpdated;
     timespec _msgSentTime;
-    //FIX::UTCTimeStamp _FIXSentTime;
-    inline uint32_t _addVolume(uint32_t vol) { 
-        _totalVolume += vol; 
+    inline uint32_t _addVolume(uint32_t vol) {
+    _totalVolume += vol;
 #ifdef DEBUG
-        std::cerr << "TOTAL VOLUME(@" << _price << ") NOW (+ " << vol << "):" << _totalVolume << std::endl;
+      std::cerr << "TOTAL VOLUME(@"
+          << _price
+          << ") NOW (+ "
+          << vol
+          << "):"
+          << _totalVolume
+          << std::endl;
 #endif
-        return _totalVolume; }
+      return _totalVolume;
+    }
 
-    inline uint32_t _removeVolume(uint32_t vol) { 
-        _totalVolume -= vol; 
+    inline uint32_t _removeVolume(uint32_t vol) {
+      _totalVolume -= vol;
 #ifdef DEBUG
-        std::cerr << "TOTAL VOLUME(@" << _price << ") NOW (- " << vol << "):" << _totalVolume << std::endl;
+      std::cerr << "TOTAL VOLUME(@"
+          << _price
+          << ") NOW (- "
+          << vol
+          << "):"
+          << _totalVolume
+          << std::endl;
 #endif
-        return _totalVolume; }
+      return _totalVolume;
+    }
 
     Orders::iterator _findOrder(uint32_t orderId);
     int _removeOrder(uint32_t orderId);
-    
-};  
-
-/*
-class KLimitComp : public std::binary_function<pKLimit, pKLimit, bool>
-{
-    bool operator() (pKLimit const& a, pKLimit const& b) {
-        return (*a) < (*b);
-    }
 };
-*/
 
-/*
-struct KLimitComp : public std::binary_function<pKLimit, pKLimit, bool>
-{
-    bool operator() (pKLimit const& a, pKLimit const& b) {
-        return (*a) < (*b);
-    }
-};
-*/
-} // namespace capk
+}  // namespace capk
+#endif  // ORDER_BOOK_ORDER_BOOK_V2_LIMIT_H_
 
-
-#endif // CAPK_LIMIT

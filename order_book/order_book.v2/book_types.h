@@ -1,10 +1,11 @@
-#ifndef CAPK_BOOK_TYPES
-#define CAPK_BOOK_TYPES
+#ifndef ORDER_BOOK_ORDER_BOOK_V2_BOOK_TYPES_H_
+#define ORDER_BOOK_ORDER_BOOK_V2_BOOK_TYPES_H_
+
+#include <boost/shared_ptr.hpp>
 
 #include <map>
 #include <set>
 #include <list>
-#include <boost/shared_ptr.hpp>
 
 namespace capk {
     class KLimit;
@@ -18,4 +19,4 @@ namespace capk {
     typedef std::map<uint32_t, pKOrder> KOrderMap;
 }
 
-#endif //CAPK_BOOK_TYPES
+#endif  // ORDER_BOOK_ORDER_BOOK_V2_BOOK_TYPES_H_
