@@ -1,30 +1,187 @@
 
+#include <time.h>
+
 #include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
-
-#include <boost/tokenizer.hpp>
 #include <algorithm>
 #include <iterator>
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/tokenizer.hpp>
+
 #include "gtest/gtest.h" 
 
-#include "limit.h"
-#include "order.h"
 #include "order_book.h"
-#include "book_types.h"
+#include "order.h"
+#include "limit.h"
 
 #include "utils/types.h"
 #include "utils/jenkins_hash.cpp"
 #include "utils/time_utils.h"
 #include "utils/fix_convertors.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
-using namespace boost::posix_time;
 
-using namespace std;
 
-capk::KBook book("TESTBOOK", 4);     
+namespace pt = boost::posix_time;
 
+class FullBookTest : public ::testing::Test {
+  public:
+   FullBookTest() {};
+   ~FullBookTest() {};
+
+   virtual void SetUp() {
+      ob = new capk::KBook("FOOBAR", 100);
+   }
+
+   virtual void TearDown() {
+      delete ob;
+   }
+
+   capk::KBook* ob;
+};
+
+class InitBookTest : public ::testing::Test {
+ public:
+  InitBookTest() {};
+
+  ~InitBookTest() {};
+
+  virtual void SetUp() {
+    ob = new capk::KBook("EURUSD", 5);
+  }
+
+  virtual void TearDown() {
+    delete ob;
+  }
+
+  capk::KBook* ob;     
+
+};
+
+TEST_F(InitBookTest, EmptyBook) {
+  EXPECT_EQ(capk::NO_BID, ob->bestPrice(capk::BID));
+  EXPECT_EQ(capk::NO_ASK, ob->bestPrice(capk::ASK));
+}
+
+
+TEST_F(InitBookTest, Add1Bid) {
+  int orderId = 1;
+  double qty = 1000000;
+  double price = 1.00000;
+  timespec timeStamp;
+  clock_gettime(CLOCK_REALTIME, &timeStamp);
+  EXPECT_EQ(ob->add(orderId, capk::BID, qty, price, timeStamp, timeStamp), 1);
+  EXPECT_EQ(price, ob->bestPrice(capk::BID));
+  capk::pKOrder order = ob->getOrder(orderId);  
+  EXPECT_EQ(order->getPrice(), price);
+  EXPECT_EQ(order->getSize(), qty);
+  EXPECT_EQ(order->getBuySell(), capk::BID);
+}
+
+TEST_F(InitBookTest, Add1Ask) {
+  int orderId = 2;
+  double qty = 2000000;
+  double price = 2.00000;
+  timespec timeStamp;
+  clock_gettime(CLOCK_REALTIME, &timeStamp);
+  EXPECT_EQ(ob->add(orderId, capk::ASK, qty, price, timeStamp, timeStamp), 1);
+  EXPECT_EQ(price, ob->bestPrice(capk::ASK));
+  capk::pKOrder order = ob->getOrder(orderId);  
+  EXPECT_EQ(order->getPrice(), price);
+  EXPECT_EQ(order->getSize(), qty);
+  EXPECT_EQ(order->getBuySell(), capk::ASK);
+}
+
+TEST_F(InitBookTest, GetNonExistentOrder) {
+  int orderId = 22222;
+  capk::pKOrder order = ob->getOrder(orderId);  
+  EXPECT_EQ(capk::pKOrder(), order);
+  EXPECT_EQ(order, capk::pKOrder());
+}
+
+TEST_F(InitBookTest, DeleteNonExistentOrder) {
+  int orderId = 22222;
+  timespec timeStamp;
+  clock_gettime(CLOCK_REALTIME, &timeStamp);
+  // Removing a non-exitent order returns false - should it? 
+  EXPECT_EQ(ob->remove(orderId, timeStamp, timeStamp), 0);
+}
+
+TEST_F(InitBookTest, Add1Delete1Ask) {
+  int orderId = 2;
+  double qty = 2000000;
+  double price = 2.00000;
+  timespec timeStamp;
+  clock_gettime(CLOCK_REALTIME, &timeStamp);
+  // Add order
+  EXPECT_EQ(ob->add(orderId, capk::ASK, qty, price, timeStamp, timeStamp), 1);
+  // Check that order is there
+  EXPECT_EQ(price, ob->bestPrice(capk::ASK));
+  capk::pKOrder order = ob->getOrder(orderId);  
+  EXPECT_EQ(order->getPrice(), price);
+  EXPECT_EQ(order->getSize(), qty);
+  EXPECT_EQ(order->getBuySell(), capk::ASK);
+  // Remove the order
+  EXPECT_EQ(ob->remove(orderId, timeStamp, timeStamp), 1);
+  // Check that order does not exist
+  order = ob->getOrder(orderId);  
+  EXPECT_EQ(capk::pKOrder(), order);
+  EXPECT_EQ(order, capk::pKOrder());
+}
+
+TEST_F(InitBookTest, Add1Delete1Bid) {
+  int orderId = 2;
+  double qty = 2000000;
+  double price = 2.00000;
+  timespec timeStamp;
+  clock_gettime(CLOCK_REALTIME, &timeStamp);
+  // Add order
+  EXPECT_EQ(ob->add(orderId, capk::BID, qty, price, timeStamp, timeStamp), 1);
+  // Check that order is there
+  EXPECT_EQ(price, ob->bestPrice(capk::BID));
+  capk::pKOrder order = ob->getOrder(orderId);  
+  EXPECT_EQ(order->getPrice(), price);
+  EXPECT_EQ(order->getSize(), qty);
+  EXPECT_EQ(order->getBuySell(), capk::BID);
+  // Remove the order
+  EXPECT_EQ(ob->remove(orderId, timeStamp, timeStamp), 1);
+  // Check that order does not exist
+  order = ob->getOrder(orderId);  
+  EXPECT_EQ(capk::pKOrder(), order);
+  EXPECT_EQ(order, capk::pKOrder());
+}
+
+TEST_F(InitBookTest, ImproveBid) {
+  int bid1Id = 21;
+  int bid2Id = 43;
+  double qty1 = 11111111;
+  double qty2 = 5;
+  double price1 = 1.00000;
+  double price2 = 2.00000;
+  timespec timeStamp;
+  clock_gettime(CLOCK_REALTIME, &timeStamp);
+  // Add order
+  EXPECT_EQ(ob->add(bid1Id, capk::BID, qty1, price1, timeStamp, timeStamp), 1);
+  EXPECT_EQ(ob->add(bid2Id, capk::BID, qty2, price2, timeStamp, timeStamp), 1);
+  // Check that order is there
+  EXPECT_EQ(price2, ob->bestPrice(capk::BID));
+  capk::pKOrder order = ob->getOrder(bid2Id);  
+  EXPECT_EQ(order->getPrice(), price2);
+  EXPECT_EQ(order->getSize(), qty2);
+  EXPECT_EQ(order->getBuySell(), capk::BID);
+  // Check that the other order still exists
+  order = ob->getOrder(bid1Id);  
+  EXPECT_EQ(order->getPrice(), price1);
+  EXPECT_EQ(order->getSize(), qty1);
+  EXPECT_EQ(order->getBuySell(), capk::BID);
+}
+
+
+
+
+
+/*
 TEST(BookTests, LaceBook) { 
     timespec evtTime, exchTime;
     //clock_gettime(CLOCK_REALTIME, &entryTime);
@@ -118,6 +275,7 @@ TEST(BookTests, m1) {
     ASSERT_EQ(best_ask, 1.0001);
 
 }
+*/
 /*
 TEST(BookTests, BBO) {
     double best_bid = book.bestPrice(capk::BID);
@@ -234,6 +392,7 @@ main(int argc, char* argv[])
 {
     testing::InitGoogleTest(&argc, argv);
     int result =  RUN_ALL_TESTS();
+/*
     char x;
     cin >> x;
     const int maxIters = 10000;
@@ -274,7 +433,6 @@ main(int argc, char* argv[])
         entId[k] = hashlittle(entStr[k], 5, 0);
     }
     
-    //ptime time_start(microsec_clock::local_time());
     timespec time_start, time_end;
     clock_gettime(CLOCK_REALTIME, &time_start);
     for (int i = 0; i < maxIters; i++) {
@@ -317,7 +475,6 @@ main(int argc, char* argv[])
         std::cout << book;
         std::cout << "---------------------------------------------------------\n"; 
     }
-    //ptime time_end(microsec_clock::local_time());
     clock_gettime(CLOCK_REALTIME, &time_end);
     timespec d = capk::timespec_delta(time_end, time_start);
 
@@ -326,7 +483,7 @@ main(int argc, char* argv[])
     printf("Total adds %d; successful adds %d\n", countAdd, addSuccess);
     printf("Total modify %d; successful modify %d\n", countModify, modifySuccess);
     printf("Total remove %d; successful remove %d\n", countRemove, removeSuccess);
-
+*/
     return result; 
 }
 
