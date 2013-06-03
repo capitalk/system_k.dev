@@ -273,7 +273,6 @@ uint32_t KBook::getTotalVolumeAtLimit(Side_t buySell, double price) {
 #ifdef DEBUG
   std::cerr << "NO LIMIT: " << buySell << " @ " << price << std::endl;
 #endif
-  // return -1;
   return 0;
 }
 
@@ -305,7 +304,6 @@ uint32_t KBook::getOrderCountAtLimit(Side_t buySell, double price) {
       return (*it)->getOrderCount();
     }
   }
-  // return -1;
   return 0;
 }
 
@@ -317,7 +315,7 @@ double KBook::bestPriceVolume(Side_t buySell) {
 double KBook::bestPrice(Side_t buySell) {
   // printLevels(buySell);
   if (buySell == BID) {
-    //  KTK TODO - NOTE this does not support negative prices
+    //  TODO(tkaria@capitalkpartners.com) - NOTE this does not support negative prices
     KTree::reverse_iterator bit = _bidTree.rbegin();
     if (bit == _bidTree.rend()) {
       return NO_BID;
@@ -325,7 +323,7 @@ double KBook::bestPrice(Side_t buySell) {
     return (*bit)->getPrice();
   }
   if (buySell == ASK) {
-    //  KTK TODO - NOTE this does not support negative prices
+    //  TODO(tkaria@capitalkpartners.com) - NOTE this does not support negative prices
     KTree::iterator ait = _askTree.begin();
     if (ait == _askTree.end()) {
       return NO_ASK;

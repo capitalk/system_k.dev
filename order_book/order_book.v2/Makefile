@@ -16,9 +16,6 @@ LIBS= -lquickfix \
 
 CFLAGS=-Wall  -std=c++0x -O3 
 
-%.o: %.cpp
-	$(CC) $(CFLAGS) $(INCLUDE) -c $(input) -o $(output)
-
 ifeq ($(dbg),1)
 	CFLAGS = -Wall  -std=c++0x -ggdb -g  -DDEBUG
 endif
