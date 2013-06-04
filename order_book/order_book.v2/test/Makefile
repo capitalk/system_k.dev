@@ -23,20 +23,26 @@ LIBS=-L$(SRC) \
 
 CFLAGS=-Wall  -std=c++0x -ggdb -DDEBUG
 
-all: liborder_book2.a book_tests2
+all: liborder_book2.a perf_test unit_test
 
 liborder_book2.a: 
 	cd .. && make 
 
-book_tests2 : liborder_book2.a book_tests2.o 
-	$(CC) book_tests2.o  $(LIBS) -lorder_book2 -o $@   
+unit_test : liborder_book2.a unit_test.o 
+	$(CC) unit_test.o  $(LIBS) -lorder_book2 -o $@   
 
-book_tests2.o: book_tests2.cpp 
-	$(CC) -c $(INCLUDE) $(CFLAGS) book_tests2.cpp
+unit_test.o: unit_test.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) unit_test.cpp
+
+perf_test : liborder_book2.a perf_test.o 
+	$(CC) perf_test.o  $(LIBS) -lorder_book2 -o $@   
+
+perf_test.o: perf_test.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) perf_test.cpp
 
 
 clean :
-	rm -f  *.o book_tests2 
+	rm -f  *.o perf_test unit_test
 
 .PHONY: clean 
 
