@@ -19,7 +19,7 @@ class KOrder {
   public:
     KOrder(uint32_t orderId, Side_t buySell, double size, double price);
 
-    virtual ~KOrder();
+    ~KOrder();
 
     inline void setSize(double size) {
       _size = size;

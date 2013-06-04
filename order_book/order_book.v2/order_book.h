@@ -39,20 +39,20 @@ class KBook {
   public:
     KBook(const char* name, size_t depth);
 
-    virtual ~KBook();
+    ~KBook();
 
-    virtual int add(uint32_t orderId,
+    int add(uint32_t orderId,
                     capk::Side_t buySell,
                     double size,
                     double price,
                     timespec evtTime,
                     timespec exchSendTime);
 
-    virtual int remove(uint32_t orderId,
+    int remove(uint32_t orderId,
                        timespec evtTime,
                        timespec exchSendTime);
 
-    virtual int modify(uint32_t orderId,
+    int modify(uint32_t orderId,
                        double size,
                        timespec evtTime,
                        timespec exchSendTime);
@@ -65,19 +65,19 @@ class KBook {
         return _depth;
     };
 
-    virtual double bestPrice(capk::Side_t buySell);
+    double bestPrice(capk::Side_t buySell);
 
-    virtual double bestPriceVolume(capk::Side_t buySell);
+    double bestPriceVolume(capk::Side_t buySell);
 
     friend std::ostream& operator<<(std::ostream& out, const KBook& b);
 
-    virtual uint32_t getOrderCountAtLimit(capk::Side_t buySell, double price);
+    uint32_t getOrderCountAtLimit(capk::Side_t buySell, double price);
 
-    virtual uint32_t getTotalVolumeAtLimit(capk::Side_t buySell, double price);
+    uint32_t getTotalVolumeAtLimit(capk::Side_t buySell, double price);
 
     void printLevels(capk::Side_t buySell);
 
-    virtual pKOrder getOrder(uint32_t orderId);
+    pKOrder getOrder(uint32_t orderId);
 
     const char* getOutputVersionString() {
         return OB_VERSION_STRING;
@@ -92,8 +92,8 @@ class KBook {
     void clear();
 
   private:
-    virtual int addBid(KOrder* bid, timespec eventTime, timespec exchSendTime);
-    virtual int addAsk(KOrder* ask, timespec eventTime, timespec exchSendTime);
+    int addBid(KOrder* bid, timespec eventTime, timespec exchSendTime);
+    int addAsk(KOrder* ask, timespec eventTime, timespec exchSendTime);
     KOrderMap _orderMap;
     KTree _bidTree;
     KTree _askTree;
