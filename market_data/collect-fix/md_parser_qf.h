@@ -1,24 +1,5 @@
 /* -*- C++ -*- */
 
-/****************************************************************************
-** Copyright (c) quickfixengine.org All rights reserved.
-**
-** This file is part of the QuickFIX FIX Engine
-**
-** This file may be distributed under the terms of the quickfixengine.org
-** license as defined by quickfixengine.org and appearing in the file
-** LICENSE included in the packaging of this file.
-**
-** This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
-** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-**
-** See http://www.quickfixengine.org/LICENSE for licensing information.
-**
-** Contact ask@quickfixengine.org if any conditions of this licensing are
-** not clear to you.
-**
-****************************************************************************/
-
 #ifndef MARKET_DATA_COLLECT_FIX_APPLICATION_H_
 #define MARKET_DATA_COLLECT_FIX_APPLICATION_H_
 
@@ -30,11 +11,7 @@
 
 #include <zmq.hpp>
 
-#include <boost/iostreams/device/file.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/iostreams/stream.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/make_shared.hpp>
 
 #include <string>
 #include <queue>
@@ -43,8 +20,6 @@
 
 #include "quickfix/Application.h"
 #include "quickfix/MessageCracker.h"
-#include "quickfix/Values.h"
-#include "quickfix/Mutex.h"
 
 #ifdef USE_FIX_42
 #include "quickfix/fix42/MarketDataIncrementalRefresh.h"
@@ -58,9 +33,9 @@
 #include "quickfix/fix42/ResendRequest.h"
 #include "quickfix/fix42/TestRequest.h"
 #include "quickfix/fix42/TradingSessionStatus.h"
-#include "quickfix/fix42/SecurityStatus.h"
-#include "quickfix/fix42/SecurityDefinition.h"
-#include "quickfix/fix42/SecurityDefinitionRequest.h"
+//#include "quickfix/fix42/SecurityStatus.h"
+//#include "quickfix/fix42/SecurityDefinition.h"
+//#include "quickfix/fix42/SecurityDefinitionRequest.h"
 #endif //  USE_FIX_42
 
 #ifdef USE_FIX_43
@@ -75,9 +50,9 @@
 #include "quickfix/fix43/ResendRequest.h"
 #include "quickfix/fix43/TestRequest.h"
 #include "quickfix/fix43/TradingSessionStatus.h"
-#include "quickfix/fix43/SecurityStatus.h"
-#include "quickfix/fix43/SecurityDefinition.h"
-#include "quickfix/fix43/SecurityDefinitionRequest.h"
+//#include "quickfix/fix43/SecurityStatus.h"
+//#include "quickfix/fix43/SecurityDefinition.h"
+//#include "quickfix/fix43/SecurityDefinitionRequest.h"
 #endif //  USE_FIX_43
 
 #ifdef USE_FIX_44
@@ -92,9 +67,9 @@
 #include "quickfix/fix44/ResendRequest.h"
 #include "quickfix/fix44/TestRequest.h"
 #include "quickfix/fix44/TradingSessionStatus.h"
-#include "quickfix/fix44/SecurityStatus.h"
-#include "quickfix/fix44/SecurityDefinition.h"
-#include "quickfix/fix44/SecurityDefinitionRequest.h"
+//#include "quickfix/fix44/SecurityStatus.h"
+//#include "quickfix/fix44/SecurityDefinition.h"
+//#include "quickfix/fix44/SecurityDefinitionRequest.h"
 #endif //  USE_FIX_44
 
 #ifdef USE_FIX_50
@@ -103,9 +78,9 @@
 #include "quickfix/fix50/MarketDataRequestReject.h"
 #include "quickfix/fix50/MarketDataSnapshotFullRefresh.h"
 #include "quickfix/fix50/TradingSessionStatus.h"
-#include "quickfix/fix50/SecurityStatus.h"
-#include "quickfix/fix50/SecurityDefinition.h"
-#include "quickfix/fix50/SecurityDefinitionRequest.h"
+//#include "quickfix/fix50/SecurityStatus.h"
+//#include "quickfix/fix50/SecurityDefinition.h"
+//#include "quickfix/fix50/SecurityDefinitionRequest.h"
 #endif //  USE_FIX_50
 
 #ifdef  USE_FIX_50SP2
@@ -114,9 +89,9 @@
 #include "quickfix/fix50sp2/MarketDataRequestReject.h"
 #include "quickfix/fix50sp2/MarketDataSnapshotFullRefresh.h"
 #include "quickfix/fix50sp2/TradingSessionStatus.h"
-#include "quickfix/fix50sp2/SecurityStatus.h"
-#include "quickfix/fix50sp2/SecurityDefinition.h"
-#include "quickfix/fix50sp2/SecurityDefinitionRequest.h"
+//#include "quickfix/fix50sp2/SecurityStatus.h"
+//#include "quickfix/fix50sp2/SecurityDefinition.h"
+//#include "quickfix/fix50sp2/SecurityDefinitionRequest.h"
 #endif //  USE_FIX50SP2
 
 #if defined(USE_FIX_50) || defined(USE_FIX50SP2)

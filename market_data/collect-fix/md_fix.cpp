@@ -2,8 +2,6 @@
 #pragma warning(disable : 4503 4355 4786)
 #endif
 
-#include "md_parser_qf.h"
-
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
@@ -34,6 +32,7 @@
 #include "utils/logging.h"
 #endif // LOG
 
+#include "md_parser_qf.h"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -67,33 +66,6 @@ Application* g_papplication = NULL;
  */
 void *g_zmq_context = NULL;
 void *g_pub_socket = NULL;
-
-/**
- * Read symbol config file - one symbol per line
- * @param string filename of symbol config file
- * @return std::vector of strings that contain symbol names
- */
-std::vector<std::string>
-readSymbols(std::string symbol_file_name)
-{
-  std::string line;
-  std::vector<std::string> symbols;
-  std::ifstream symbols_stream(symbol_file_name);
-#ifdef LOG
-  pan::log_DEBUG("Reading symbol file: ", symbol_file_name);
-#endif
-  if (symbols_stream.is_open()) {
-    while (symbols_stream.good()) {
-      std::getline(symbols_stream, line);
-#ifdef LOG
-      pan::log_DEBUG("Symbol: ",  line.c_str());
-#endif
-      symbols.push_back(line);
-    }
-  }
-  return symbols;
-}
-
 
 void
 SetSignalHandlers()
@@ -333,7 +305,7 @@ ReadRemoteConfig(ApplicationConfig* application_config)
   capkproto::configuration all_venue_config;
 
   // Call the configuration server
-  capk::get_config_params(g_zmq_context,
+  capk::readConfigServer(g_zmq_context,
                           application_config->config_server_addr.c_str(),
                           &all_venue_config);
   capkproto::venue_configuration my_config =
@@ -537,7 +509,7 @@ main(int argc, char** argv )
     return (-1);
   }
 
-  std::vector<std::string> symbols = readSymbols(config.symbol_file_name);
+  std::vector<std::string> symbols = capk::readSymbolsFile(config.symbol_file_name);
   if (symbols.size() <= 0) {
 #ifdef LOG
     pan::log_CRITICAL("No symbols set in:", config.symbol_file_name.c_str());

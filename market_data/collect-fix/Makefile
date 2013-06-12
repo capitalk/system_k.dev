@@ -53,43 +53,47 @@ else
 CFLAGS = -Wall -std=c++0x -pthread -O3 -ULOG -DNDEBUG
 endif
 
-all: protos collect
+all: protos md_fix
 
 OBJS = jenkins_hash.o \
       config_server.o \
       time_utils.o \
-      collect.o \
+      md_fix.o \
       md_broadcast.o \
       md_parser_qf.o
 
 LOG_OBJS = pantheios_be_zmq.o \
            logging.o
 
+LOCAL_PROTOS=spot_fx_md_1.pb.o \
+             venue_configuration.pb.o \
+             capk_globals.pb.o
+
 include $(PROTO)/Makefile.inc
 
 ifdef LOG
-collect : \
+md_fix : \
     $(LOG_OBJS) \
     $(OBJS) \
     $(ORDERBOOK_LIB) \
-    $(PROTOBUF_OBJS)
+    $(LOCAL_PROTOS)
 	@echo Building with -DLOG \(logging on\)
 	$(CC) $(CFLAGS) \
       $(LOG_OBJS) \
       $(OBJS) \
-      $(PROTOBUF_OBJS) \
+      $(LOCAL_PROTOS) \
       $(ORDERBOOK_LIB) \
       $(LIBS) \
       $(PANTHEIOS_LIBS) -o $@ 
 else
-collect : \
+md_fix : \
     $(OBJS) \
     $(ORDERBOOK_LIB) \
-    $(PROTOBUF_OBJS)
+    $(LOCAL_PROTOS)
 	@echo Building with -ULOG \(logging off\)
 	$(CC) $(CFLAGS) \
       $(OBJS) \
-      $(PROTOBUF_OBJS) \
+      $(LOCAL_PROTOS) \
       $(ORDERBOOK_LIB) \
       $(LIBS) -o $@ 
 endif
@@ -109,7 +113,7 @@ config_server.o: $(UTILS_SRC)/config_server.cpp $(UTILS_SRC)/config_server.h
 time_utils.o: $(UTILS_SRC)/time_utils.cpp $(UTILS_SRC)/time_utils.h
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-collect.o: collect.cpp
+md_fix.o: md_fix.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 md_broadcast.o: md_broadcast.cpp md_broadcast.h
@@ -126,16 +130,16 @@ protos:
 	cd $(PROTO) && make
 
 clean :
-	rm -f *.o collect 
+	rm -f *.o md_fix 
 	rm -f *.pid
 	cd $(PROTO) && make clean
 	cd $(ORDERBOOK_DIR) && make clean
 
 install :
 	cp -r ./cfg /usr/local/capk
-	cp ./collect /usr/local/capk
+	cp ./md_fix /usr/local/capk
 	cp *.sh /usr/local/capk
 
-.PHONY : collect 
+.PHONY : md_fix 
 
 
