@@ -26,19 +26,19 @@ liborder_book2.a: order.o order_book.o limit.o time_utils.o fix_convertors.o
 	ar rcs liborder_book2.a $+
 
 order.o: order.cpp 
-	$(CC) -c $(INCLUDE) $(CFLAGS) order.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $^ 
 
 order_book.o: order_book.cpp 
-	$(CC) -c $(INCLUDE) $(CFLAGS) order_book.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $^
 
 limit.o: limit.cpp
-	$(CC) -c $(INCLUDE) $(CFLAGS) limit.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $^
 
 time_utils.o: $(UTILS_SRC)/time_utils.cpp
-	$(CC) -c $(INCLUDE) $(CFLAGS) $(UTILS_SRC)/time_utils.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $^
 
 fix_convertors.o: $(UTILS_SRC)/fix_convertors.cpp
-	$(CC) -c $(INCLUDE) $(CFLAGS) $(UTILS_SRC)/fix_convertors.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $^
 
 clean :
 	rm -f  *.o liborder_book2.a 
