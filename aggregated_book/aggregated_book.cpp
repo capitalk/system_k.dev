@@ -1,599 +1,448 @@
+#include "aggregated_book.h"
 
-#include <iostream>
-#include <string>
-#include <exception>
-
-#include <stdio.h>
-// For printing size_t across platforms where size_t differs
-// @see http://stackoverflow.com/questions/174612/cross-platform-format-string-for-variables-of-type-size-t
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-
-
-#include <boost/program_options.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/thread.hpp>
-
-#include <zmq.hpp>
-
-#include "utils/zhelpers.hpp"
-#include "utils/time_utils.h"
-#include "utils/bbo_book_types.h"
-#include "utils/config_server.h"
-#include "utils/venue_globals.h"
-#include "utils/constants.h"
-#include "utils/types.h"
-#include "utils/constants.h"
-
-#include "proto/spot_fx_md_1.pb.h"
-
-namespace po = boost::program_options;
-
-#define DBG 1
-#define MAX_SYMBOLS 500
-#define MSGBUF_SIZ 2048
-#define UPDATE_TIMEOUT_MILLIS 5000
-
-//#define INIT_BID INT_MIN
-//#define INIT_ASK INT_MAX
-//#define INIT_SIZE -1
-
-/*
- * Unrolled loops if we like
- */
-// for mic info 
-#define STRCPY5(dst, src) do { \
-    dst[0] = src[0]; dst[1] = src[1]; dst[2] = src[2]; \
-    dst[3] = src[3]; dst[4] = src[4]; \
-} while(0)
-
-// for pair name info
-#define STRCPY8(dst, src) do { \
-    dst[0] = src[0]; dst[1] = src[1]; dst[2] = src[2]; \
-    dst[3] = src[3]; dst[4] = src[4]; dst[5] = src[5]; \
-    dst[6] = src[6]; dst[7] = src[7]; \
-} while(0)
-
-
-//#define SYMBOL_LEN 8
-const char symbols[][SYMBOL_LEN] = {
-    "EUR/USD", 
-    "GBP/USD", 
-    "USD/JPY", 
-    "USD/CHF", 
-    "USD/CAD", 
-    "USD/ZAR", 
-    "USD/NOK", 
-    "AUD/USD", 
-    "AUD/JPY", 
-    "AUD/NZD", 
-    "AUD/CAD", 
-    "AUD/CHF", 
-    "CAD/CHF", 
-    "CAD/JPY", 
-    "CHF/JPY", 
-    "EUR/AUD", 
-    "EUR/CAD", 
-    "EUR/CHF", 
-    "EUR/GBP", 
-    "EUR/JPY", 
-    "EUR/NZD", 
-    "GBP/JPY", 
-    "GBP/AUD", 
-    "GBP/CAD", 
-    "GBP/CHF", 
-    "GBP/NZD", 
-    "NZD/CAD", 
-    "NZD/CHF", 
-    "NZD/USD", 
-    "NZD/JPY",
-    "USD/HKD",
-    "USD/SEK",
-    "EUR/SEK",
-    "EUR/CZK",
-    "SGD/JPY", 
-    "EUR/NOK",
-    "USD/MXN",
-    "EUR/ZAR", 
-    "USD/HUF",
-    "USD/PLN",
-    "EUR/PLN",
-    "GBP/DKK",
-    "USD/DKK",
-    "DKK/NOK",
-    "NOK/SEK",
-    "GBP/SEK",
-    "GBP/ZAR",
-    "USD/CZK"
-};
-
-capkproto::configuration all_venue_config;
-
-#define SYMBOL_COUNT (sizeof(symbols) / SYMBOL_LEN)
-
-/*
-char mics[][MIC_LEN] = {
-    "XCDE",
-    "FXCM"
-    "HSFX",
-    "GAIN", 
-    "FXCM"
-};
-*/
-
-capk::venue_id_t venues[MAX_VENUES];
-
-/*
-capk::venue_id_t venues[] = {
-    capk::kXCDE_VENUE_ID,
-    capk::kFXCM_VENUE_ID
-};
-*/
-
-//#define VENUE_COUNT (sizeof(venues) / sizeof(capk::venue_id_t))
-unsigned int VENUE_COUNT = 0;
-
-zmq::socket_t* bcast_sock;
-
-class worker;
-struct market_data_receiver {
-    worker* w;
-    boost::thread* t;
-};
-         
-
-struct instrument_info
-{
-    char symbol[SYMBOL_LEN];
-    zmq::socket_t* broadcast_socket;
-    capk::SingleMarketBBO_t venues[MAX_VENUES];
-};
-
-void instrument_reset(capk::SingleMarketBBO_t& bbo)  {
-    bbo.bid_price = capk::INIT_BID;
-    bbo.ask_price = capk::INIT_ASK;
-    bbo.bid_size = capk::INIT_SIZE;
-    bbo.ask_size = capk::INIT_SIZE;
+void instrument_reset(capk::SingleMarketBBO_t* bbo)  {
+  if (!bbo) {
+    return;
+  }
+  bbo->bid_price = capk::INIT_BID;
+  bbo->ask_price = capk::INIT_ASK;
+  bbo->bid_size = capk::INIT_SIZE;
+  bbo->ask_size = capk::INIT_SIZE;
 }
 
-bool instrument_is_unset(capk::SingleMarketBBO_t& bbo) {
-    return (bbo.bid_price == capk::INIT_BID &&
-        bbo.ask_price == capk::INIT_ASK &&
-        bbo.bid_size == capk::INIT_SIZE &&
-        bbo.ask_size == capk::INIT_SIZE);
+bool instrument_is_unset(const capk::SingleMarketBBO_t& bbo) {
+  return (bbo.bid_price == capk::INIT_BID &&
+          bbo.ask_price == capk::INIT_ASK &&
+          bbo.bid_size == capk::INIT_SIZE &&
+          bbo.ask_size == capk::INIT_SIZE);
 }
 
 bool isZeroTimespec(const struct timespec& ts) {
-	return (ts.tv_sec == 0 && ts.tv_nsec == 0);
-}
-
-instrument_info instruments[MAX_SYMBOLS];
-int32_t seq_num = 0;
-
-class book_manager
-{
-    public: 
-        book_manager(zmq::context_t* context, const std::string& connectAddr): 
-                _context(context), 
-                _connectAddr(connectAddr), 
-                _stopRequested(false) {};
-        void run();
-        void stop(); 
-    private: 
-        zmq::context_t* _context;
-        std::string _connectAddr;
-        volatile bool _stopRequested;
-};
-
-void 
-book_manager::stop() {
-    _stopRequested = true;
-}
-
-void 
-book_manager::run() {
-    try {
-        zmq::socket_t receiver(*_context, ZMQ_SUB); 
-        const char* filter = "";
-        receiver.setsockopt(ZMQ_SUBSCRIBE, filter, strlen(filter));
-        receiver.bind(_connectAddr.c_str());
-        fprintf(stdout, "book_manager: connect address: %s\n", _connectAddr.c_str());
-        fprintf(stdout, "book_manager: stop requested: %d\n", _stopRequested);
-
-        capkproto::instrument_bbo bbo;
-        while (1 && _stopRequested == false) {
-            // Extract the message from protobufs
-            zmq::message_t msg;
-            receiver.recv(&msg);
-#ifdef DEBUG
-            fprintf(stderr, "book_manager received: %" PRIuPTR" bytes\n",  msg.size());
-#endif
-            bbo.ParseFromArray(msg.data(), msg.size());
-            capk::venue_id_t bid_venue_id = bbo.bid_venue_id();
-            capk::venue_id_t ask_venue_id = bbo.ask_venue_id();
-#ifdef DEBUG
-            fprintf(stderr, "Received protobuf:\n%s\n", bbo.DebugString().c_str());
-#endif
-            char sym[SYMBOL_LEN];
-            STRCPY8(sym, bbo.symbol());
-            double bid_size = bbo.bid_size();
-            double ask_size = bbo.ask_size();
-            double bid_price = bbo.bid_price();
-            double ask_price = bbo.ask_price();
-#ifdef DEBUG
-            boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
-#endif
-
-            bool found_symbol = false;
-            bool found_venue = false;
-
-            // Add the price to the correct orderbook
-            // That is, receive an update for a SINGLE symbol on a SINGLE mic
-            // so just blindly update it in the book 
-            for (unsigned int i = 0; i < SYMBOL_COUNT; i++) {
-                if (strncmp(sym, instruments[i].symbol, SYMBOL_LEN) == 0) {
-                    found_symbol = true;
-                    for (unsigned int j = 0; j < VENUE_COUNT; j++) {
-                        //std::cerr << "VENUE_ID: " << instruments[i].venues[j].venue_id << std::endl;
-                        // update the specific book that the price came from
-                        if (instruments[i].venues[j].venue_id != capk::kNULL_VENUE_ID && 
-                            instruments[i].venues[j].venue_id == bid_venue_id && 
-                            instruments[i].venues[j].venue_id == ask_venue_id) {
-                                found_venue = true;
-                                instruments[i].venues[j].bid_price = bid_price; 
-                                instruments[i].venues[j].ask_price = ask_price; 
-                                instruments[i].venues[j].bid_size = bid_size; 
-                                instruments[i].venues[j].ask_size = ask_size; 
-                                clock_gettime(CLOCK_MONOTONIC, &instruments[i].venues[j].last_update);
-                                break;
-                        }
-                    }
-                } 
-            }
-
-            if (!found_symbol) {
-                std::cerr << "No matching symbol(book_manager): " << sym << "\n";
-            }
-            if (!found_venue) {
-                std::cerr << "No matching venue(book_manager): BID(" 
-                                                               << bid_venue_id 
-                                                               << ") ASK(" 
-                                                               << ask_venue_id 
-                                                               << ")" << "\n";
-            }
-			
-			// Now go through all the books and pick the bbo
-            // check the time since last update and reset if too long
-            double bb = capk::NO_BID;
-            double ba = capk::NO_ASK;
-            double bbvol = capk::INIT_SIZE;
-            double bavol = capk::INIT_SIZE;
-            capk::venue_id_t bb_venue_id = capk::kNULL_VENUE_ID;
-            capk::venue_id_t ba_venue_id = capk::kNULL_VENUE_ID;
-            timespec now;
-            std::string msg_str;
-			unsigned long last_update_millis;
-
-			// find the symbol and venue id in the book structure
-            for (unsigned int i = 0; i < SYMBOL_COUNT; i++) {
-                if (strncmp(sym, instruments[i].symbol, SYMBOL_LEN) == 0) {
-                    found_symbol = true;
-
-                    for (unsigned int j = 0; j < VENUE_COUNT; j++) {
-                        if (instruments[i].venues[j].venue_id != capk::kNULL_VENUE_ID) {
-                            // check the elapsed time since last update
-                            clock_gettime(CLOCK_MONOTONIC, &now);
-                            last_update_millis = 
-                                capk::timespec_delta_millis(instruments[i].venues[j].last_update, now);
-                            // was the item ever updated? 
-                            /*
-							if (isZeroTimespec(instruments[i].mics[j].last_update)) {
-								    fprintf(stderr, "<%s:%s>: NEVER UPDATED\n", 
-                                        instruments[i].mics[j].MIC_name,
-                                        instruments[i].symbol);
-							}
-							*/
-							fprintf(stderr, "<%d:%s>: %f@%f (last update: %lu ms)", 
-									instruments[i].venues[j].venue_id,
-									instruments[i].symbol,
-									instruments[i].venues[j].bid_price, 
-									instruments[i].venues[j].ask_price, 
-									last_update_millis);
-							if (last_update_millis > UPDATE_TIMEOUT_MILLIS) { 
-								//fprintf(stderr, "*** TIMEOUT ****");
-								instrument_reset(instruments[i].venues[j]);
-							}
-							fprintf(stderr, "\n");
-#ifdef DEBUG
-							std::cerr << "Last update: " << instruments[i].venues[j].last_update << std::endl;
-							std::cerr << "Now        : " << now << std::endl;
-                            timespec tdelta = 
-                                capk::timespec_delta(instruments[i].venues[j].last_update, now);
-							std::cerr << "Tdelta     : " << tdelta << std::endl;
-                            fprintf(stderr, "<%s:%d>: ms since last update: %lu\n", 
-                                    instruments[i].symbol, 
-                                    instruments[i].venues[j].venue_id, 
-									last_update_millis);
-							fprintf(stderr, "<%d:%s>: %f@%f\n", 
-									instruments[i].venues[j].venue_id,
-									instruments[i].symbol,
-									instruments[i].venues[j].bid_price, 
-									instruments[i].venues[j].ask_price);
-#endif 
-						}
-                        
-						if (instruments[i].venues[j].bid_price > bb) {
-							bb = instruments[i].venues[j].bid_price;
-							bb_venue_id = instruments[i].venues[j].venue_id;	
-							bbvol = instruments[i].venues[j].bid_size; 
-						} 
-						if (instruments[i].venues[j].ask_price < ba) {
-							ba = instruments[i].venues[j].ask_price;
-							ba_venue_id = instruments[i].venues[j].venue_id;
-							bavol = instruments[i].venues[j].ask_size; 
-						} 
-					}
-				}
-			}
-            
-            // Setup BBO and re-broadcast
-            fprintf(stderr, "\n***\n<%s> BB: %d:%f(%f) BA: %d:%f(%f)\n***\n", 
-                    sym, 
-                    bb_venue_id, 
-                    bb, 
-                    bbvol, 
-                    ba_venue_id, 
-                    ba, 
-                    bavol);
-
-            capkproto::instrument_bbo ins_bbo;
-
-            ins_bbo.set_symbol(sym);
-
-            ins_bbo.set_bid_venue_id(bb_venue_id);
-            ins_bbo.set_bid_price(bb);
-            ins_bbo.set_bid_size(bbvol);
-
-            ins_bbo.set_ask_venue_id(ba_venue_id);
-            ins_bbo.set_ask_price(ba);
-            ins_bbo.set_ask_size(bavol); 
-            ins_bbo.set_sequence(seq_num++);
-
-            int msgsize = bbo.ByteSize();
-            if (msgsize > MSGBUF_SIZ) {
-                fprintf(stderr, "**\nins_bbo msg too large for buffer - DROPPING MSG!\n***");
-                //s_send(*bcast_sock, "ERR");
-                continue;
-            }
-            else {
-                ins_bbo.SerializeToString(&msg_str);
-#ifdef DEBUG 
-                fprintf(stderr, "Sending %d bytes\n", msgsize);
-                fprintf(stderr, "Sending %s \n", ins_bbo.DebugString().c_str());
-#endif
-            }
-
-			s_sendmore(*bcast_sock, sym);
-			s_send(*bcast_sock, msg_str);
-#ifdef DEBUG 
-            boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
-            boost::posix_time::time_duration duration(time_end - time_start);
-            fprintf(stderr, "BookUpdate Time(us) to recv and parse: %s\n", to_simple_string(duration).c_str());
-#endif
-        }
-    }
-    catch (std::exception& e) {
-        std::cerr << "EXCEPTION: " << __FILE__ << __LINE__ << e.what();
-    }
-}
-
-class worker
-{   
-    public:
-        worker(zmq::context_t* context, const std::string& connectAddr, const std::string& inprocAddr): _context(context), _connectAddr(connectAddr), _inprocAddr(inprocAddr),  _stopRequested(false) {};
-        void run();
-        void stop();
-        ~worker();
- 
-    private:
-        zmq::context_t* _context;
-        std::string _connectAddr;
-        std::string _inprocAddr;
-        zmq::socket_t* _inproc;
-        volatile bool _stopRequested;
-        
-};
-
-worker::~worker() {
-    if (_inproc) delete _inproc;
-}
-
-void 
-worker::stop() {
-    _stopRequested = true;
+  return (ts.tv_sec == 0 && ts.tv_nsec == 0);
 }
 
 void
-worker::run () {
-    try {
-        assert(_context != NULL);
-        assert(_connectAddr.c_str() != NULL);
-        fprintf(stdout, "worker: connect address: %s\n",  _connectAddr.c_str());
-        fprintf(stdout, "worker: stop requested: %d\n", _stopRequested);
-        zmq::socket_t subscriber(*_context, ZMQ_SUB);
-        subscriber.connect(_connectAddr.c_str());
-        const char* filter = "";
-        subscriber.setsockopt(ZMQ_SUBSCRIBE, filter, strlen(filter));
-        //capkproto::instrument_bbo bbo;
-        
-        _inproc = new zmq::socket_t(*_context, ZMQ_PUB);
-        assert(_inproc);
-        _inproc->connect(_inprocAddr.c_str());
-        
-        zmq::message_t msg;
-        while (1 && _stopRequested == false) {
-            subscriber.recv(&msg);
+OrderBookAggregator::stop() {
+  _stopRequested = true;
+}
+
+void
+OrderBookAggregator::run() {
+  try {
+    zmq::socket_t receiver(*_context, ZMQ_SUB);
+    const char* filter = "";
+    receiver.setsockopt(ZMQ_SUBSCRIBE, filter, strlen(filter));
+    receiver.bind(_bindAddr.c_str());
+    printf("OrderBookAggregator bind address: %s\n",
+            _bindAddr.c_str());
+
+    capkproto::instrument_bbo bbo;
+    while (1 && _stopRequested == false) {
+      // Extract the message from protobufs
+      zmq::message_t msg;
+      receiver.recv(&msg);
 #ifdef DEBUG
-            boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
+      printf("OrderBookAggregator received: %" PRIuPTR" bytes\n",
+              msg.size());
+#endif
+      bbo.ParseFromArray(msg.data(), msg.size());
+      capk::venue_id_t bid_venue_id = bbo.bid_venue_id();
+      capk::venue_id_t ask_venue_id = bbo.ask_venue_id();
+#ifdef DEBUG
+      printf("OrderBookAggregator received protobuf:\n%s\n",
+             bbo.DebugString().c_str());
+#endif
+      char sym[SYMBOL_LEN];
+      STRCPY8(sym, bbo.symbol());
+      double bid_size = bbo.bid_size();
+      double ask_size = bbo.ask_size();
+      double bid_price = bbo.bid_price();
+      double ask_price = bbo.ask_price();
+#ifdef DEBUG
+      boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
 #endif
 
-			int64_t more;
-			size_t more_size;
-			more_size = sizeof(more);
-			subscriber.getsockopt(ZMQ_RCVMORE, &more, &more_size);
-            // send to orderbook on inproc socket - no locks needed according to zmq
-            _inproc->send(msg, more ? ZMQ_SNDMORE : 0);
+      bool found_symbol = false;
+      bool found_venue = false;
 
-#ifdef DEBUG
-            boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
-            boost::posix_time::time_duration duration(time_end - time_start);
-            fprintf(stderr, "Inbound from md interface time to receive and parse: %s\n", to_simple_string(duration).c_str()); 
-#endif
+      // Add the price to the correct orderbook
+      // That is, receive an update for a SINGLE symbol on a SINGLE mic
+      // so just blindly update it in the book
+      for (uint32_t i = 0; i < _symbol_count; i++) {
+        //if (strncmp(sym, instruments[i].symbol, SYMBOL_LEN) == 0) {
+        if (STRCMP8(sym, instruments[i].symbol) == 0) {
+          found_symbol = true;
+          for (uint32_t j = 0; j < VENUE_COUNT; j++) {
+            // update the specific book that the price came from
+            if (instruments[i].venues[j].venue_id != capk::NULL_VENUE_ID &&
+                instruments[i].venues[j].venue_id == bid_venue_id &&
+                instruments[i].venues[j].venue_id == ask_venue_id) {
+              found_venue = true;
+              instruments[i].venues[j].bid_price = bid_price;
+              instruments[i].venues[j].ask_price = ask_price;
+              instruments[i].venues[j].bid_size = bid_size;
+              instruments[i].venues[j].ask_size = ask_size;
+              clock_gettime(CLOCK_MONOTONIC,
+                            &instruments[i].venues[j].last_update);
+              break;
+            }
+          }
         }
-    } 
-    catch (std::exception& e) {
-        std::cerr << "EXCEPTION: " << __FILE__ << __LINE__ << e.what();
+      }
+
+      if (!found_symbol) {
+        fprintf(stderr,
+                "No matching symbol in OrderBookAggregator for: %s\n", sym);
+        return;
+      }
+      if (!found_venue) {
+        fprintf(stderr,
+                "No matching venue in OrderBookAggregator for bid_venue_id: %d ask_venue_id %d\n",
+                bid_venue_id,
+                ask_venue_id);
+        return;
+      }
+
+      // Now go through all the books and pick the bbo
+      // check the time since last update and reset if too long
+      double bb_price = capk::NO_BID;
+      double ba_price = capk::NO_ASK;
+      double bb_size = capk::INIT_SIZE;
+      double ba_size = capk::INIT_SIZE;
+      capk::venue_id_t bb_venue_id = capk::NULL_VENUE_ID;
+      capk::venue_id_t ba_venue_id = capk::NULL_VENUE_ID;
+      timespec now;
+      std::string msg_str;
+      int64_t last_update_millis;
+
+      // find the symbol and venue id in the book structure
+      for (uint32_t i = 0; i < _symbol_count; i++) {
+        if (strncmp(sym, instruments[i].symbol, SYMBOL_LEN) == 0) {
+          found_symbol = true;
+
+          for (uint32_t j = 0; j < VENUE_COUNT; j++) {
+            if (instruments[i].venues[j].venue_id != capk::NULL_VENUE_ID) {
+              // check the elapsed time since last update
+              clock_gettime(CLOCK_MONOTONIC, &now);
+              last_update_millis =
+                capk::timespec_delta_millis(instruments[i].venues[j].last_update, now);
+              // was the item ever updated?
+              /*
+              if (isZeroTimespec(instruments[i].mics[j].last_update)) {
+              fprintf(stderr, "<%s:%s>: NEVER UPDATED\n",
+                          instruments[i].mics[j].MIC_name,
+                          instruments[i].symbol);
+              }
+              */
+              fprintf(stderr, "<%d:%s>: %f@%f (last update: %lu ms)\n",
+                      instruments[i].venues[j].venue_id,
+                      instruments[i].symbol,
+                      instruments[i].venues[j].bid_price,
+                      instruments[i].venues[j].ask_price,
+                      last_update_millis);
+              if (last_update_millis > UPDATE_TIMEOUT_MILLIS) {
+#ifdef DEBUG
+                fprintf(stderr, "*** TIMEOUT *** on %s (%d ms)",
+                        instruments[i].symbol,
+                        UPDATE_TIMEOUT_MILLIS);
+#endif
+                instrument_reset(&instruments[i].venues[j]);
+              }
+#ifdef DEBUG
+              fprintf(stderr, "Last update: %ld:%ld\n",
+                      instruments[i].venues[j].last_update.tv_sec,
+                      instruments[i].venues[j].last_update.tv_nsec);
+              fprintf(stderr, "Now        : %ld:%ld(ns)\n",
+                      now.tv_sec,
+                      now.tv_nsec);
+              timespec tdelta =
+                capk::timespec_delta(instruments[i].venues[j].last_update,
+                                     now);
+              fprintf(stderr, "Tdelta     : %ld:%ld(ns)\n",
+                      tdelta.tv_sec,
+                      tdelta.tv_nsec);
+              fprintf(stderr, "<%s:%d>: ms since last update: %lu\n",
+                      instruments[i].symbol,
+                      instruments[i].venues[j].venue_id,
+                      last_update_millis);
+              fprintf(stderr, "<%d:%s>: %f@%f\n",
+                      instruments[i].venues[j].venue_id,
+                      instruments[i].symbol,
+                      instruments[i].venues[j].bid_price,
+                      instruments[i].venues[j].ask_price);
+#endif
+            }
+
+            if (instruments[i].venues[j].bid_price > bb_price) {
+              bb_price = instruments[i].venues[j].bid_price;
+              bb_venue_id = instruments[i].venues[j].venue_id;
+              bb_size = instruments[i].venues[j].bid_size;
+            }
+            if (instruments[i].venues[j].ask_price < ba_price) {
+              ba_price = instruments[i].venues[j].ask_price;
+              ba_venue_id = instruments[i].venues[j].venue_id;
+              ba_size = instruments[i].venues[j].ask_size;
+            }
+          }
+        }
+      }
+
+      // Setup BBO and re-broadcast
+      fprintf(stderr, "\n***\n<%s> BB: %d:%f(%f) BA: %d:%f(%f)\n***\n",
+              sym,
+              bb_venue_id,
+              bb_price,
+              bb_size,
+              ba_venue_id,
+              ba_price,
+              ba_size);
+
+      capkproto::instrument_bbo ins_bbo;
+      ins_bbo.set_symbol(sym);
+      ins_bbo.set_bid_venue_id(bb_venue_id);
+      ins_bbo.set_bid_price(bb_price);
+      ins_bbo.set_bid_size(bb_size);
+      ins_bbo.set_ask_venue_id(ba_venue_id);
+      ins_bbo.set_ask_price(ba_price);
+      ins_bbo.set_ask_size(ba_size);
+      ins_bbo.set_sequence(seq_num++);
+
+      int msgsize = bbo.ByteSize();
+      if (msgsize > MSGBUF_SIZ) {
+        fprintf(stderr, "***\nins_bbo msg too large for buffer - DROPPING MSG!\n***");
+        continue;
+      } else {
+        ins_bbo.SerializeToString(&msg_str);
+#ifdef DEBUG
+        fprintf(stderr, "Sending %d bytes\n", msgsize);
+        fprintf(stderr, "Sending %s \n", ins_bbo.DebugString().c_str());
+#endif
+      }
+
+      s_sendmore(*bcast_sock, sym);
+      s_send(*bcast_sock, msg_str);
+#ifdef DEBUG
+      boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
+      boost::posix_time::time_duration duration(time_end - time_start);
+      fprintf(stderr, "BookUpdate Time(us) to recv and parse: %s\n",
+              to_simple_string(duration).c_str());
+#endif
     }
+  }
+  catch(const std::exception& e) {
+    fprintf(stderr, "EXCEPTION: %s %d %s\n", __FILE__, __LINE__, e.what());
+  }
+}
+
+OrderBookListener::~OrderBookListener() {
+  if (_aggregator) {
+    delete _aggregator;
+  }
+}
+
+void
+OrderBookListener::stop() {
+  _stopRequested = true;
+}
+
+void
+OrderBookListener::run() {
+  try {
+    assert(_context != NULL);
+    assert(_market_data_addr.c_str() != NULL);
+
+    fprintf(stdout, "OrderBookListener connecting to: %s\n",
+            _market_data_addr.c_str());
+    zmq::socket_t subscriber(*_context, ZMQ_SUB);
+    subscriber.connect(_market_data_addr.c_str());
+    const char* filter = "";
+    subscriber.setsockopt(ZMQ_SUBSCRIBE, filter, strlen(filter));
+
+    _aggregator = new zmq::socket_t(*_context, ZMQ_PUB);
+    assert(_aggregator);
+    _aggregator->connect(_aggregator_addr.c_str());
+
+    zmq::message_t msg;
+    while (1 && _stopRequested == false) {
+      subscriber.recv(&msg);
+#ifdef DEBUG
+      boost::posix_time::ptime time_start(boost::posix_time::microsec_clock::local_time());
+#endif
+
+      int64_t more;
+      size_t more_size;
+      more_size = sizeof(more);
+      subscriber.getsockopt(ZMQ_RCVMORE, &more, &more_size);
+      // send to orderbook on inproc socket - no locks needed according to zmq
+      _aggregator->send(msg, more ? ZMQ_SNDMORE : 0);
+
+#ifdef DEBUG
+      boost::posix_time::ptime time_end(boost::posix_time::microsec_clock::local_time());
+      boost::posix_time::time_duration duration(time_end - time_start);
+      fprintf(stderr, "Inbound from md interface time to receive and parse: %s\n",
+              to_simple_string(duration).c_str());
+#endif
+    }
+  }
+  catch(const std::exception& e) {
+    fprintf(stderr, "EXCEPTION: %s %d %s\n", __FILE__, __LINE__, e.what());
+  }
 }
 
 
-void 
-initialize_instrument_info(zmq::context_t* context, const capkproto::configuration& conf)
-{
-    assert(context);
-    assert(SYMBOL_COUNT > 0);
-    assert(VENUE_COUNT > 0);
-#ifdef DEBUG
-    std::cerr << "Initializing instruments: " << sizeof(instruments)  << " bytes \n";
-    std::cerr << "SYMBOL count: " << SYMBOL_COUNT << "\n"; 
-#endif
-    std::cout << "Initializing: " << SYMBOL_COUNT << " symbols" << std::endl;
-    for (unsigned int i=0; i < SYMBOL_COUNT; i++) {
-        std::cerr << "Initializing symbol: <" << i << "> to <" << symbols[i] << ">\n";
-        STRCPY8(instruments[i].symbol, symbols[i]);
-        instruments[i].broadcast_socket = new zmq::socket_t(*context, ZMQ_PUB);  
-        assert(instruments[i].broadcast_socket);
+void initialize_instrument_info(zmq::context_t* context,
+                                const capkproto::configuration& conf, 
+                                const std::vector<std::string> symbols,
+                                const uint32_t symbol_count) {
+  assert(context);
+  assert(symbol_count > 0);
+  assert(VENUE_COUNT > 0);
+  printf("Initializing instruments: %ld bytes for %u symbols\n",
+         sizeof(instruments), symbol_count);
+  for (uint32_t i = 0; i < symbol_count; i++) {
+    printf("Initializing symbol: %d to %s\n", i, symbols[i].c_str());
+    STRCPY8(instruments[i].symbol, symbols[i].c_str());
+    instruments[i].broadcast_socket = new zmq::socket_t(*context, ZMQ_PUB);
+    assert(instruments[i].broadcast_socket);
 
-        int num_venues = conf.configs_size();
-        std::cout << "Initializing: " << num_venues << " venues" << std::endl;
-        for (int j=0; j < num_venues; j++) {
-            const capkproto::venue_configuration vc = conf.configs(j);
-            std::cerr << "Initializing venue: <" << j << "> to <" << vc.venue_id() << ">\n";
-			instruments[i].venues[j].venue_id = vc.venue_id(); 
-			instruments[i].venues[j].last_update = {0};
-            instruments[i].venues[j].bid_price = capk::INIT_BID;
-            instruments[i].venues[j].ask_price = capk::INIT_ASK;
-            instruments[i].venues[j].bid_size = -1;
-            instruments[i].venues[j].ask_size = -1;
-        }
+    int num_venues = conf.configs_size();
+    printf("Initializing: %d venues\n", num_venues);
+    for (int j = 0; j < num_venues; j++) {
+      const capkproto::venue_configuration vc = conf.configs(j);
+      printf("Initializing venue: %d to %d\n", i, vc.venue_id());
+      instruments[i].venues[j].venue_id = vc.venue_id();
+      instruments[i].venues[j].last_update = {0};
+      instruments[i].venues[j].bid_price = capk::INIT_BID;
+      instruments[i].venues[j].ask_price = capk::INIT_ASK;
+      instruments[i].venues[j].bid_size = -1;
+      instruments[i].venues[j].ask_size = -1;
     }
+  }
 
-    // sanity check
+  // sanity check TODO REMOVE IT IS ANNOYING
 #ifdef DEBUG
-    for (unsigned int i = 0; i < SYMBOL_COUNT; i++) {
-        for (unsigned int j = 0; j < VENUE_COUNT; j++) {
-                    fprintf(stderr, "%s <%d>:%f@%f\n", 
-                            instruments[i].symbol, 
-                            instruments[i].venues[j].venue_id,
-                            instruments[i].venues[j].bid_price, 
-                            instruments[i].venues[j].ask_price);
-        }
+  for (uint32_t i = 0; i < symbol_count; i++) {
+    for (uint32_t j = 0; j < VENUE_COUNT; j++) {
+      fprintf(stderr, "%s <%d>:%f@%f\n",
+              instruments[i].symbol,
+              instruments[i].venues[j].venue_id,
+              instruments[i].venues[j].bid_price,
+              instruments[i].venues[j].ask_price);
     }
+  }
 #endif
 }
 
-const std::string AGGREGATE_OB = "inproc://ob";
-//const char* XCDE_addr = "tcp://127.0.0.1:5271";
-//const char* GAIN_addr= "tcp://127.0.0.1:5272";
-//const char* FXCM_addr= "tcp://127.0.0.1:5273";
-//const char* BCAST_OUT = "tcp://*:9000";
+int main(int argc, char** argv) {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  // ZMQ context setup - ONLY ONE!
+  zmq::context_t context(1);
+
+  // make sure counts are less that allocated space
+  assert(VENUE_COUNT < MAX_VENUES);
+
+  std::vector<std::string> sym_vector;
+  uint32_t num_symbols = 0;
+  // check program options
+  // TODO(tkaria@capitalkpartners.com) - use config file  and symbol file
+  // tkaria@capitalkpartners.com - completed config and symbol
+  //
+  try {
+    po::options_description desc("Allowed options");
+    desc.add_options()
+    ("help", "produce help message")
+    ("c", po::value<std::string>(), "<config file>")
+    ("s", po::value<std::string>(), "<symbol file>")
+    ("d", "debug info");
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
 
 
-int 
-main(int argc, char** argv)
-{
-
-    GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-    // make sure counts are less that allocated space 
-    assert(VENUE_COUNT < MAX_VENUES);
-    assert(SYMBOL_COUNT < MAX_SYMBOLS);
-
-	// check program options
-	// KTK - TODO - use config file  and symbol file
-    try {
-        po::options_description desc("Allowed options");
-        desc.add_options()
-            ("help", "produce help message")
-            ("c", po::value<std::string>(), "<config file>")
-            ("s", po::value<std::string>(), "<symbol file>")
-            ("d", "debug info")
-        ;
-
-        po::variables_map vm;
-        po::store(po::parse_command_line(argc, argv, desc), vm);
-        po::notify(vm);
-
-        if (vm.count("help")) {
-            std::cout << desc << "\n";
-            return 1;
-        }
-        if (vm.count("c")) {
-            std::cout << "Config file: " << vm["c"].as<std::string>() << ".\n";
-            std::string configFile = vm["c"].as<std::string>();
-        } else {
-            // set default
-            std::cerr << "Config file was not set \n";
-        }
-
-    }
-    catch (std::exception& e) {
-        std::cerr << "EXCEPTION: " << __FILE__ << __LINE__ << e.what();
-        return (-1);
+    if (vm.count("help")) {
+      std::cerr << desc << std::endl;
+      return -1;
     }
 
-	// program options and init are OK - now start sockets and threads
-    try { 
-		// Global context for ZMQ
-		zmq::context_t context(1);
-        // Request config params from configuration server
-	    capk::get_config_params((context), "tcp://127.0.0.1:11111", &all_venue_config);
-        
-		bcast_sock = new zmq::socket_t(context, ZMQ_PUB);
-        assert(bcast_sock);
-        int zero = 0;
-        bcast_sock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
-        std::cerr << "Attempting to bind to: " << capk::kCAPK_AGGREGATED_BOOK_MD_INTERFACE_ADDR << ". If this does not return then the socket is likely in use" << std::endl;
-		bcast_sock->bind(capk::kCAPK_AGGREGATED_BOOK_MD_INTERFACE_ADDR);
-        std::cerr << "Bind complete." << std::endl;
-
-        // connect to inproc socket for orderbook
-        book_manager ob(&context, AGGREGATE_OB);
-        boost::thread* t0 = new boost::thread(boost::bind(&book_manager::run, &ob));
-        sleep(2);
-
-        // subscribers
-        // subscribe to all available venues as exist in the config server
-        int num_venues = all_venue_config.configs_size();
-        VENUE_COUNT = num_venues;
-		initialize_instrument_info(&context, all_venue_config);
-        std::cerr << "Configured venues (not necessarily broadcasting): " << num_venues << std::endl;
-        market_data_receiver* receivers = new market_data_receiver[num_venues];
-        boost::thread_group thread_group;
-        for (int i=0; i< num_venues; i++) {
-            const capkproto::venue_configuration vc = all_venue_config.configs(i);
-            std::cerr << "Creating listener for: " << vc.mic_name() << std::endl;
-            receivers[i].w = new worker(&context, vc.market_data_broadcast_addr(), AGGREGATE_OB);
-            receivers[i].t = new boost::thread(boost::bind(&worker::run, receivers[i].w));
-            thread_group.add_thread(receivers[i].t);
-        }
-        thread_group.join_all();
-        t0->join();
-        assert(thread_group.size() == num_venues);
-        google::protobuf::ShutdownProtobufLibrary();
-    } 
-    catch(std::exception& e) {
-        std::cerr << "EXCEPTION: " << __FILE__ << __LINE__ << e.what();
-        return (-1);
+    if (vm.count("s")) {
+      std::string symbol_file = vm["s"].as<std::string>();
+      printf("Using symbol file: %s\n", symbol_file.c_str());
+      sym_vector = capk::readSymbolsFile(symbol_file);
+      num_symbols = sym_vector.size();
+      assert(num_symbols < MAX_SYMBOLS);
+      if (num_symbols == 0) {
+        return -1;
+      }
+      printf("%s contains %d symbols", symbol_file.c_str(), num_symbols);
+    } else {
+      std::cerr << desc << std::endl;
+      fprintf(stderr, "Symbol file was not set - exiting\n");
+      return -1;
     }
+
+
+    if (vm.count("c")) {
+      std::string config_file = vm["c"].as<std::string>();
+      printf("Using config file: %s\n", config_file.c_str());
+      capk::readVenueConfigFile(config_file, &all_venue_config);
+    } else {
+      fprintf(stderr, "Config file was not set - using config server\n");
+      // Request config params from configuration server
+      if (capk::readConfigServer(context,
+                              CONFIG_SERVER_ADDR,
+                              &all_venue_config, 
+                              500000) != 0) {
+        fprintf(stderr, "Cannot reach config server at: %s\n", CONFIG_SERVER_ADDR);
+        return -1;
+      }
+    }
+
+    //  Program options and init are OK - now start sockets and threads
+    //  Connect to inproc socket for orderbook
+    OrderBookAggregator ob(&context, AGGREGATE_OB_ADDR, num_symbols);
+    boost::thread* t0 = new boost::thread(boost::bind(&OrderBookAggregator::run, &ob));
+    //sleep(2);
+    //  Create the outbound broadcast socket
+    bcast_sock = new zmq::socket_t(context, ZMQ_PUB);
+    assert(bcast_sock);
+    int zero = 0;
+    bcast_sock->setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
+    printf("Attempting to bind to: %s ... ",
+           capk::CAPK_AGGREGATED_BOOK_MD_INTERFACE_ADDR);
+    bcast_sock->bind(capk::CAPK_AGGREGATED_BOOK_MD_INTERFACE_ADDR);
+    printf(" complete.\n");
+
+
+    // subscribers
+    // subscribe to all available venues as exist in the config server
+    uint32_t num_venues = all_venue_config.configs_size();
+    VENUE_COUNT = num_venues;
+    initialize_instrument_info(&context, all_venue_config, sym_vector, num_symbols);
+    printf("Number of configured venues (not necessarily broadcasting): %d\n",
+           num_venues);
+    MarketDataReceiver* receivers = new MarketDataReceiver[num_venues];
+    boost::thread_group thread_group;
+    for (uint32_t i = 0; i< num_venues; i++) {
+      const capkproto::venue_configuration vc = all_venue_config.configs(i);
+      printf("Creating listener for: %s\n", vc.mic_name().c_str());
+      receivers[i].listener =
+          new OrderBookListener(&context,
+                                vc.market_data_broadcast_addr(),
+                                AGGREGATE_OB_ADDR);
+      receivers[i].thread =
+          new boost::thread(boost::bind(&OrderBookListener::run,
+                                        receivers[i].listener));
+      thread_group.add_thread(receivers[i].thread);
+    }
+    thread_group.join_all();
+    t0->join();
+    assert(thread_group.size() == num_venues);
+    google::protobuf::ShutdownProtobufLibrary();
+  }
+  catch(const std::exception& e) {
+    fprintf(stderr, "EXCEPTION: %s %d %s\n", __FILE__, __LINE__, e.what());
+    return (-1);
+  }
 }
