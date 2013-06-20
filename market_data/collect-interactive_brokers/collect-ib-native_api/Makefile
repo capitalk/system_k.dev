@@ -1,23 +1,23 @@
 CXX=g++
 CXXFLAGS=-DIB_USE_STD_STRING -Wall -Wno-switch
 
-ROOT_DIR=..
+CAPK_ROOT=~/capitalk
 
-COMMON=../../../../common
+COMMON=$(CAPK_ROOT)/common
 UTILS=$(COMMON)/src/c++
 UTILS_SRC=$(UTILS)/utils
 PROTO=$(COMMON)/proto
 
-BASE_SRC_DIR=$(ROOT_DIR)/PosixSocketClient
+BASE_SRC_DIR=../PosixSocketClient
 
-INCLUDES=-I$(ROOT_DIR)/Shared/ \
-		 -I$(BASE_SRC_DIR) \
-		 -I$(PROTO) \
-		 -I$(UTILS) \
-		 -I$(COMMON)
+INCLUDES=-I../Shared/ \
+		 -I $(BASE_SRC_DIR) \
+		 -I $(PROTO) \
+		 -I $(UTILS) \
+		 -I $(COMMON)
 
 TARGET=collect-interactive_brokers
-LIBS= -lrt -lzmq -lprotobuf
+LIBS= -lrt -lzmq -lprotobuf -lboost_system
 
 all: protos $(TARGET)
 

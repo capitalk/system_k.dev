@@ -8,6 +8,9 @@
 
 #include "utils/constants.h"
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include <stdio.h>
 #include <memory.h>
 #include <time.h>
@@ -42,7 +45,7 @@ bool PosixTestClient::connect(const char *host, unsigned int port, int clientId)
 
     //m_pubSock = zmq::socket_t(&m_zmqContext);
     m_pubSock.setsockopt(ZMQ_LINGER, &zero, sizeof(zero));
-    m_pubSock.bind(capk::kIBRK_BROADCAST_ADDR); 
+    m_pubSock.bind(capk::IBRK_BROADCAST_ADDR); 
 
 	if (bRes) {
 		fprintf(stderr,  "Connected to %s:%d clientId:%d\n", !( host && *host) ? "127.0.0.1" : host, port, clientId);
@@ -123,14 +126,14 @@ void PosixTestClient::zmqPublishTick(const capk::IBSingleMarketBBO_t& ib)
     ib_bbo.set_ask_size(ib.ask_size);
     //ib_bbo.set_last_price(ib.last_price);
     //ib_bbo.set_last_size(ib.last_size);
-    ib_bbo.set_venue_id(capk::kIBRK_VENUE_ID);
+    ib_bbo.set_venue_id(capk::IBRK_VENUE_ID);
     char msgbuf[256];
     size_t msgsize = ib_bbo.ByteSize();
     assert(msgsize < sizeof(msgbuf));
     ib_bbo.SerializeToArray(msgbuf, msgsize);
     zmq::message_t msg(msgsize);
     memcpy(msg.data(), msgbuf, msgsize);
-    fprintf(stderr, "Sending tick message:\n %s %d\n", ib_bbo.DebugString().c_str(), msgsize);
+    fprintf(stderr, "Sending tick message:\n %s" PRIuPTR "\n", ib_bbo.DebugString().c_str(), msgsize);
     sndOK = m_pubSock.send(msg, 0);
     assert(sndOK);
 }
