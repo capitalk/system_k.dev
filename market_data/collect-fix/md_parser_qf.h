@@ -144,6 +144,8 @@ struct ApplicationConfig {
     std::string symbol_file_name;
     // Name of configuration file
     std::string config_file_name;
+    // Name of venue configuration file
+    std::string venue_config_file_name;
     // Are we publishing order book?
     bool is_publishing;
     // Address to publish order book data

@@ -154,7 +154,7 @@ WritePidFile(const char* prefix, const char* suffix, pid_t pid, pid_t ppid)
  * @return 0 on success
  */
 int
-ReadLocalConfig(ApplicationConfig* application_config,
+ReadFIXConfig(ApplicationConfig* application_config,
                 const FIX::Dictionary& dict)
 {
   if (application_config == NULL) {
@@ -163,7 +163,7 @@ ReadLocalConfig(ApplicationConfig* application_config,
   int err = 0;
 
 #ifdef LOG
-  pan::log_DEBUG("BEGIN - file based configuration");
+  pan::log_DEBUG("BEGIN - FIX configuration");
 #endif
 
   // MIC code
@@ -278,12 +278,67 @@ ReadLocalConfig(ApplicationConfig* application_config,
   application_config->is_publishing = is_publishing;
 
 #ifdef LOG
-  pan::log_DEBUG("END - file based configuration");
+  pan::log_DEBUG("END - FIX configuration");
 #endif
 
   return (err);
 }
 
+int ReadLocalVenueConfig(const std::string & venue_config_file, ApplicationConfig* application_config ) {
+#ifdef LOG
+  pan::log_DEBUG("BEGIN - local venue configuration");
+#endif
+  // protobuf for configuration
+  capkproto::configuration all_venue_config;
+  capk::readVenueConfigFile(venue_config_file, &all_venue_config);
+  capkproto::venue_configuration my_config =
+      capk::get_venue_config(&all_venue_config,
+                             application_config->mic_string.c_str());
+
+  if (my_config.venue_id() <= 0) {
+#ifdef LOG
+    pan::log_CRITICAL("venue_id is not set or set to 0");
+#endif
+    return (-1);
+  } else {
+    application_config->venue_id = my_config.venue_id();
+    if (application_config->venue_id == 0) {
+#ifdef LOG
+      pan::log_CRITICAL("venue_id in config file is 0");
+#endif
+      return (-1);
+   }
+#ifdef LOG
+    pan::log_DEBUG("My venue_id: ", pan::integer(application_config->venue_id));
+#endif
+  }
+
+  // If publishing get the bind address
+  if (application_config->is_publishing) {
+    std::string addr = my_config.market_data_broadcast_addr();
+    if (addr.length() > 0) {
+      application_config->publishing_addr = addr;
+#ifdef LOG
+      pan::log_DEBUG("Publishing to: ",
+                     my_config.market_data_broadcast_addr().c_str());
+#endif
+    } else {
+#ifdef LOG
+      pan::log_WARNING("Publishing is set but no address configured");
+#endif
+    }
+  } else {
+#ifdef LOG
+    pan::log_DEBUG("Not publishing");
+#endif
+  }
+
+#ifdef LOG
+  pan::log_DEBUG("END - local venue configuration");
+#endif
+
+  return (0);
+}
 /**
  * Read the configuration from the config server.
  * Config is sent in a protobuf that details the network config and
@@ -294,20 +349,22 @@ ReadLocalConfig(ApplicationConfig* application_config,
  * that stores settings read from remote config
  * @return 0 on success
  */
-int
-ReadRemoteConfig(ApplicationConfig* application_config)
-{
+int ReadRemoteConfig(ApplicationConfig* application_config) {
 #ifdef LOG
   pan::log_DEBUG("BEGIN - remote configuration");
 #endif
 
-  // Received protobuf for configuration
+  // protobuf for configuration
   capkproto::configuration all_venue_config;
 
   // Call the configuration server
-  capk::readConfigServer(g_zmq_context,
+  int ret = capk::readConfigServer(g_zmq_context,
                           application_config->config_server_addr.c_str(),
-                          &all_venue_config);
+                          &all_venue_config, 
+                          50000);
+  if (ret != 0) {
+    return -1; 
+  }
   capkproto::venue_configuration my_config =
       capk::get_venue_config(&all_venue_config,
                              application_config->mic_string.c_str());
@@ -379,7 +436,8 @@ ReadCommandLineParams(int argc,
     po::options_description desc("Allowed options");
     desc.add_options()
     ("help", "produce help message")
-    ("c", po::value<std::string>(), "<config file>")
+    ("c", po::value<std::string>(), "<FIX config file>")
+    ("v", po::value<std::string>(), "<venue config file>")
     ("s", po::value<std::string>(), "<symbol file>")
     ("o", po::value<std::string>(), "<orderbook output path>")
     ("config-server", po::value<std::string>(), "<config server address>")
@@ -429,6 +487,14 @@ ReadCommandLineParams(int argc,
                            application_config->symbol_file_name.c_str());
 #endif
 
+    if (vm.count("v")) {
+      application_config->venue_config_file_name = vm["v"].as<std::string>();
+    } 
+#ifdef LOG
+    pan::log_INFORMATIONAL("Venue config file: ",
+                           application_config->symbol_file_name.c_str());
+#endif
+
     if (vm.count("c")) {
       application_config->config_file_name = vm["c"].as<std::string>();
 #ifdef LOG
@@ -436,12 +502,12 @@ ReadCommandLineParams(int argc,
 #endif
     } else {
 #ifdef LOG
-      pan::log_WARNING("Config file was not set.");
+      pan::log_WARNING("FIX config file was not set.");
 #endif
       err++;
     }
 #ifdef LOG
-    pan::log_INFORMATIONAL("Config file: ",
+    pan::log_INFORMATIONAL("FIX config file: ",
                            application_config->config_file_name.c_str());
 #endif
 
@@ -456,6 +522,10 @@ ReadCommandLineParams(int argc,
 
     application_config->config_server_addr = DEFAULT_CONFIG_SERVER_ADDRESS;
     if (vm.count("config-server") > 0) {
+      if (vm.count("v") > 0) {
+        fprintf(stderr, "Specify --config-server OR --v but not both");
+        return -1;
+      }
       application_config->config_server_addr =
           vm["config-server"].as<std::string>();
     }
@@ -501,7 +571,6 @@ main(int argc, char** argv )
   // Must call this to use protobufs
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-
   if (ReadCommandLineParams(argc, argv, &config) != 0) {
 #ifdef LOG
     pan::log_CRITICAL("Aborting due to missing parameters.");
@@ -526,13 +595,23 @@ main(int argc, char** argv )
 
 
     // Get additional config settings from FIX config file
-    if (ReadLocalConfig(&config, dict) != 0) {
+    if (ReadFIXConfig(&config, dict) != 0) {
+      fprintf(stderr, "Can't read local config file - exiting\n");
       return (-1);
     }
 
-    // Get config settings from config server
-    if (ReadRemoteConfig(&config) != 0) {
-      return (-1);
+    if (config.venue_config_file_name == "") {
+      // Get config settings from config server
+      if (ReadRemoteConfig(&config) != 0) {
+        fprintf(stderr, "Can't read remote configuration - exiting\n");
+        return (-1);
+      }
+    }
+    else {
+      if (ReadLocalVenueConfig(config.venue_config_file_name, &config) != 0) {
+        fprintf(stderr, "Can't read local venue configuration - exiting\n");
+        return (-1);
+      }
     }
 
     // Create the FIX application instance
