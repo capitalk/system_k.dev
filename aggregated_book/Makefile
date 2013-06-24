@@ -38,10 +38,13 @@ aggregated_book.o: aggregated_book.cpp
 time_utils.o: $(UTILS_SRC)/time_utils.cpp $(UTILS_SRC)/time_utils.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $< 
 
+bbo_book_types.o: $(UTILS_SRC)/bbo_book_types.cpp $(UTILS_SRC)/bbo_book_types.h
+	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $< 
+
 config_server.o: $(UTILS_SRC)/config_server.cpp $(UTILS_SRC)/config_server.h
 	$(CC) -o $@ -c $(INCLUDE) $(CFLAGS) $< 
 
-aggregated_book : aggregated_book.o time_utils.o config_server.o $(LOCAL_PROTOS)
+aggregated_book : aggregated_book.o time_utils.o config_server.o bbo_book_types.o $(LOCAL_PROTOS)
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ 
 
 protos : 

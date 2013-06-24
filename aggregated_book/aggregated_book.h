@@ -134,11 +134,16 @@ public:
     _bindAddr(bindAddr),
     _stopRequested(false),
     _symbol_count(symbol_count) {};
+  void updateOrderBooks(const capk::InstrumentBBO_t& bbo);
+  void broadcastBBO(zmq::socket_t* bcast_sock, 
+                    const capk::InstrumentBBO_t& bbo);
+ 
   void run();
   void stop();
 private:
   zmq::context_t* _context;
   std::string _bindAddr;
+  zmq::socket_t* _bcast_sock;
   volatile bool _stopRequested;
   uint32_t _symbol_count;
 };
