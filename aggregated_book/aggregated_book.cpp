@@ -38,7 +38,7 @@ void OrderBookAggregator::broadcastBBO(zmq::socket_t* bcast_sock,
               bbo.ask_price,
               bbo.ask_size);
 
-      std::string bbo_msg;
+      std::string bbo_string;
       capkproto::instrument_bbo bbo_proto;
       bbo_proto.set_symbol(bbo.symbol);
       bbo_proto.set_bid_venue_id(bbo.bid_venue_id);
@@ -54,16 +54,22 @@ void OrderBookAggregator::broadcastBBO(zmq::socket_t* bcast_sock,
         fprintf(stderr, "***\nbbo_proto msg too large for buffer - DROPPING MSG!\n***");
         return;
       } else {
-        bbo_proto.SerializeToString(&bbo_msg);
+        bbo_proto.SerializeToString(&bbo_string);
 #ifdef DEBUG
         fprintf(stderr, "Sending %d bytes\n", msgsize);
         fprintf(stderr, "Sending %s \n", bbo_proto.DebugString().c_str());
 #endif
       }
       // Send header frame with symbol
-      s_sendmore(*bcast_sock, bbo.symbol);
+      zmq::message_t msg_symbol(SYMBOL_LEN);
+      memcpy(msg_symbol.data(), bbo.symbol, SYMBOL_LEN);
+      bcast_sock->send(msg_symbol, ZMQ_SNDMORE);
+      //s_sendmore(*bcast_sock, bbo.symbol);
       // Send bbo data
-      s_send(*bcast_sock, bbo_msg);
+      //s_send(*bcast_sock, bbo_string);
+      zmq::message_t msg_bbo(bbo_string.size());
+      memcpy(msg_bbo.data(), bbo_string.data(), bbo_string.size());
+      bcast_sock->send(msg_bbo);
   } catch(const std::exception& e) {
     fprintf(stderr, "EXCEPTION: %s %d %s\n", __FILE__, __LINE__, e.what());
   }

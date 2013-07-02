@@ -26,7 +26,6 @@
 #include <string>
 #include <exception>
 
-#include "utils/zhelpers.hpp"
 #include "utils/time_utils.h"
 #include "utils/bbo_book_types.h"
 #include "utils/config_server.h"
