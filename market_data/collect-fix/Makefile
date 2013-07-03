@@ -1,7 +1,7 @@
 CC = g++
 
-CAPK_ROOT = ~/capitalk
-COMMON = ../../../common
+SYSK_ROOT = ../../ 
+COMMON = ../../common
 UTILS = $(COMMON)/src/c++
 UTILS_SRC = $(UTILS)/utils
 PROTO = $(COMMON)/proto
@@ -10,10 +10,10 @@ ORDERBOOK_DIR = ../../order_book/order_book.v2
 ORDERBOOK_INC = ../../order_book
 ORDERBOOK_LIB = $(ORDERBOOK_DIR)/liborder_book2.a
 
-PANTHEIOS_EXT = $(CAPK_ROOT)/pantheios_be_zmq
+PANTHEIOS_EXT = $(COMMON)/pantheios_be_zmq
 
 INCLUDE = -I $(PANTHEIOS_ROOT)/include \
-		-I $(CAPK_ROOT) \
+		-I $(SYSK_ROOT) \
 		-I $(STLSOFT)/include \
 		-I $(ORDERBOOK_INC) \
 		-I $(PANTHEIOS_EXT) \
