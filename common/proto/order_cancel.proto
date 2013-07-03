@@ -1,0 +1,14 @@
+package capkproto;
+
+import "capk_globals.proto";
+
+message order_cancel {
+    optional bytes		orig_cl_order_id = 1;
+    optional bytes		cl_order_id = 2;
+    optional bytes		strategy_id = 3;
+    optional string		symbol = 4;
+	optional side_t		side = 5;
+	optional double		order_qty = 6;
+	optional string		fut_sett_date = 7;
+}
+

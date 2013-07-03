@@ -1,0 +1,9 @@
+Source code for this library from
+http://www.geonius.com/software/index.html#libgpl
+
+As of 13 June 2013 this source is covered by the MIT Licence 
+(http://www.geonius.com/software/LICENSE.txt) but please 
+see site for futher information
+
+The entire library is located in the csoft.tgz file but we have taken only what
+is requried from that library and compiled it into libcsoft.a

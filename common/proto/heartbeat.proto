@@ -1,0 +1,8 @@
+package capkproto;
+
+import "capk_globals.proto";
+
+message hearbeat {
+    required sfixed32 venue_id = 1;
+}
+

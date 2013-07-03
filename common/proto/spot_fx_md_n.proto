@@ -1,0 +1,41 @@
+package capkproto;
+
+import "capk_globals.proto";
+
+// Change this to single market bbo
+message single_market_layer {
+    required sfixed32 venue_id = 2;
+    required double bid_size = 3;
+    required double bid_price = 4;
+    required double ask_size = 5;
+    required double ask_price = 6;
+}
+
+message single_market_level_1 {
+    required string symbol = 1;
+    required single_market_layer layer = 2;
+}
+message single_market_level_n {
+    required string symbol = 1;
+    repeated single_market_layer layers = 2;
+}
+
+// A single layer of price from multiple markets
+message multi_market_instrument_layer {
+    required sfixed32 bid_venue_id = 2;
+    required double bid_price = 3;
+    required double bid_size = 4;
+    required sfixed32 ask_venue_id = 5;
+    required double ask_price = 6;
+    required double ask_size = 7;
+}
+
+message multi_market_instrument_level_1 {
+    required string symbol = 1;
+    required multi_market_instrument_layer layer = 2;
+}
+// Depth order book for multiple markets
+message multi_market_level_n {
+    required string symbol = 1;
+    repeated multi_market_instrument_layer layers = 2;
+}
