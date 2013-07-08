@@ -102,7 +102,7 @@ InitializeZMQ()
   g_zmq_context = zmq_init(1);
   assert(g_zmq_context);
 
-  /** Setup the scoekt for publishing prices */
+  /** Setup the socket for publishing prices */
   g_pub_socket = zmq_socket(g_zmq_context, ZMQ_PUB);
   zmq_setsockopt(g_pub_socket, ZMQ_LINGER, &zero, sizeof(zero));
   assert(g_pub_socket);
