@@ -1,0 +1,10 @@
+AC_INIT([system_k], [0.0.1])
+AC_CONFIG_AUX_DIR([.])
+AM_INIT_AUTOMAKE, 
+AC_PROG_LIBTOOL
+AC_PROG_CXX
+AC_PROG_CC
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_FILES([Makefile])
+AC_CONFIG_SUBDIRS([order_book/Makefile market_data/collect-fix/Makefile])
+AC_OUTPUT
