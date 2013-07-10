@@ -31,8 +31,10 @@ md_fix_CXXFLAGS = -I $(common_includedir) \
               -I ${PANTHEIOS_PFX}/include \
               -I ${STLSOFT_PFX}/include 
 
+#md_fix_LDFLAGS = -L$(orderbook_libs)
+
 md_fix_LDADD = -L$(orderbook_libs) \
-               -lorderbook-0.0.1 
+               -lorderbook-0.0.0
 
 md_fix_SOURCES = src/md_broadcast.cpp \
 	src/md_broadcast.h \

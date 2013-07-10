@@ -28,9 +28,10 @@ namespace capk {
 class level;
 class order;
 class order_book;
+class level_comparator;
 
 struct level_comparator : public std::binary_function<plevel, plevel, bool> {
-    bool operator() (plevel const& a, plevel const& b);
+    bool operator() (const plevel& a, const plevel& b);
 };
 
 

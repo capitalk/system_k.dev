@@ -31,14 +31,14 @@ class FullBookTest : public ::testing::Test {
    ~FullBookTest() {};
 
    virtual void SetUp() {
-      ob = new capk::KBook("FOOBAR", 100);
+      ob = new capk::order_book("FOOBAR", 100);
    }
 
    virtual void TearDown() {
       delete ob;
    }
 
-   capk::KBook* ob;
+   capk::order_book* ob;
 };
 
 class InitBookTest : public ::testing::Test {
@@ -48,14 +48,14 @@ class InitBookTest : public ::testing::Test {
   ~InitBookTest() {};
 
   virtual void SetUp() {
-    ob = new capk::KBook("EURUSD", 5);
+    ob = new capk::order_book("EURUSD", 5);
   }
 
   virtual void TearDown() {
     delete ob;
   }
 
-  capk::KBook* ob;     
+  capk::order_book* ob;     
 
 };
 
@@ -73,7 +73,7 @@ TEST_F(InitBookTest, Add1Bid) {
   clock_gettime(CLOCK_REALTIME, &timeStamp);
   EXPECT_EQ(ob->add(orderId, capk::BID, qty, price, timeStamp, timeStamp), 1);
   EXPECT_EQ(price, ob->bestPrice(capk::BID));
-  capk::pKOrder order = ob->getOrder(orderId);  
+  capk::porder order = ob->getOrder(orderId);  
   EXPECT_EQ(order->getPrice(), price);
   EXPECT_EQ(order->getSize(), qty);
   EXPECT_EQ(order->getBuySell(), capk::BID);
@@ -87,7 +87,7 @@ TEST_F(InitBookTest, Add1Ask) {
   clock_gettime(CLOCK_REALTIME, &timeStamp);
   EXPECT_EQ(ob->add(orderId, capk::ASK, qty, price, timeStamp, timeStamp), 1);
   EXPECT_EQ(price, ob->bestPrice(capk::ASK));
-  capk::pKOrder order = ob->getOrder(orderId);  
+  capk::porder order = ob->getOrder(orderId);  
   EXPECT_EQ(order->getPrice(), price);
   EXPECT_EQ(order->getSize(), qty);
   EXPECT_EQ(order->getBuySell(), capk::ASK);
@@ -95,9 +95,9 @@ TEST_F(InitBookTest, Add1Ask) {
 
 TEST_F(InitBookTest, GetNonExistentOrder) {
   int orderId = 22222;
-  capk::pKOrder order = ob->getOrder(orderId);  
-  EXPECT_EQ(capk::pKOrder(), order);
-  EXPECT_EQ(order, capk::pKOrder());
+  capk::porder order = ob->getOrder(orderId);  
+  EXPECT_EQ(capk::porder(), order);
+  EXPECT_EQ(order, capk::porder());
 }
 
 TEST_F(InitBookTest, DeleteNonExistentOrder) {
@@ -118,7 +118,7 @@ TEST_F(InitBookTest, Add1Delete1Ask) {
   EXPECT_EQ(ob->add(orderId, capk::ASK, qty, price, timeStamp, timeStamp), 1);
   // Check that order is there
   EXPECT_EQ(price, ob->bestPrice(capk::ASK));
-  capk::pKOrder order = ob->getOrder(orderId);  
+  capk::porder order = ob->getOrder(orderId);  
   EXPECT_EQ(order->getPrice(), price);
   EXPECT_EQ(order->getSize(), qty);
   EXPECT_EQ(order->getBuySell(), capk::ASK);
@@ -126,8 +126,8 @@ TEST_F(InitBookTest, Add1Delete1Ask) {
   EXPECT_EQ(ob->remove(orderId, timeStamp, timeStamp), 1);
   // Check that order does not exist
   order = ob->getOrder(orderId);  
-  EXPECT_EQ(capk::pKOrder(), order);
-  EXPECT_EQ(order, capk::pKOrder());
+  EXPECT_EQ(capk::porder(), order);
+  EXPECT_EQ(order, capk::porder());
 }
 
 TEST_F(InitBookTest, Add1Delete1Bid) {
@@ -140,7 +140,7 @@ TEST_F(InitBookTest, Add1Delete1Bid) {
   EXPECT_EQ(ob->add(orderId, capk::BID, qty, price, timeStamp, timeStamp), 1);
   // Check that order is there
   EXPECT_EQ(price, ob->bestPrice(capk::BID));
-  capk::pKOrder order = ob->getOrder(orderId);  
+  capk::porder order = ob->getOrder(orderId);  
   EXPECT_EQ(order->getPrice(), price);
   EXPECT_EQ(order->getSize(), qty);
   EXPECT_EQ(order->getBuySell(), capk::BID);
@@ -148,8 +148,8 @@ TEST_F(InitBookTest, Add1Delete1Bid) {
   EXPECT_EQ(ob->remove(orderId, timeStamp, timeStamp), 1);
   // Check that order does not exist
   order = ob->getOrder(orderId);  
-  EXPECT_EQ(capk::pKOrder(), order);
-  EXPECT_EQ(order, capk::pKOrder());
+  EXPECT_EQ(capk::porder(), order);
+  EXPECT_EQ(order, capk::porder());
 }
 
 TEST_F(InitBookTest, ImproveBid) {
@@ -166,7 +166,7 @@ TEST_F(InitBookTest, ImproveBid) {
   EXPECT_EQ(ob->add(bid2Id, capk::BID, qty2, price2, timeStamp, timeStamp), 1);
   // Check that order is there
   EXPECT_EQ(price2, ob->bestPrice(capk::BID));
-  capk::pKOrder order = ob->getOrder(bid2Id);  
+  capk::porder order = ob->getOrder(bid2Id);  
   EXPECT_EQ(order->getPrice(), price2);
   EXPECT_EQ(order->getSize(), qty2);
   EXPECT_EQ(order->getBuySell(), capk::BID);
@@ -191,7 +191,7 @@ TEST_F(InitBookTest, MutipleOrdersAtPrice) {
   EXPECT_EQ(ob->add(bid2Id, capk::BID, qty2, price2, timeStamp, timeStamp), 1);
   // Check that order is there
   EXPECT_EQ(price2, ob->bestPrice(capk::BID));
-  capk::pKOrder order = ob->getOrder(bid2Id);  
+  capk::porder order = ob->getOrder(bid2Id);  
   EXPECT_EQ(order->getPrice(), price2);
   EXPECT_EQ(order->getSize(), qty2);
   EXPECT_EQ(order->getBuySell(), capk::BID);
@@ -220,8 +220,8 @@ TEST_F(InitBookTest, DeleteMutipleOrdersAtPrice) {
   // Delete the first one
   EXPECT_EQ(1, ob->remove(bid1Id, timeStamp, timeStamp));
   EXPECT_EQ(price1, ob->bestPrice(capk::BID));
-  capk::pKOrder order = ob->getOrder(bid1Id);  
-  EXPECT_EQ(order, capk::pKOrder()); 
+  capk::porder order = ob->getOrder(bid1Id);  
+  EXPECT_EQ(order, capk::porder()); 
   // Check that the second order still exists
   order = ob->getOrder(bid2Id);  
   EXPECT_EQ(order->getPrice(), price2);
@@ -246,7 +246,7 @@ TEST_F(InitBookTest, ModifySize) {
   EXPECT_EQ(ob->add(bid2Id, capk::BID, qty2, price2, timeStamp, timeStamp), 1);
   // Check that order is there
   EXPECT_EQ(price2, ob->bestPrice(capk::BID));
-  capk::pKOrder order = ob->getOrder(bid2Id);  
+  capk::porder order = ob->getOrder(bid2Id);  
   EXPECT_EQ(order->getPrice(), price2);
   EXPECT_EQ(order->getSize(), qty2);
   EXPECT_EQ(order->getBuySell(), capk::BID);
