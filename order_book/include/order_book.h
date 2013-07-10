@@ -19,27 +19,26 @@
 #include "utils/constants.h"
 
 
-#define OB_VERSION_STRING "V3"
+#define OB_VERSION_STRING "0.0.1"
 
 #define OB_NAME_LEN 128
 
 namespace capk {
 
-class KLimit;
-class KOrder;
-class KBook;
-class KLimitComp;
+class level;
+class order;
+class order_book;
 
-struct KLimitComp : public std::binary_function<pKLimit, pKLimit, bool> {
-    bool operator() (pKLimit const& a, pKLimit const& b);
+struct level_comparator : public std::binary_function<plevel, plevel, bool> {
+    bool operator() (plevel const& a, plevel const& b);
 };
 
 
-class KBook {
+class order_book {
   public:
-    KBook(const char* name, size_t depth);
+    order_book(const char* name, size_t depth);
 
-    ~KBook();
+    ~order_book();
 
     int add(uint32_t orderId,
                     capk::Side_t buySell,
@@ -69,7 +68,7 @@ class KBook {
 
     double bestPriceVolume(capk::Side_t buySell);
 
-    friend std::ostream& operator<<(std::ostream& out, const KBook& b);
+    friend std::ostream& operator<<(std::ostream& out, const order_book& b);
 
     uint32_t getOrderCountAtLimit(capk::Side_t buySell, double price);
 
@@ -77,7 +76,7 @@ class KBook {
 
     void printLevels(capk::Side_t buySell);
 
-    pKOrder getOrder(uint32_t orderId);
+    porder getOrder(uint32_t orderId);
 
     const char* getOutputVersionString() {
         return OB_VERSION_STRING;
@@ -92,18 +91,18 @@ class KBook {
     void clear();
 
   private:
-    int addBid(KOrder* bid, timespec eventTime, timespec exchSendTime);
-    int addAsk(KOrder* ask, timespec eventTime, timespec exchSendTime);
-    KOrderMap _orderMap;
-    KTree _bidTree;
-    KTree _askTree;
+    int addBid(order* bid, timespec eventTime, timespec exchSendTime);
+    int addAsk(order* ask, timespec eventTime, timespec exchSendTime);
+    order_map _orderMap;
+    limit_tree _bidTree;
+    limit_tree _askTree;
     char _name[OB_NAME_LEN];
     timespec _evtTime;
     timespec _exchSndTime;
     uint32_t _depth;
 
-    KTree::iterator _findLimit(KTree&  tree, double price);
-    KOrderMap::iterator _findOrderId(uint32_t orderId);
+    limit_tree::iterator _findLimit(limit_tree&  tree, double price);
+    order_map::iterator _findOrderId(uint32_t orderId);
 };
 
 }  // namespace capk

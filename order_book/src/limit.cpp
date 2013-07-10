@@ -2,7 +2,7 @@
 
 namespace capk {
 
-std::ostream& operator<<(std::ostream& out, const capk::KLimit& limit) {
+std::ostream& operator<<(std::ostream& out, const capk::level& limit) {
   out <<  limit._price
       << ","
       << limit._totalVolume
@@ -11,18 +11,18 @@ std::ostream& operator<<(std::ostream& out, const capk::KLimit& limit) {
   return out;
 }
 
-KLimit::KLimit(double price, uint32_t totalVolume) {
+level::level(double price, uint32_t totalVolume) {
   _price = price;
   _totalVolume = totalVolume;
 }
 
-KLimit::~KLimit() {
+level::~level() {
 }
 
-int KLimit::addOrder(pKOrder order) {
+int level::addOrder(porder order) {
   uint32_t orderId = order->getOrderId();
 #ifdef DEBUG
-  std::cerr << "KLimit::addOrder - Orders size @ "
+  std::cerr << "level::addOrder - Orders size @ "
       << _price
       << ": "
       << _orders.size() << std::endl;
@@ -35,18 +35,18 @@ int KLimit::addOrder(pKOrder order) {
     return 0;
   }
   if (order) {
-    _orders.push_back(pKOrder(order));
+    _orders.push_back(porder(order));
     _addVolume(order->getSize());
     return 1;
   }
   return 0;
 }
 
-int KLimit::removeOrder(uint32_t orderId) {
+int level::removeOrder(uint32_t orderId) {
   return _removeOrder(orderId);
 }
 
-int KLimit::modifyOrder(uint32_t orderId, double size) {
+int level::modifyOrder(uint32_t orderId, double size) {
   Orders::iterator it = _findOrder(orderId);
   if (it != _orders.end()) {
     // Modify total volume
@@ -60,7 +60,7 @@ int KLimit::modifyOrder(uint32_t orderId, double size) {
 
 /*
 void
-KLimit::printAllOrders()
+level::debugPrint()
 {
     Orders::iterator it = _orders.begin();
     std::cerr << "LIMIT:" << _price << std::endl;
@@ -70,7 +70,7 @@ KLimit::printAllOrders()
 }
 */
 
-Orders::iterator KLimit::_findOrder(uint32_t orderId) {
+Orders::iterator level::_findOrder(uint32_t orderId) {
   // TODO(tkaria@capitalkpartners.com) linear search
   Orders::iterator it = _orders.begin();
   for (it = _orders.begin(); it != _orders.end(); it++) {
@@ -82,7 +82,7 @@ Orders::iterator KLimit::_findOrder(uint32_t orderId) {
   return it;
 }
 
-int KLimit::_removeOrder(uint32_t orderId) {
+int level::_removeOrder(uint32_t orderId) {
   if (_orders.size() == 0) {
     return 1;
   }
@@ -101,8 +101,9 @@ int KLimit::_removeOrder(uint32_t orderId) {
   return 0;
 }
 
-bool KLimitComp::operator() (pKLimit const& a, pKLimit const& b) {
-  return (*a) < (*b);
+bool level::operator() (const plevel& l1, const plevel& l2) {
+  return (*l1) < (*l2);
 }
+
 }  // namesapce capk
 

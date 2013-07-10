@@ -18,15 +18,15 @@
 
 namespace capk {
 
-class KBook;
+class order_book;
 
-class KLimit {
+class level {
   public:
-    KLimit(double price, uint32_t totalVolume = 0);
+    level(double price, uint32_t totalVolume = 0);
 
-    virtual ~KLimit();
+    virtual ~level();
 
-    int addOrder(pKOrder order);
+    int addOrder(porder order);
 
     int removeOrder(uint32_t orderId);
 
@@ -60,16 +60,18 @@ class KLimit {
       _msgSentTime = sentTime;
     }
 
-    bool operator<(const KLimit& rhs) const {
+    bool operator<(const level& rhs) const {
       return (this->_price < rhs.getPrice());
     }
 
-    bool operator>(const KLimit& rhs) const {
+    bool operator>(const level& rhs) const {
       return (this->_price > rhs.getPrice());
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const capk::KLimit& e);
-    friend std::ostream& operator<<(std::ostream& out, const capk::KBook& b);
+    bool operator()(const plevel& l1, const plevel& l2);
+
+    friend std::ostream& operator<<(std::ostream& out, const capk::level& e);
+    friend std::ostream& operator<<(std::ostream& out, const capk::order_book& b);
 
   private:
     Orders _orders;

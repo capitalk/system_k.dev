@@ -1,11 +1,10 @@
 #include "order_book.h"
 
-
 namespace capk {
 
-std::ostream& operator<<(std::ostream& out, const capk::KBook& b) {
-  capk::KTree::reverse_iterator bit = b._bidTree.rbegin();
-  capk::KTree::iterator ait = b._askTree.begin();
+std::ostream& operator<<(std::ostream& out, const capk::order_book& b) {
+  capk::limit_tree::reverse_iterator bit = b._bidTree.rbegin();
+  capk::limit_tree::iterator ait = b._askTree.begin();
   int i = 1;
   while (bit != b._bidTree.rend()) {
     out.unsetf(std::ios::fixed);
@@ -64,33 +63,33 @@ std::ostream& operator<<(std::ostream& out, const capk::KBook& b) {
   return out;
 }
 
-KBook::KBook(const char* name, size_t depth):_name({0}), _depth(depth) {
+order_book::order_book(const char* name, size_t depth):_name({0}), _depth(depth) {
   if (name) {
     strncpy(_name, name, OB_NAME_LEN-1);
     _name[OB_NAME_LEN-1] = '\0';
   }
 }
 
-KBook::~KBook() {
+order_book::~order_book() {
 }
 
-pKOrder KBook::getOrder(uint32_t orderId) {
-  KOrderMap::iterator it = _findOrderId(orderId);
+porder order_book::getOrder(uint32_t orderId) {
+  order_map::iterator it = _findOrderId(orderId);
   if (it == _orderMap.end()) {
-    return pKOrder();
+    return porder();
   } else {
     return it->second;
   }
 }
 
-int KBook::add(uint32_t orderId,
+int order_book::add(uint32_t orderId,
                Side_t buySell,
                double size,
                double price,
                timespec evtTime,
                timespec exchSndTime) {
   _exchSndTime = exchSndTime;
-  KOrder* pOrd = new KOrder(orderId, buySell, size, price);
+  order* pOrd = new order(orderId, buySell, size, price);
   if (buySell == BID) {
     return addBid(pOrd, evtTime, exchSndTime);
   }
@@ -100,49 +99,42 @@ int KBook::add(uint32_t orderId,
   return 0;
 }
 
-int KBook::addBid(KOrder* bid, timespec evtTime, timespec exchSndTime) {
+int order_book::addBid(order* bid, timespec evtTime, timespec exchSndTime) {
   if (bid) {
-    pKOrder pBid(bid);
-    KTree::iterator it = _findLimit(_bidTree, pBid->getPrice());
+    porder pBid(bid);
+    limit_tree::iterator it = _findLimit(_bidTree, pBid->getPrice());
     if (it != _bidTree.end()) {
       (*it)->addOrder(pBid);
       (*it)->setUpdateTime(evtTime);
       this->_evtTime = evtTime;
     } else {
-#ifdef DEBUG
-      std::cerr << "Adding new limit: " << pBid->getPrice() << std::endl;
-#endif
-      KLimit* newLimit = new KLimit(pBid->getPrice());
+      level* newLimit = new level(pBid->getPrice());
       newLimit->setUpdateTime(evtTime);
       newLimit->addOrder(pBid);
       this->_evtTime = evtTime;
-      _bidTree.insert(pKLimit(newLimit));
+      _bidTree.insert(plevel(newLimit));
     }
     uint32_t oid = bid->getOrderId();
     _orderMap[oid] = pBid;
-#ifdef DEBUG
-    KOrderMap::iterator xxx = _findOrderId(bid->getOrderId());
-    std::cerr << "MAP ENTRY: " << xxx->second->getOrderId() << std::endl;
-#endif
     return 1;
   }
   return 0;
 }
 
-int KBook::addAsk(KOrder* ask, timespec evtTime, timespec exchSndTime) {
+int order_book::addAsk(order* ask, timespec evtTime, timespec exchSndTime) {
   if (ask) {
-    pKOrder pAsk(ask);
-    KTree::iterator it = _findLimit(_askTree, ask->getPrice());
+    porder pAsk(ask);
+    limit_tree::iterator it = _findLimit(_askTree, ask->getPrice());
     if (it != _askTree.end()) {
       (*it)->addOrder(pAsk);
       (*it)->setUpdateTime(evtTime);
       _evtTime = evtTime;
     } else {
-      KLimit* newLimit = new KLimit(ask->getPrice());
+      level* newLimit = new level(ask->getPrice());
       newLimit->setUpdateTime(evtTime);
       newLimit->addOrder(pAsk);
       _evtTime = evtTime;
-      _askTree.insert(pKLimit(newLimit));
+      _askTree.insert(plevel(newLimit));
     }
     uint32_t oid = ask->getOrderId();
     _orderMap[oid] = pAsk;
@@ -151,23 +143,23 @@ int KBook::addAsk(KOrder* ask, timespec evtTime, timespec exchSndTime) {
   return 0;
 }
 
-void KBook::clear() {
+void order_book::clear() {
   _orderMap.clear();
   _bidTree.clear();
   _askTree.clear();
 }
 
-int KBook::remove(uint32_t orderId, timespec evtTime, timespec exchSndTime) {
+int order_book::remove(uint32_t orderId, timespec evtTime, timespec exchSndTime) {
   double limit;
   Side_t bidAsk;
   _exchSndTime = exchSndTime;
-  KOrderMap::iterator oit =  _findOrderId(orderId);
+  order_map::iterator oit =  _findOrderId(orderId);
   if (oit != _orderMap.end()) {
     limit = oit->second->getPrice();
     bidAsk = oit->second->getBuySell();
 
     if (bidAsk == BID) {
-      KTree::iterator bit = _findLimit(_bidTree, limit);
+      limit_tree::iterator bit = _findLimit(_bidTree, limit);
       if (bit != _bidTree.end()) {
         _orderMap.erase(orderId);
         int removeOk = (*bit)->removeOrder(orderId);
@@ -184,7 +176,7 @@ int KBook::remove(uint32_t orderId, timespec evtTime, timespec exchSndTime) {
       return 0;
     }
     if (bidAsk == ASK) {
-      KTree::iterator ait = _findLimit(_askTree, limit);
+      limit_tree::iterator ait = _findLimit(_askTree, limit);
       if (ait != _bidTree.end()) {
         _orderMap.erase(orderId);
         int removeOk = (*ait)->removeOrder(orderId);
@@ -204,7 +196,7 @@ int KBook::remove(uint32_t orderId, timespec evtTime, timespec exchSndTime) {
   return 0;
 }
 
-int KBook::modify(uint32_t orderId,
+int order_book::modify(uint32_t orderId,
                   double size,
                   timespec evtTime,
                   timespec exchSndTime) {
@@ -212,7 +204,7 @@ int KBook::modify(uint32_t orderId,
 // the map to get to the limit price. Then use the limit price
 // to search for the order in the tree
   _exchSndTime = exchSndTime;
-  KOrderMap::iterator it = _findOrderId(orderId);
+  order_map::iterator it = _findOrderId(orderId);
   if (it != _orderMap.end()) {
 // TODO(tkaria@capitalkpartners.com) Modify size directly in order
 // and have order notify its parent
@@ -221,7 +213,7 @@ int KBook::modify(uint32_t orderId,
 // TODO(tkaria@capitalkpartners.com) ask Hotspot
     double price = it->second->getPrice();
     Side_t bs = it->second->getBuySell();
-    KTree::iterator lit;
+    limit_tree::iterator lit;
     if (bs == BID) {
       lit  = _findLimit(_bidTree, price);
       if (lit == _bidTree.end()) {
@@ -242,8 +234,8 @@ int KBook::modify(uint32_t orderId,
   return 0;
 }
 
-uint32_t KBook::getTotalVolumeAtLimit(Side_t buySell, double price) {
-  KTree::iterator it;
+uint32_t order_book::getTotalVolumeAtLimit(Side_t buySell, double price) {
+  limit_tree::iterator it;
   if (buySell == BID) {
     it = _findLimit(_bidTree, price);
     if (it != _bidTree.end()) {
@@ -276,8 +268,8 @@ uint32_t KBook::getTotalVolumeAtLimit(Side_t buySell, double price) {
   return 0;
 }
 
-uint32_t KBook::getOrderCountAtLimit(Side_t buySell, double price) {
-  KTree::iterator it;
+uint32_t order_book::getOrderCountAtLimit(Side_t buySell, double price) {
+  limit_tree::iterator it;
   if (buySell == BID) {
     it = _findLimit(_bidTree, price);
     if (it != _bidTree.end()) {
@@ -307,16 +299,16 @@ uint32_t KBook::getOrderCountAtLimit(Side_t buySell, double price) {
   return 0;
 }
 
-double KBook::bestPriceVolume(Side_t buySell) {
+double order_book::bestPriceVolume(Side_t buySell) {
   double p = bestPrice(buySell);
   return getTotalVolumeAtLimit(buySell, p);
 }
 
-double KBook::bestPrice(Side_t buySell) {
+double order_book::bestPrice(Side_t buySell) {
   // printLevels(buySell);
   if (buySell == BID) {
     //  TODO(tkaria@capitalkpartners.com) - NOTE this does not support negative prices
-    KTree::reverse_iterator bit = _bidTree.rbegin();
+    limit_tree::reverse_iterator bit = _bidTree.rbegin();
     if (bit == _bidTree.rend()) {
       return NO_BID;
     }
@@ -324,7 +316,7 @@ double KBook::bestPrice(Side_t buySell) {
   }
   if (buySell == ASK) {
     //  TODO(tkaria@capitalkpartners.com) - NOTE this does not support negative prices
-    KTree::iterator ait = _askTree.begin();
+    limit_tree::iterator ait = _askTree.begin();
     if (ait == _askTree.end()) {
       return NO_ASK;
     }
@@ -334,16 +326,16 @@ double KBook::bestPrice(Side_t buySell) {
   return (-999999999);
 }
 
-void KBook::printLevels(Side_t buySell) {
+void order_book::printLevels(Side_t buySell) {
   if (buySell == BID) {
-    KTree::reverse_iterator bit = _bidTree.rbegin();
+    limit_tree::reverse_iterator bit = _bidTree.rbegin();
     while (bit != _bidTree.rend()) {
       std::cout << "BID: " << *(*bit) << "\n";
       bit++;
     }
   }
   if (buySell == ASK) {
-    KTree::reverse_iterator ait = _askTree.rbegin();
+    limit_tree::reverse_iterator ait = _askTree.rbegin();
     while (ait != _askTree.rend()) {
       std::cout << "ASK: " << *(*ait) << "\n";
       ait++;
@@ -351,29 +343,26 @@ void KBook::printLevels(Side_t buySell) {
   }
 }
 
-
-KTree::iterator KBook::_findLimit(KTree& tree, double price) {
-  KTree::iterator it;
-  KLimit* tmpLimit = new KLimit(price);
-  it = tree.find(pKLimit(tmpLimit));
+limit_tree::iterator order_book::_findLimit(limit_tree& tree, double price) {
+  limit_tree::iterator it;
+  level* tmpLimit = new level(price);
+  it = tree.find(plevel(tmpLimit));
   return it;
 }
 
-
-KOrderMap::iterator KBook::_findOrderId(uint32_t orderId) {
-  KOrderMap::iterator it = _orderMap.find(orderId);
+order_map::iterator order_book::_findOrderId(uint32_t orderId) {
+  order_map::iterator it = _orderMap.find(orderId);
   // assert(it != _orderMap.end());
   return it;
 }
 
-void KBook::dbg() {
-  KOrderMap::iterator it = _orderMap.begin();
+void order_book::dbg() {
+  order_map::iterator it = _orderMap.begin();
   std::cerr << "ORDER MAP\n";
   while (it != _orderMap.end()) {
     std::cerr << it->first << " : " << *(it->second) << "\n";
     it++;
   }
 }
-
 }  // namespace capk
 

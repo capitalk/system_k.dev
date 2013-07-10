@@ -8,15 +8,15 @@
 #include <list>
 
 namespace capk {
-    class KLimit;
-    class KOrder;
-    class KBook;
-    class KLimitComp;
-    typedef boost::shared_ptr<KLimit> pKLimit;
-    typedef boost::shared_ptr<KOrder> pKOrder;
-    typedef std::list<pKOrder> Orders;
-    typedef std::set<pKLimit, KLimitComp> KTree;
-    typedef std::map<uint32_t, pKOrder> KOrderMap;
+    class level;
+    class order;
+    class order_book;
+    class level_comparator;
+    typedef boost::shared_ptr<level> plevel;
+    typedef boost::shared_ptr<order> porder;
+    typedef std::list<porder> Orders;
+    typedef std::set<plevel, level_comparator> limit_tree;
+    typedef std::map<uint32_t, porder> order_map;
 }
 
 #endif  // ORDER_BOOK_ORDER_BOOK_V2_BOOK_TYPES_H_

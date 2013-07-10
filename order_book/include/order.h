@@ -15,11 +15,11 @@
 
 namespace capk {
 
-class KOrder {
+class order {
   public:
-    KOrder(uint32_t orderId, Side_t buySell, double size, double price);
+    order(uint32_t orderId, Side_t buySell, double size, double price);
 
-    ~KOrder();
+    ~order();
 
     inline void setSize(double size) {
       _size = size;
@@ -57,11 +57,11 @@ class KOrder {
       return _buySell;
     }
 
-    bool operator<(const KOrder& rhs) const {
+    bool operator<(const order& rhs) const {
       return (this->getPrice() < rhs.getPrice());
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const KOrder& e);
+    friend std::ostream& operator<<(std::ostream& out, const order& e);
 
   private:
     uint32_t _orderId;
@@ -71,9 +71,9 @@ class KOrder {
 };
 
 /*
-struct KOrderComp : public std::binary_function<pKOrder, pKOrder, bool>
+struct KOrderComp : public std::binary_function<porder, porder, bool>
 {
-    bool operator() (pKOrder const& a, pKOrder const& b) {
+    bool operator() (porder const& a, porder const& b) {
         return (*a) < (*b);
     }
 }

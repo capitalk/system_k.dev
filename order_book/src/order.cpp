@@ -2,7 +2,7 @@
 
 namespace capk {
 
-std::ostream& operator<<(std::ostream& out, const capk::KOrder& e) {
+std::ostream& operator<<(std::ostream& out, const capk::order& e) {
   out << "ORDER: "
       << ":"
       << e._orderId
@@ -15,7 +15,7 @@ std::ostream& operator<<(std::ostream& out, const capk::KOrder& e) {
   return out;
 }
 
-KOrder::KOrder(uint32_t orderId,
+order::order(uint32_t orderId,
                capk::Side_t buySell,
                double size,
                double price) {
@@ -25,7 +25,7 @@ KOrder::KOrder(uint32_t orderId,
   _price = price;
 }
 
-KOrder:: ~KOrder() {
+order:: ~order() {
 }
 
 }  // namespace capk
