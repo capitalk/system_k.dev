@@ -1,6 +1,17 @@
+# @configure_input@
+
+# Package-related substitution variables
+package = @PACKAGE_NAME@
+version = @PACKAGE_VERSION@
+tarname = @PACKAGE_TARNAME@
+distdir = $(tarname)-$(version)
+
+# Prefix-related substitution variables
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
 
 AUTOMAKE_OPTIONS = subdir-objects
-
 
 includedir = ./include
 common_includedir = ../common/src/c++

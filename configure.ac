@@ -6,5 +6,6 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_SUBDIRS([order_book/Makefile market_data/collect-fix/Makefile])
+AC_CONFIG_SUBDIRS([order_book])
+AC_CONFIG_SUBDIRS([market_data/fix])
 AC_OUTPUT

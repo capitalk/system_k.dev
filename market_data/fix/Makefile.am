@@ -11,8 +11,6 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
 
-#SUBDIRS = ../../order_book
-
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 
 common_includedir = ../../common
@@ -22,7 +20,7 @@ orderbook_libs = ../../order_book/.libs
 
 bin_PROGRAMS = md_fix
 
-md_fix_CPPFLAGS = 
+md_fix_CPPFLAGS = -std=c++0x
 
 md_fix_CXXFLAGS = -I $(common_includedir) \
               -I $(orderbook_includedir) \
@@ -32,8 +30,6 @@ md_fix_CXXFLAGS = -I $(common_includedir) \
               -I../.. \
               -I ${PANTHEIOS_PFX}/include \
               -I ${STLSOFT_PFX}/include 
-
-#md_fix_LDFLAGS = -Wl, -Bstatic 
 
 md_fix_LDADD = -L$(orderbook_libs) \
                -lorderbook-0.0.0
