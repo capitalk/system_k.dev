@@ -101,7 +101,7 @@ int level::_removeOrder(uint32_t orderId) {
   return 0;
 }
 
-bool level::operator() (const plevel& l1, const plevel& l2) {
+bool level_comparator::operator() (const plevel& l1, const plevel& l2) {
   return (*l1) < (*l2);
 }
 
