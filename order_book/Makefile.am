@@ -42,6 +42,8 @@ liborderbook_0_0_0_la_SOURCES = src/limit.cpp \
                     include/order.h \
                     include/order_book.h \
                     include/book_types.h \
+                    ../common/src/c++/utils/types.h \
+                    ../common/src/c++/utils/constants.h \
                     ../common/src/c++/utils/time_utils.cpp \
                     ../common/src/c++/utils/time_utils.h
 
