@@ -11,7 +11,7 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
 
-SUBDIRS = ../../order_book
+#SUBDIRS = ../../order_book
 
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 
@@ -31,7 +31,7 @@ md_fix_CXXFLAGS = -I $(common_includedir) \
               -I ${PANTHEIOS_PFX}/include \
               -I ${STLSOFT_PFX}/include 
 
-#md_fix_LDFLAGS = -L$(orderbook_libs)
+#md_fix_LDFLAGS = -Wl, -Bstatic 
 
 md_fix_LDADD = -L$(orderbook_libs) \
                -lorderbook-0.0.0
@@ -54,6 +54,9 @@ md_fix_SOURCES = src/md_broadcast.cpp \
   ../../common/proto/capk_globals.pb.cc 
 
 if ENABLE_LOG 
+md_fix_SOURCES += ../../common/src/c++/utils/logging.cpp \
+                  ../../common/src/c++/utils/logging.h \
+                  ../../common/pantheios_be_zmq/pantheios_be_zmq.cpp 
 md_fix_CPPFLAGS += -DLOG
 md_fix_LDADD += -L$(PANTHEIOS_PFX)/lib \
                -lpantheios.1.core.gcc44.file64bit.mt \
@@ -64,9 +67,6 @@ md_fix_LDADD += -L$(PANTHEIOS_PFX)/lib \
                -lpantheios.1.bec.fprintf.gcc44.file64bit.mt \
                -lpantheios.1.util.gcc44.file64bit.mt \
                -lpantheios.1.core.gcc44.file64bit.mt 
-md_fix_SOURCES += ../../common/pantheios_be_zmq/pantheios_be_zmq.cpp \
-                  ../../common/src/c++/utils/logging.cpp \
-                  ../../common/src/c++/utils/logging.h 
 endif
 
 dist_noinst_SCRIPTS = autogen.sh

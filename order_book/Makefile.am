@@ -30,7 +30,9 @@ liborderbook_0_0_0_la_SOURCES = src/limit.cpp \
                     include/limit.h \
                     include/order.h \
                     include/order_book.h \
-                    include/book_types.h
+                    include/book_types.h \
+                    ../common/src/c++/utils/time_utils.cpp \
+                    ../common/src/c++/utils/time_utils.h
 
 dist_noinst_SCRIPTS = autogen.sh
 

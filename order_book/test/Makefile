@@ -25,7 +25,7 @@ LIBS=-L$(SRC) \
    -lboost_system \
 	 -lgtest 
 
-CFLAGS=-Wall  -std=c++0x -ggdb -DDEBUG
+CFLAGS=-Wall  -std=c++0x -ggdb -DDEBUG  -Wl,--as-needed
 
 all: orderbook-0.0.0.a unit_test perf_test
 
@@ -33,7 +33,7 @@ orderbook-0.0.0.a:
 	cd .. && make 
 
 unit_test : orderbook-0.0.0.a unit_test.o 
-	$(CC) unit_test.o  $(LIBS) -lorderbook-0.0.0 -o $@   
+	$(CC) unit_test.o  $(LIBS) -Bstatic -lorderbook-0.0.0 -o $@   
 
 unit_test.o: unit_test.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) unit_test.cpp
