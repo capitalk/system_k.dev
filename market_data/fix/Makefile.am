@@ -53,6 +53,8 @@ md_fix_SOURCES = src/md_broadcast.cpp \
   ../../common/proto/capk_globals.pb.h \
   ../../common/proto/capk_globals.pb.cc 
 
+gcc_version = gcc@GCC_VERSION_MAJOR@@GCC_VERSION_MINOR@
+
 if ENABLE_LOG 
 md_fix_SOURCES += ../../common/src/c++/utils/logging.cpp \
                   ../../common/src/c++/utils/logging.h 

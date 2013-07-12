@@ -8,7 +8,7 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_MKDIR_P
 
-AC_CONFIG_SUBDIRS([../../order_book])
+#AC_CONFIG_SUBDIRS([../../order_book])
 
 
 # Safety check for wrong --srcdir argument - file must exist in src directory
@@ -148,9 +148,9 @@ AC_SUBST(QUICKFIX_PFX)
 
 AC_DEFUN([AX_GCC_VERSION], [
   GCC_VERSION=""
-  AX_CHECK_COMPILE_FLAG([-dumpversion],
-     [ax_gcc_version_option=yes],
-     [ax_gcc_version_option=no])
+  #AX_CHECK_COMPILE_FLAG([-dumpversion],
+     #[ax_gcc_version_option=yes],
+     #[ax_gcc_version_option=no])
 
   AS_IF([test "x$GCC" = "xyes"],[
     AS_IF([test "x$ax_gcc_version_option" != "xno"],[
@@ -164,11 +164,16 @@ AC_DEFUN([AX_GCC_VERSION], [
     ])
   ])
   AC_SUBST([GCC_VERSION])
+  GCC_VERSION_MAJOR=$(echo $GCC_VERSION | cut -d'.' -f1)
+  GCC_VERSION_MINOR=$(echo $GCC_VERSION | cut -d'.' -f2)
+  GCC_VERSION_PATCH=$(echo $GCC_VERSION | cut -d'.' -f3)
+  AC_SUBST(GCC_VERSION_MAJOR)
+  AC_SUBST(GCC_VERSION_MINOR)
+  AC_SUBST(GCC_VERSION_PATCH)
 ])
 
-GCC_VERSION_MAJOR=$(echo $GCC_VERSION | cut -d'.' -f1)
-GCC_VERSION_MINOR=$(echo $GCC_VERSION | cut -d'.' -f2)
-GCC_VERSION_PATCH=$(echo $GCC_VERSION | cut -d'.' -f3)
+AX_GCC_VERSION()
+
 
 # Checks for libraries.
 AC_CHECK_LIB([boost_date_time], [main])
@@ -183,7 +188,7 @@ AC_CHECK_LIB([pthread], [main])
 AC_CHECK_LIB([quickfix], [main])
 AC_CHECK_LIB([rt], [main])
 AC_CHECK_LIB([zmq], [main])
-AC_CHECK_LIB([pantheios.1.core.gcc44.file64bit], [main])
+#AC_CHECK_LIB([pantheios.1.core.gcc44.file64bit], [main])
 
 # Check header files
 AC_CHECK_HEADERS([arpa/inet.h float.h inttypes.h limits.h malloc.h memory.h netdb.h stdint.h stdlib.h string.h sys/socket.h unistd.h quickfix/Session.h boost/program_options.hpp zmq.hpp util/config_server.h])
