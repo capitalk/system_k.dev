@@ -1,5 +1,7 @@
 #include "logging.h"
+#ifdef PAN_BE_ZMQ
 #include "pantheios_be_zmq/pantheios_be_zmq.h"
+#endif // PAN_BE_ZMQ
 
 //extern const PAN_CHAR_T PANTHEIOS_FE_PROCESS_IDENTITY[];
 

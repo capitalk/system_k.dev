@@ -14,7 +14,6 @@ bindir = @bindir@
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 
 common_includedir = ../../common
-pantheios_be_zmq_includedir = ../../..
 orderbook_includedir = ../../order_book/include
 orderbook_libs = ../../order_book/.libs
 
@@ -24,7 +23,6 @@ md_fix_CPPFLAGS = -std=c++0x
 
 md_fix_CXXFLAGS = -I $(common_includedir) \
               -I $(orderbook_includedir) \
-              -I $(pantheios_be_zmq_includedir) \
               -I $(common_includedir)/src/c++/ \
               -I $(common_includedir)/proto \
               -I../.. \
@@ -57,8 +55,7 @@ md_fix_SOURCES = src/md_broadcast.cpp \
 
 if ENABLE_LOG 
 md_fix_SOURCES += ../../common/src/c++/utils/logging.cpp \
-                  ../../common/src/c++/utils/logging.h \
-                  ../../../pantheios_be_zmq/pantheios_be_zmq.cpp 
+                  ../../common/src/c++/utils/logging.h 
 
 md_fix_CPPFLAGS += -DLOG
 

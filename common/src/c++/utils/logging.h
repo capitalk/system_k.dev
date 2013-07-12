@@ -4,7 +4,7 @@
 // Primary header file, always be included
 #include "pantheios/pantheios.hpp" 
 
-// Inserters for ridiculous type safety mechanism in Pantheios
+// Inserters for type safety mechanism in Pantheios
 #include "pantheios/inserters/boolean.hpp"
 #include "pantheios/inserters/character.hpp"
 #include "pantheios/inserters/args.hpp"
