@@ -28,12 +28,12 @@ FIXConvertors::UTCTimeStampToPTime(FIX::UtcTimeStamp& t, char* buf, const int bu
 
     pt = time_from_string(buf);
     //std::cerr << "ORIG: (" <<buf << ") " << "PTIME: (" << pt << ")" << std::endl;
-    return true;
 #ifdef DEBUG
     ptime time_end(microsec_clock::local_time());
     time_duration duration(time_end - time_start);
     std::cout << __FILE__ << " " <<  __FUNCTION__ << " execution time: " << duration << '\n';
 #endif // DEBUG
+    return true;
 
 }
 
