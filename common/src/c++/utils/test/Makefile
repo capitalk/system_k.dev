@@ -12,7 +12,6 @@ SRC=..
 
 INCLUDE=-I$(SRC) \
 		-I$(UTILS) \
-		-I $(PANTHEIOS_ROOT)/include \
 		-I $(STLSOFT)/include 
 
 LIBS= -lquickfix \
@@ -25,16 +24,6 @@ LIBS= -lquickfix \
 		-lboost_thread \
 		-lgtest 
 
-
-PANTHEIOS_LIBS= -L $(PANTHEIOS_ROOT)/lib \
-        -l pantheios.1.core.gcc44.file64bit \
-        -l pantheios.1.fe.simple.gcc44.file64bit.debug \
-        -l pantheios.1.util.gcc44.file64bit \
-		-l pantheios.1.be.N.gcc44.file64bit \
-        -l pantheios.1.bec.file.gcc44.file64bit \
-        -l pantheios.1.bec.fprintf.gcc44.file64bit \
-        -l pantheios.1.util.gcc44.file64bit \
-        -l pantheios.1.core.gcc44.file64bit 
 
 CFLAGS=-Wall -std=c++0x -pthread -O3 -DLOG
 LDFLAGS=-static
@@ -62,28 +51,28 @@ test_time_compare.o: test_time_compare.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 test_time_compare: test_time_compare.o time_utils.o
-	$(CC) $(CFLAGS) $?  $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+	$(CC) $(CFLAGS) $?  $(LIBS) -o $@ 
 
-uuidgen_test.o: uuidgen_test.cpp
+test_uuidgen.o: test_uuidgen.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-uuidgen_test: uuidgen_test.o
-	$(CC) $(CFLAGS) $< $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+test_uuidgen: test_uuidgen.o
+	$(CC) $(CFLAGS) $< $(LIBS) -o $@ 
 
 zmq_version.o: zmq_version.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
 zmq_version: zmq_version.o 
-	$(CC) $(CFLAGS) $< $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+	$(CC) $(CFLAGS) $< $(LIBS) -o $@ 
 
-timespec2str_test.o: timespec2str_test.cpp
+test_timespec2str.o: test_timespec2str.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $<
 
-timespec2str_test: timespec2str_test.o time_utils.o fix_convertors.o
-	$(CC) $(CFLAGS) $^ $(LIBS) $(PANTHEIOS_LIBS) -o $@ 
+test_timespec2str: test_timespec2str.o time_utils.o fix_convertors.o
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ 
 
-test: uuidgen_test zmq_version timespec2str_test test_time_compare 
+test: test_uuidgen zmq_version test_timespec2str test_time_compare 
 
 clean :
-	rm -f *.o uuidgen_test zmq_version timespec2str_test test_time_compare
+	rm -f *.o test_uuidgen zmq_version test_timespec2str test_time_compare
 
