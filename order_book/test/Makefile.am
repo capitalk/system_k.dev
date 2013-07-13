@@ -39,7 +39,7 @@ unit_test.o: unit_test.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) unit_test.cpp
 
 perf_test : orderbook-0.0.0.a perf_test.o 
-	$(CC) perf_test.o  $(LIBS) -lorderbook-0.0.0 -o $@   
+	$(CC) perf_test.o  $(LIBS) -Bstatic -lorderbook-0.0.0 -o $@   
 
 perf_test.o: perf_test.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) perf_test.cpp
