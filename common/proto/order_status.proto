@@ -1,39 +1,59 @@
+//
+// System K - A framework for building trading applications and analysis
+// Copyright (C) 2013 Timir Karia <tkaria@capitalkpartners.com>
+//
+// This file is part of System K.
+//
+// System K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// System K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with System K.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 package capkproto;
 
 import "capk_globals.proto";
 
 message order_status {
-    optional bytes		order_id		= 1;
-    optional bytes		cl_order_id	    = 2;
-    optional bytes		strategy_id		= 3;
-    optional string		symbol			= 4;
-	optional side_t		side			= 5;
+  optional bytes		order_id		  = 1;
+  optional bytes		cl_order_id	  = 2;
+  optional bytes		strategy_id		= 3;
+  optional string		symbol		    = 4;
+	optional side_t		side			    = 5;
 	optional string		security_type	= 6;
 }
 
 message group_no_orders {
-    optional bytes		cl_order_id		= 1;
-	optional double		cum_qty			= 2;
+  optional bytes		cl_order_id		= 1;
+	optional double		cum_qty			  = 2;
 	optional sfixed32	ord_status		= 3;
 	optional double		leaves_qty		= 4;
-	optional double		cxl_qty			= 5;
+	optional double		cxl_qty			  = 5;
 	optional sfixed32	time_in_force	= 6;
-	optional double		avg_px			= 7;
-	optional string		text			= 8;
-	optional string		order_id		= 9;
-	optional string		symbol			= 10;
-	optional side_t		side			= 11;
-	optional sfixed32	ord_type		= 12;
+	optional double		avg_px			  = 7;
+	optional string		text			    = 8;
+	optional string		order_id	  	= 9;
+	optional string		symbol		  	= 10;
+	optional side_t		side			    = 11;
+	optional sfixed32	ord_type	  	= 12;
 }
 
 message list_status {
-	optional string		list_id			= 1;
-	optional sfixed32	list_status_type= 2; // always == 2
-	optional sfixed32	no_rpts			= 3; // always == 1
-	optional sfixed32	list_order_status= 4; // always == 1
-	optional sfixed32	rpt_seq			= 5; // always == 1	
-	optional string		text			= 6; 
-	optional sfixed32	tot_no_orders	= 7; // should be equal to no_orders in repeated group no_orders - not used in the protobuf since it is redundant to have no_orders in each repeated group
+	optional string		list_id			      = 1;
+	optional sfixed32	list_status_type  = 2; // always == 2
+	optional sfixed32	no_rpts			      = 3; // always == 1
+	optional sfixed32	list_order_status = 4; // always == 1
+	optional sfixed32	rpt_seq			      = 5; // always == 1	
+	optional string		text			        = 6; 
+	optional sfixed32	tot_no_orders	    = 7; // should be equal to no_orders in repeated group no_orders - not used in the protobuf since it is redundant to have no_orders in each repeated group
 	repeated group_no_orders order_status_list = 9;
 }
 

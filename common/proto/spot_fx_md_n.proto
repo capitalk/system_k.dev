@@ -1,41 +1,66 @@
+//
+// System K - A framework for building trading applications and analysis
+// Copyright (C) 2013 Timir Karia <tkaria@capitalkpartners.com>
+//
+// This file is part of System K.
+//
+// System K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// System K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with System K.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 package capkproto;
 
 import "capk_globals.proto";
 
-// Change this to single market bbo
+// One layer in an orderbook
 message single_market_layer {
-    required sfixed32 venue_id = 2;
-    required double bid_size = 3;
-    required double bid_price = 4;
-    required double ask_size = 5;
-    required double ask_price = 6;
+  required sfixed32 venue_id = 2;
+  required double bid_size = 3;
+  required double bid_price = 4;
+  required double ask_size = 5;
+  required double ask_price = 6;
 }
 
+// BBO for a single market
 message single_market_level_1 {
-    required string symbol = 1;
-    required single_market_layer layer = 2;
+  required string symbol = 1;
+  required single_market_layer layer = 2;
 }
+
+// Full book (arbitrary depth) for single market
 message single_market_level_n {
-    required string symbol = 1;
-    repeated single_market_layer layers = 2;
+  required string symbol = 1;
+  repeated single_market_layer layers = 2;
 }
 
 // A single layer of price from multiple markets
 message multi_market_instrument_layer {
-    required sfixed32 bid_venue_id = 2;
-    required double bid_price = 3;
-    required double bid_size = 4;
-    required sfixed32 ask_venue_id = 5;
-    required double ask_price = 6;
-    required double ask_size = 7;
+  required sfixed32 bid_venue_id = 2;
+  required double bid_price = 3;
+  required double bid_size = 4;
+  required sfixed32 ask_venue_id = 5;
+  required double ask_price = 6;
+  required double ask_size = 7;
 }
 
+// Multi market layer
 message multi_market_instrument_level_1 {
-    required string symbol = 1;
-    required multi_market_instrument_layer layer = 2;
+  required string symbol = 1;
+  required multi_market_instrument_layer layer = 2;
 }
+
 // Depth order book for multiple markets
 message multi_market_level_n {
-    required string symbol = 1;
-    repeated multi_market_instrument_layer layers = 2;
+  required string symbol = 1;
+  repeated multi_market_instrument_layer layers = 2;
 }

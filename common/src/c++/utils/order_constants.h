@@ -1,3 +1,23 @@
+//
+// System K - A framework for building trading applications and analysis
+// Copyright (C) 2013 Timir Karia <tkaria@capitalkpartners.com>
+//
+// This file is part of System K.
+//
+// System K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// System K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with System K.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 #ifndef __ORDER_CONSTANTS_H__
 #define __ORDER_CONSTANTS_H__
 
@@ -16,74 +36,74 @@ namespace capk {
 
 
 enum internal_order_state {
-    INT_STATE_PENDING_CANCEL = 12,
-	INT_STATE_PENDING_REPLACE = 11,
-	INT_STATE_DONE_FOR_DAY = 10,
-	INT_STATE_CALCULATED = 9,
-	INT_STATE_FILLED = 8,
-    INT_STATE_STOPPED = 7,
-    INT_STATE_SUSPENDED = 6,
-    INT_STATE_CANCELED = 5,
-    INT_STATE_EXPIRED = 5,
-    INT_STATE_PARTIALLY_FILLED = 4,
-    INT_STATE_REPLACED = 3,
-    INT_STATE_NEW = 2,
-    INT_STATE_REJECTED = 2,
-    INT_STATE_PENDING_NEW = 2,
-    INT_STATE_ACCEPTED_FOR_BIDDING = 1,
-    INT_STATE_UNINIT = 0
+  INT_STATE_PENDING_CANCEL = 12,
+  INT_STATE_PENDING_REPLACE = 11,
+  INT_STATE_DONE_FOR_DAY = 10,
+  INT_STATE_CALCULATED = 9,
+  INT_STATE_FILLED = 8,
+  INT_STATE_STOPPED = 7,
+  INT_STATE_SUSPENDED = 6,
+  INT_STATE_CANCELED = 5,
+  INT_STATE_EXPIRED = 5,
+  INT_STATE_PARTIALLY_FILLED = 4,
+  INT_STATE_REPLACED = 3,
+  INT_STATE_NEW = 2,
+  INT_STATE_REJECTED = 2,
+  INT_STATE_PENDING_NEW = 2,
+  INT_STATE_ACCEPTED_FOR_BIDDING = 1,
+  INT_STATE_UNINIT = 0
 };
 typedef enum internal_order_state OrderState_t;
 
 // Exec transaction type - FIX tag 20
 enum exec_trans_type {
-    NO_EXEC_TRAN = -1,
-	EXEC_TRAN_NEW = '0',
-	EXEC_TRAN_CANCEL = '1',
-	EXEC_TRAN_CORRECT = '2',
-	EXEC_TRAN_STATUS = '3'
+  NO_EXEC_TRAN = -1,
+  EXEC_TRAN_NEW = '0',
+  EXEC_TRAN_CANCEL = '1',
+  EXEC_TRAN_CORRECT = '2',
+  EXEC_TRAN_STATUS = '3'
 };
 typedef enum exec_trans_type ExecTransType_t;
 
 // Order status - FIX tag 39
 enum ord_status {
-    NO_ORD_STATUS = -1,
-	ORD_STATUS_NEW = '0',
-	ORD_STATUS_PARTIAL_FILL = '1',
-	ORD_STATUS_FILL = '2',
-	ORD_STATUS_DONE_FOR_DAY = '3',
-	ORD_STATUS_CANCELLED = '4',
-	ORD_STATUS_REPLACE = '5',
-	ORD_STATUS_PENDING_CANCEL = '6',
-	ORD_STATUS_STOPPED = '7',
-	ORD_STATUS_REJECTED = '8',
-	ORD_STATUS_SUSPENDED = '9',
-	ORD_STATUS_PENDING_NEW = 'A',
-	ORD_STATUS_CALCULATED = 'B',
-	ORD_STATUS_EXPIRED = 'C',
-	ORD_STATUS_RESTATED = 'D',
-	ORD_STATUS_PENDING_REPLACE = 'E'
+  NO_ORD_STATUS = -1,
+  ORD_STATUS_NEW = '0',
+  ORD_STATUS_PARTIAL_FILL = '1',
+  ORD_STATUS_FILL = '2',
+  ORD_STATUS_DONE_FOR_DAY = '3',
+  ORD_STATUS_CANCELLED = '4',
+  ORD_STATUS_REPLACE = '5',
+  ORD_STATUS_PENDING_CANCEL = '6',
+  ORD_STATUS_STOPPED = '7',
+  ORD_STATUS_REJECTED = '8',
+  ORD_STATUS_SUSPENDED = '9',
+  ORD_STATUS_PENDING_NEW = 'A',
+  ORD_STATUS_CALCULATED = 'B',
+  ORD_STATUS_EXPIRED = 'C',
+  ORD_STATUS_RESTATED = 'D',
+  ORD_STATUS_PENDING_REPLACE = 'E'
 };
 typedef enum ord_status OrdStatus_t;
 
 // Exec types - FIX tag 150
 enum exec_type {
-    NO_EXEC_TYPE = -1,
-	EXEC_TYPE_NEW = '0',
-	EXEC_TYPE_PARTIAL_FILL = '1',
-	EXEC_TYPE_FILL = '2',
-	EXEC_TYPE_DONE_FOR_DAY = '3',
-	EXEC_TYPE_CANCELLED = '4',
-	EXEC_TYPE_REPLACE = '5',
-	EXEC_TYPE_PENDING_CANCEL = '6',
-	EXEC_TYPE_STOPPED = '7',
-	EXEC_TYPE_REJECTED = '8',
-	EXEC_TYPE_SUSPENDED = '9',
-	EXEC_TYPE_PENDING_NEW = 'A',
-	EXEC_TYPE_CALCULATED = 'B',
-	EXEC_TYPE_EXPIRED = 'C',
-	EXEC_TYPE_RESTATED = 'D',
-	EXEC_TYPE_PENDING_REPLACE = 'E'	
+  NO_EXEC_TYPE = -1,
+  EXEC_TYPE_NEW = '0',
+  EXEC_TYPE_PARTIAL_FILL = '1',
+  EXEC_TYPE_FILL = '2',
+  EXEC_TYPE_DONE_FOR_DAY = '3',
+  EXEC_TYPE_CANCELLED = '4',
+  EXEC_TYPE_REPLACE = '5',
+  EXEC_TYPE_PENDING_CANCEL = '6',
+  EXEC_TYPE_STOPPED = '7',
+  EXEC_TYPE_REJECTED = '8',
+  EXEC_TYPE_SUSPENDED = '9',
+  EXEC_TYPE_PENDING_NEW = 'A',
+  EXEC_TYPE_CALCULATED = 'B',
+  EXEC_TYPE_EXPIRED = 'C',
+  EXEC_TYPE_RESTATED = 'D',
+  EXEC_TYPE_PENDING_REPLACE = 'E'	
 };
 typedef enum exec_type ExecType_t;
 

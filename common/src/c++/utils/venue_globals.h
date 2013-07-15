@@ -1,3 +1,23 @@
+//
+// System K - A framework for building trading applications and analysis
+// Copyright (C) 2013 Timir Karia <tkaria@capitalkpartners.com>
+//
+// This file is part of System K.
+//
+// System K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// System K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with System K.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 #ifndef CAPK_VENUE_GLOBALS
 #define CAPK_VENUE_GLOBALS
 
@@ -50,8 +70,6 @@ namespace capk
     const char* const FAST_ORDER_PING_ADDR = "tcp://127.0.0.1:7997";
     const char* const FAST_BROADCAST_ADDR = "tcp://127.0.0.1:5997";
 
-
-
     // GAIN MIC and venue info
     const char* const GAIN_BROADCAST_ADDR = "tcp://127.0.0.1:5996";
 
@@ -61,12 +79,10 @@ namespace capk
     const char* const IBRK_DEV_MIC_STRING = "IBRK.dev";
     const venue_id_t IBRK_VENUE_ID = 342234;
 
-
     // Trade serialization service address
     //const char* const kTRADE_SERIALIZATION_ADDR = "tcp://127.0.0.1:9898";
     const char* const TRADE_SERIALIZATION_ADDR = "ipc:///tmp/trade_serializer";
     const char* const RECOVERY_LISTENER_ADDR = "ipc:///tmp/recovery";
-
 }
 
 #endif // CAPK_VENUE_GLOBALS

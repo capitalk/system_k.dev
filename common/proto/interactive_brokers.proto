@@ -1,31 +1,51 @@
+//
+// System K - A framework for building trading applications and analysis
+// Copyright (C) 2013 Timir Karia <tkaria@capitalkpartners.com>
+//
+// This file is part of System K.
+//
+// System K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// System K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with System K.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 package capkproto;
 
 import "capk_globals.proto";
 
 message interactive_brokers_bbo {
-    required sfixed32 venue_id = 1;
-    required string symbol = 2;
-    required double bid_size = 3;
-    required double bid_price = 4;
-    required double ask_size = 5;
-    required double ask_price = 6;
+    required sfixed32 venue_id  = 1;
+    required string symbol      = 2;
+    required double bid_size    = 3;
+    required double bid_price   = 4;
+    required double ask_size    = 5;
+    required double ask_price   = 6;
 }
 
 message interactive_brokers_contract {
-    required sfixed32 conId = 1;
-    optional string symbol = 2;
-    optional string secType = 3;
-    optional string expiry = 4;
-    optional double strike = 5;
-    optional string right = 6;
-    optional string multiplier = 7;
-    optional string exchange = 8;
+    required sfixed32 conId     = 1;
+    optional string symbol      = 2;
+    optional string secType     = 3;
+    optional string expiry      = 4;
+    optional double strike      = 5;
+    optional string right       = 6;
+    optional string multiplier  = 7;
+    optional string exchange    = 8;
     optional string primaryExchagne = 9;
-    optional string currency = 10;
+    optional string currency    = 10;
     optional string localSymbol = 11;
     optional bool includeExpired = 12;
-    optional string secIdType = 13; // could be CUSIP; SEDOL; ISIN; RIC
-    optional string secId = 14;
+    optional string secIdType   = 13; // could be CUSIP; SEDOL; ISIN; RIC
+    optional string secId       = 14;
   
 }
 
