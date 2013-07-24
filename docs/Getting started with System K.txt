@@ -1,0 +1,88 @@
+
+Hi Teresa,
+
+I think it's best to give you an overview of what we've done; where we are; and what this project is all about. I'm not big on secrets from people that work with me so if you have any questions at all or anything is unclear please don't hesitate to ask. 
+
+But first some administrative stuff:
+1) I've created an account in capitalkpartners.com for you - you can forward it if you like to any account but it's easier for me to send you links to google docs; use chat and video; and administer if you're on the domain. 
+
+2) You'll need to signup for a github account (it's free since you'll be a member of capitalk organization). And then I'll add you to the capitalk repositories. Once you create a user (https://github.com/signup/free) you'll need to generate a key for access (https://help.github.com/articles/generating-ssh-keys) You have push and pull (read and write access in git parlance) so please use caution. If you're unsure of something please ask me (not to make you paranoid but better safe than sorry - you'll get used to git quickly I'm sure).
+
+Why we started:
+I left my position as head of automated market making at an Amsterdam trading firm (AllOptions) in Jan 2011. After a few months of rest I decided to start my own firm focused on foreign exchange (FX). I chose FX becasue I had seen that the equities trading space had become crowded and requiring more expensive infrastructure than ever and FX was still fragmented and slow. 
+
+We looked at several trading system options but none had the flexibility that we desired so we set out to build one that would be easily distributed and extensible. That's the code that you see now. But it's quite messy and not documented for anyone else to use. 
+
+However in the time after 2008 it has become increasingly hard for the smaller players to get credit from prime brokerages for FX trading. So without at least USD 10M in capital we were unable to start as we wanted. To this end we decided it was time to monetize the software assets that we have now. In the end we would like to provide a solution for other firms like ours that don't have the skills or time to develop software that we have. Further, I think there's a real need in the market for a professional grade piece of software that can handle very large order flow and market data. To that end I would like to cleanup the source code and make it available for public consumption starting with the market data and aggregated book (order book created from multiple markets). 
+
+So it's time for a major code overhaul before public release. We'll start with the market data collectors and core data structures like the order book and protocol buffers and then move further if there's a decent reception. 
+
+Where we go:
+I'd like to put out the market data code and some supplementary code like the order book, protocol buffers, and aggregated book to get started. Then we'll see how it's received. If well, then I will approach all the FX dealers I know and attempt to create a resource where smaller traders can still access the same pool of liquidity. I think this in itself is a compelling offering for many small to medium size trading shops. 
+
+Tools we use:
+Git/Github.com - for source control - we have several repositories right now and the split between them is not ideal. We'll need to discuss how to clean it up but this should not hinder making progress for now. I sent you a good book for this but I think the best resource is the web. 
+	Resources: 
+	http://help.github.com
+
+Getting setup:
+AWS
+Generate a keypair
+Mail me the PUBLIC part of they key only - ends with .pub
+
+
+Quickfix - www.quickfixengine.com. We use the C++ version of this software currently. I don't like it at all but I haven't had time to write a replacement. It works and is tested but it is slow. I would like to test and move to fix8 if the performance is better. See http://www.fix8.org. This is not something we need to do now but I'd like to build the market data software so that people can move easily betweenn whatever FIX engine they like. 
+	Resources:
+	http://www.quickfixengine.com
+	http://sourceforge.net/mail/?group_id=37535 - this is the quickfix mailing list 
+	http://www.quickfixengine.org/forum/people.php?PageAction=SignOutNow&ReturnUrl=http://www.quickfixengine.org/forum/ - this is the discussion forum. You can login with username capk and pass 2simple 
+
+
+Google Protocol Buffers - http://code.google.com/p/protobuf/ - for data serialization/deserialization. Very small, fast and efficient encoding and decoding of data and the primary mode of moving data around our system on the network. 
+	Resources:
+	https://developers.google.com/protocol-buffers/docs/overview - good overview of what they are and how to use them. 
+
+Google Sparse and Dense Hashtables - http://code.google.com/p/sparsehash/ - we use this as a cache in several places as it's small and super fast. 
+
+Boost - http://www.boost.org - C++ libraries - terrific set of libraries written by the guys who wrote a big chunk of the C++ standard library. We're using v1.43 but current I think is 1.50. In general we use C++ as a better C so you wont' see many of the fancy language extensions in new C++ specs in the code (only templates and some functors but nothing weird)
+
+Pantheios - http://www.pantheios.org - C++ logging library
+
+Google Test - https://code.google.com/p/googletest/downloads/list - unit testing library for C++ that we use. Easy to setup and use. 
+
+Package dependencies
+uuid
+uuid-devel
+gcc (4.4)
+git
+protobuf (2.5.0)
+pantheios (and STLsoft)
+zeromq (2.2.0)
+boost (1.433)
+sparsehash
+gtest
+quickfix (1.13.3)
+
+Getting started:
+I think the best way to get started is to build the code and get it connected to the markets and see data coming through. The system doesn't currently build on Windows so you'll have to use the Makefiles on Linux. I'd like to do a Windows build at some point but I don't think now is the time since there's quite a few *nix specific references (e.g. atomic variables)
+
+Architecture overview:
+TODO
+
+Building:
+Should for now just be "make" in each directory. "make dbg=1" will compile with debugging symbols. Start by building the collect-fix directory which will build the orderbooks as well. Need to move all of this to autoconf for public consumption (here's a good introcution to autoconf - http://www.edwardrosten.com/code/autoconf/index.html)
+
+Bugs:
+We use the github bug tracking system so if there's something you want to assign to me to fix please do it there. It's also a reminder for me to get to it. 
+
+Goal - phase 1:
+1)Autoconf setup
+2)Doxygen comments in code 
+3)Abstract out logging and orderbook (so people can use their own if they want)
+
+
+Very excited to have you on board. I look forward to making some very cool software with you. 
+
+Best,
+Timir
+
