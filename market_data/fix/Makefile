@@ -6,9 +6,9 @@ UTILS = $(COMMON)/src/c++
 UTILS_SRC = $(UTILS)/utils
 PROTO = $(COMMON)/proto
 
-ORDERBOOK_DIR = ../../order_book/order_book.v2
+ORDERBOOK_DIR = ../../order_book/
 ORDERBOOK_INC = ../../order_book
-ORDERBOOK_LIB = $(ORDERBOOK_DIR)/liborder_book2.a
+ORDERBOOK_LIB = $(ORDERBOOK_DIR)/liborder_book.a
 
 PANTHEIOS_EXT = $(COMMON)/pantheios_be_zmq
 
@@ -22,7 +22,7 @@ INCLUDE = -I $(PANTHEIOS_ROOT)/include \
 
 LIBS = -L$(ORDERBOOK_DIR)/ \
 		-lquickfix \
-		-lorder_book2 \
+		-lorder_book \
 		-lrt \
 		-lzmq \
 		-lprotobuf \
