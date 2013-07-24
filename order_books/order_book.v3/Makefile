@@ -1,7 +1,7 @@
 CC = g++
 
-CAPK_ROOT = ~/capitalk
-COMMON = $(CAPK_ROOT)/common
+SYSK_ROOT = ../..
+COMMON = $(SYSK_ROOT)/common
 UTILS = $(COMMON)/src/c++
 UTILS_SRC = $(UTILS)/utils
 PROTO = $(COMMON)/proto
@@ -23,10 +23,10 @@ endif
 #%.o: %.cpp
 	#$(CC) $(CFLAGS) $(INCLUDE) -c $(input) -o $(output)
 
-all: liborder_book3.a
+all: liborder_book.a
 
-liborder_book3.a: order_book.o 
-	ar rcs liborder_book3.a $+
+liborder_book.a: order_book.o 
+	ar rcs liborder_book.a $+ && cp $@ && ..
 
 order_book.o: order_book.c order_book.h order_book.cpp order_book.hxx
 	$(CC) -c $(INCLUDE) $(CPPFLAGS) $(CFLAGS) $<
@@ -42,7 +42,7 @@ order_book.o: order_book.c order_book.h order_book.cpp order_book.hxx
 
 
 clean :
-	rm -f  *.o liborder_book3.a 
+	rm -f  *.o liborder_book.a 
 
 
 

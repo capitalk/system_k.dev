@@ -1,7 +1,7 @@
 CC=g++
 
-CAPK_ROOT = ~/capitalk
-COMMON=$(CAPK_ROOT)/common
+SYSK_ROOT = ../../..
+COMMON=$(SYSK_ROOT)/common
 UTILS=$(COMMON)/src/c++
 UTILS_SRC=$(UTILS)/utils
 
@@ -14,7 +14,7 @@ INCLUDE= -I $(SRC) \
 LIBS= -L$(UTILS) \
       -L$(SRC) \
       -lgtest \
-      -lorder_book3 \
+      -lorder_book \
       -lpthread 
 
 CFLAGS=-Wall  -std=c++0x -O3 # -g -D DEBUG
@@ -25,7 +25,7 @@ CFLAGS=-Wall  -std=c++0x -O3 # -g -D DEBUG
 
 all: gtest_book # gtest_del gtest_mod gtest_oob
 
-liborder_book3.a: 
+liborder_book.a: 
 	cd .. && make 
 
 ifeq ($(dbg), 1)

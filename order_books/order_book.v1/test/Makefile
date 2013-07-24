@@ -1,7 +1,7 @@
 CC=g++
 
-CAPK_ROOT=~/capitalk
-COMMON=$(CAPK_ROOT)/common
+SYSK_ROOT=../../..
+COMMON=$(SYSK_ROOT)/common
 UTILS=$(COMMON)/src/c++
 UTILS_SRC=$(UTILS)
 PROTO=$(COMMON)/proto

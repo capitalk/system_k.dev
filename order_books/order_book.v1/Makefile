@@ -1,7 +1,7 @@
 CC=g++
 
-CAPK_ROOT=~/capitalk
-COMMON=$(CAPK_ROOT)/common
+SYSK_ROOT=../../
+COMMON=$(SYSK_ROOT)/common
 UTILS=$(COMMON)/src/c++
 UTILS_SRC=$(UTILS)/utils
 PROTO=$(COMMON)/proto
@@ -26,7 +26,7 @@ endif
 all: liborder_book.a
 
 liborder_book.a: order_book_entry.o order_book.o price_depth_entry.o price_depth_order_book.o 
-	ar rcs liborder_book.a $+
+	ar rcs liborder_book.a $+ && cp $@ ..
 
 price_depth_entry.o: price_depth_entry.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) price_depth_entry.cpp 

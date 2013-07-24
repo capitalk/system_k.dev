@@ -4,15 +4,15 @@ OB1=./order_book.v1
 OB2=./order_book.v2
 TEST=./test
 
-all: libOrderBook2.a libOrderBook.a test
+all: v2 v1 test
 
-libOrderBook.a: 
+v1: 
 	cd $(OB1) && make 
 
-libOrderBook2.a: 
+v2: 
 	cd $(OB2) && make
 
-test: libOrderBook.a libOrderBook2.a
+test: v1 v2
 	cd $(OB1)/test && make
 	cd $(OB2)/test && make
 	cd $(TEST) && make

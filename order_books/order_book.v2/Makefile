@@ -1,7 +1,7 @@
 CC=g++
 
-CAPK_ROOT=~/capitalk
-COMMON=$(CAPK_ROOT)/common
+SYSK_ROOT=../..
+COMMON=$(SYSK_ROOT)/common
 UTILS=$(COMMON)/src/c++
 UTILS_SRC=$(UTILS)/utils
 PROTO=$(COMMON)/proto
@@ -20,10 +20,11 @@ ifeq ($(dbg),1)
 	CFLAGS = -Wall  -std=c++0x -ggdb -g  -DDEBUG
 endif
 
-all: liborder_book2.a
+all: liborder_book.a
 
-liborder_book2.a: order.o order_book.o limit.o time_utils.o fix_convertors.o
-	ar rcs liborder_book2.a $+
+liborder_book.a: order.o order_book.o limit.o time_utils.o fix_convertors.o
+	ar rcs liborder_book.a $+ && cp $@ ..
+
 
 order.o: order.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $^ 
@@ -41,7 +42,7 @@ fix_convertors.o: $(UTILS_SRC)/fix_convertors.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $^
 
 clean :
-	rm -f  *.o liborder_book2.a 
+	rm -f  *.o liborder_book.a 
 
 
 

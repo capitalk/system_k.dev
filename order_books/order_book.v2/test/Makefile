@@ -1,7 +1,7 @@
 CC=g++
 
-CAPK_ROOT=~/capitalk
-COMMON=$(CAPK_ROOT)/common
+SYSK_ROOT=../../..
+COMMON=$(SYSK_ROOT)/common
 UTILS=$(COMMON)/src/c++
 UTILS_SRC=$(UTILS)
 PROTO=$(COMMON)/proto
@@ -23,19 +23,19 @@ LIBS=-L$(SRC) \
 
 CFLAGS=-Wall  -std=c++0x -ggdb -DDEBUG
 
-all: liborder_book2.a perf_test unit_test
+all: liborder_book.a perf_test unit_test
 
-liborder_book2.a: 
+liborder_book.a: 
 	cd .. && make 
 
-unit_test : liborder_book2.a unit_test.o 
-	$(CC) unit_test.o  $(LIBS) -lorder_book2 -o $@   
+unit_test : liborder_book.a unit_test.o 
+	$(CC) unit_test.o  $(LIBS) -lorder_book -o $@   
 
 unit_test.o: unit_test.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) unit_test.cpp
 
-perf_test : liborder_book2.a perf_test.o 
-	$(CC) perf_test.o  $(LIBS) -lorder_book2 -o $@   
+perf_test : liborder_book.a perf_test.o 
+	$(CC) perf_test.o  $(LIBS) -lorder_book -o $@   
 
 perf_test.o: perf_test.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) perf_test.cpp
